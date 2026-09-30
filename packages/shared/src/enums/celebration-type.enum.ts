@@ -1,0 +1,8 @@
+export enum CelebrationType {
+  SUNDAY_MASS = 'SUNDAY_MASS',
+  WEEKDAY_MASS = 'WEEKDAY_MASS',
+  WEDDING = 'WEDDING',
+  BAPTISM = 'BAPTISM',
+  FUNERAL = 'FUNERAL',
+  OTHER = 'OTHER',
+}

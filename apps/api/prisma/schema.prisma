@@ -1,0 +1,172 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  USER
+}
+
+enum ParishRole {
+  PARISH_ADMIN
+  PREPARER
+  READER
+  VIEWER
+}
+
+enum ContentType {
+  SONG
+  PSALM
+  GOSPEL
+  READING
+  PRAYER
+  UNIVERSAL_PRAYER
+  ANNOUNCEMENT
+  FREE_TEXT
+}
+
+enum CelebrationType {
+  SUNDAY_MASS
+  WEEKDAY_MASS
+  WEDDING
+  BAPTISM
+  FUNERAL
+  OTHER
+}
+
+enum CelebrationStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  role         UserRole @default(USER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  parishMembers       ParishMember[]
+  createdContents     Content[]
+  createdCelebrations Celebration[]
+}
+
+model Parish {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  city        String
+  country     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members              ParishMember[]
+  contents             Content[]
+  celebrationTemplates CelebrationTemplate[]
+  celebrations         Celebration[]
+}
+
+model ParishMember {
+  id        String     @id @default(cuid())
+  userId    String
+  parishId  String
+  role      ParishRole @default(VIEWER)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parish Parish @relation(fields: [parishId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, parishId])
+}
+
+model Content {
+  id          String      @id @default(cuid())
+  parishId    String
+  title       String
+  type        ContentType
+  body        String      @db.Text
+  language    String      @default("fr")
+  tags        String[]
+  createdById String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  parish    Parish @relation(fields: [parishId], references: [id], onDelete: Cascade)
+  createdBy User   @relation(fields: [createdById], references: [id])
+
+  celebrationSteps CelebrationStep[]
+}
+
+model CelebrationTemplate {
+  id          String          @id @default(cuid())
+  parishId    String
+  name        String
+  type        CelebrationType
+  description String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  parish       Parish                    @relation(fields: [parishId], references: [id], onDelete: Cascade)
+  steps        CelebrationTemplateStep[]
+  celebrations Celebration[]
+}
+
+model CelebrationTemplateStep {
+  id                  String      @id @default(cuid())
+  templateId          String
+  title               String
+  key                 String
+  order               Int
+  expectedContentType ContentType?
+  isRequired          Boolean     @default(true)
+
+  template         CelebrationTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  celebrationSteps CelebrationStep[]
+
+  @@unique([templateId, key])
+  @@unique([templateId, order])
+}
+
+model Celebration {
+  id          String            @id @default(cuid())
+  parishId    String
+  templateId  String
+  title       String
+  date        DateTime
+  location    String?
+  status      CelebrationStatus @default(DRAFT)
+  createdById String
+  publishedAt DateTime?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  parish    Parish              @relation(fields: [parishId], references: [id], onDelete: Cascade)
+  template  CelebrationTemplate @relation(fields: [templateId], references: [id])
+  createdBy User                @relation(fields: [createdById], references: [id])
+  steps     CelebrationStep[]
+}
+
+model CelebrationStep {
+  id             String  @id @default(cuid())
+  celebrationId  String
+  templateStepId String
+  title          String
+  order          Int
+  contentId      String?
+  customText     String? @db.Text
+
+  celebration  Celebration             @relation(fields: [celebrationId], references: [id], onDelete: Cascade)
+  templateStep CelebrationTemplateStep @relation(fields: [templateStepId], references: [id])
+  content      Content?                @relation(fields: [contentId], references: [id])
+}
