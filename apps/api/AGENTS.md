@@ -21,7 +21,8 @@ src/
 ├── common/          # Guards, decorators, filters, pipes réutilisables
 ├── prisma/          # PrismaService (global)
 ├── modules/
-│   ├── auth/        # POST /api/auth/register, /login, GET /api/auth/me
+│   ├── auth/        # register, login, refresh, logout, me, forgot/reset-password, verify-email, resend-verification
+│   ├── notifications/ # producteur BullMQ (emails, publication) — le consommateur est apps/notifications
 │   ├── users/       # GET /api/users/me
 │   ├── parishes/    # CRUD paroisses + recherche
 │   ├── parish-members/ # Invitation et gestion des membres
@@ -43,15 +44,23 @@ Toujours utiliser `ZodValidationPipe` avec les schemas de `@churchy/shared`.
 ### Protection JWT
 ```ts
 @UseGuards(JwtAuthGuard)
-@CurrentUser() user: any
+@CurrentUser() user: AuthUser   // entité Prisma User ; ne jamais la renvoyer telle quelle (passwordHash)
 ```
+Le JWT d'accès est lu dans le cookie httpOnly `churchy_at` (ou l'en-tête `Authorization: Bearer`).
+Voir la section « Authentification » du `CLAUDE.md` racine (refresh rotatif, cookies, reset, vérification).
 
-### Protection rôle paroisse
+### Protection rôle paroisse (obligatoire pour toute ressource de paroisse)
 ```ts
-@UseGuards(JwtAuthGuard, ParishRolesGuard)
-@ParishRoles(ParishRole.PARISH_ADMIN)
+@UseGuards(JwtAuthGuard, ParishRolesGuard)        // au niveau du contrôleur
+@ParishAccess(EDITORS)                            // parishId dans l'URL
+@ParishAccess(EDITORS, 'celebration')             // :id est une célébration → paroisse retrouvée via elle
+@ParishAccess(EDITORS, 'template', 'templateId')  // autre nom de paramètre
 ```
-Le guard lit `req.params.parishId` ou `req.params.id` pour trouver la paroisse.
+Types de ressources : `parish` (défaut), `template`, `templateStep`, `content`, `celebration`. Groupes de rôles :
+`ALL_MEMBERS` (lecture), `EDITORS` (écriture/publication), `ADMINS` (membres). Un identifiant d'une autre
+paroisse ne doit jamais contourner le contrôle : les services vérifient aussi l'appartenance à la paroisse
+(ex. modèle ou contenu d'une autre paroisse refusé). Toute nouvelle route doit avoir des tests d'autorisation
+dans `test/authorization.e2e-spec.ts`.
 
 ## Ajouter un module
 
@@ -66,10 +75,17 @@ Après modification de `packages/shared` : `npm run build -w @churchy/shared` (o
 
 ## Variables d'environnement requises
 
+Validées au démarrage par `src/config/env.ts` (l'API refuse de démarrer si la configuration est invalide) ;
+`.env` est chargé par `dotenv` (premier import de `main.ts`).
+
 - `DATABASE_URL` — PostgreSQL connection string
-- `JWT_SECRET` — Secret JWT (changer en prod !)
-- `JWT_EXPIRES_IN` — Durée token (défaut: 7d)
+- `JWT_SECRET` — **obligatoire**, 16 caractères minimum, aucune valeur de secours (`openssl rand -hex 32`) ;
+  refusé en production s'il ressemble à un exemple
+- `ACCESS_TOKEN_TTL_SECONDS` — durée du JWT d'accès (défaut : 900)
+- `REFRESH_TOKEN_TTL_DAYS` — durée de la session (défaut : 30)
 - `PORT` — Port (défaut: 3201)
-- `FRONTEND_URL` — URL du frontend pour CORS
+- `FRONTEND_URL` — origine du site web : CORS avec cookies et liens des emails (défaut : http://localhost:3200)
+- `AUTH_THROTTLE_LIMIT` / `THROTTLE_LIMIT` — requêtes par minute et par IP (routes d'auth sensibles / reste)
+- `REDIS_HOST`, `REDIS_PORT`, `REDIS_DB` — file BullMQ (défaut : localhost, 6380, 0)
 
 > Règles communes (tests obligatoires pour tout changement, précommit lint/format/typecheck/tests) : voir le `CLAUDE.md` à la racine du dépôt.

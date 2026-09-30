@@ -6,18 +6,40 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: churchy_db
     ports:
-      - "5433:5432"
+      - '5433:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d churchy_db']
+      interval: 2s
+      timeout: 3s
+      retries: 20
 
   redis:
     image: redis:7-alpine
     # AOF : persistance des jobs BullMQ en cas de redémarrage
-    command: ["redis-server", "--appendonly", "yes"]
+    command: ['redis-server', '--appendonly', 'yes']
     ports:
-      - "6380:6379"
+      - '6380:6379'
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+  # Serveur mail de développement : capture les emails envoyés (UI sur http://localhost:8025)
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - '1025:1025'
+      - '8025:8025'
+    healthcheck:
+      test: ['CMD', '/mailpit', 'readyz']
+      interval: 2s
+      timeout: 3s
+      retries: 20
 
 volumes:
   postgres_data:

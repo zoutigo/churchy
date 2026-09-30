@@ -14,15 +14,15 @@ const STATUS_LABELS: Record<CelebrationStatus, string> = {
   [CelebrationStatus.ARCHIVED]: 'Archivée',
 };
 
-interface Props {
-  celebration: Celebration;
-  parishId?: string;
-}
+/** Soit la vue d'administration (`parishId`), soit la vue publique (`publicSlug`). */
+type Props = { celebration: Celebration } & ({ parishId: string } | { publicSlug: string });
 
-export function CelebrationCard({ celebration, parishId }: Props) {
-  const href = parishId
-    ? `/dashboard/parishes/${parishId}/celebrations/${celebration.id}`
-    : `/celebrations/${celebration.id}`;
+export function CelebrationCard(props: Props) {
+  const { celebration } = props;
+  const href =
+    'parishId' in props
+      ? `/dashboard/parishes/${props.parishId}/celebrations/${celebration.id}`
+      : `/p/${props.publicSlug}/celebrations/${celebration.id}`;
 
   const date = new Date(celebration.date).toLocaleDateString('fr-FR', {
     weekday: 'long',

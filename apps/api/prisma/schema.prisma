@@ -46,18 +46,58 @@ enum CelebrationStatus {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String
-  firstName    String
-  lastName     String
-  role         UserRole @default(USER)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id              String    @id @default(cuid())
+  email           String    @unique
+  passwordHash    String
+  firstName       String
+  lastName        String
+  role            UserRole  @default(USER)
+  emailVerifiedAt DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
+  refreshTokens       RefreshToken[]
+  authTokens          AuthToken[]
   parishMembers       ParishMember[]
   createdContents     Content[]
   createdCelebrations Celebration[]
+}
+
+/// Jeton de rafraîchissement (stocké haché). `familyId` regroupe les jetons issus d'une même
+/// connexion : la réutilisation d'un jeton déjà révoqué révoque toute la famille.
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  familyId  String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([familyId])
+}
+
+enum AuthTokenType {
+  PASSWORD_RESET
+  EMAIL_VERIFICATION
+}
+
+/// Jeton à usage unique (réinitialisation de mot de passe, vérification d'email), stocké haché.
+model AuthToken {
+  id        String        @id @default(cuid())
+  userId    String
+  type      AuthTokenType
+  tokenHash String        @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime      @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type])
 }
 
 model Parish {
@@ -123,13 +163,13 @@ model CelebrationTemplate {
 }
 
 model CelebrationTemplateStep {
-  id                  String      @id @default(cuid())
+  id                  String       @id @default(cuid())
   templateId          String
   title               String
   key                 String
   order               Int
   expectedContentType ContentType?
-  isRequired          Boolean     @default(true)
+  isRequired          Boolean      @default(true)
 
   template         CelebrationTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
   celebrationSteps CelebrationStep[]

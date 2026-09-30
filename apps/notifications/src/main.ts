@@ -1,3 +1,4 @@
+import 'dotenv/config'; // charge apps/notifications/.env (Redis, SMTP)
 import { NestFactory } from '@nestjs/core';
 import { Logger } from '@nestjs/common';
 import { AppModule } from './app.module';

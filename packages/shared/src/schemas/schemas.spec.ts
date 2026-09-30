@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { loginSchema, registerSchema } from './auth.schema';
+import {
+  forgotPasswordSchema,
+  loginSchema,
+  registerSchema,
+  resetPasswordSchema,
+  verifyEmailSchema,
+} from './auth.schema';
 import { createParishSchema } from './parish.schema';
 import {
   createCelebrationSchema,
@@ -29,9 +35,46 @@ describe('registerSchema', () => {
   });
 });
 
+describe('normalisation des emails', () => {
+  it('passe l’email en minuscules et retire les espaces (register, login, forgot)', () => {
+    const email = '  Jean.Dupont@Paroisse.FR ';
+    expect(
+      registerSchema.parse({ email, password: 'password123', firstName: 'J', lastName: 'D' }).email,
+    ).toBe('jean.dupont@paroisse.fr');
+    expect(loginSchema.parse({ email, password: 'x' }).email).toBe('jean.dupont@paroisse.fr');
+    expect(forgotPasswordSchema.parse({ email }).email).toBe('jean.dupont@paroisse.fr');
+  });
+});
+
 describe('loginSchema', () => {
   it('exige un mot de passe non vide', () => {
     expect(loginSchema.safeParse({ email: 'a@b.fr', password: '' }).success).toBe(false);
+  });
+});
+
+describe('forgotPasswordSchema', () => {
+  it('exige un email valide', () => {
+    expect(forgotPasswordSchema.safeParse({ email: 'nope' }).success).toBe(false);
+    expect(forgotPasswordSchema.safeParse({ email: 'a@b.fr' }).success).toBe(true);
+  });
+});
+
+describe('resetPasswordSchema', () => {
+  it('exige un jeton et un mot de passe de 8 caractères minimum', () => {
+    expect(resetPasswordSchema.safeParse({ token: '', password: 'password123' }).success).toBe(
+      false,
+    );
+    expect(resetPasswordSchema.safeParse({ token: 't', password: 'court' }).success).toBe(false);
+    expect(resetPasswordSchema.safeParse({ token: 't', password: 'password123' }).success).toBe(
+      true,
+    );
+  });
+});
+
+describe('verifyEmailSchema', () => {
+  it('exige un jeton non vide', () => {
+    expect(verifyEmailSchema.safeParse({ token: '' }).success).toBe(false);
+    expect(verifyEmailSchema.safeParse({ token: 'abc' }).success).toBe(true);
   });
 });
 

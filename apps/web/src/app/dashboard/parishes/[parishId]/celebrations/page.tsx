@@ -5,6 +5,7 @@ import { celebrationsApi } from '@/lib/api/celebrations.api';
 import { CelebrationCard } from '@/components/celebration/CelebrationCard';
 import { Button } from '@/components/ui/button';
 import type { Celebration } from '@churchy/shared';
+import { ErrorNotice } from '@/components/ui/error-notice';
 
 interface Props {
   params: { parishId: string };
@@ -14,9 +15,16 @@ export default function CelebrationsPage({ params }: Props) {
   const { parishId } = params;
   const [celebrations, setCelebrations] = useState<Celebration[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    celebrationsApi.findByParish(parishId).then(setCelebrations).finally(() => setLoading(false));
+    celebrationsApi
+      .findByParish(parishId)
+      .then(setCelebrations)
+      .catch((err: unknown) =>
+        setError(err instanceof Error ? err.message : 'Impossible de charger les données'),
+      )
+      .finally(() => setLoading(false));
   }, [parishId]);
 
   return (
@@ -33,10 +41,14 @@ export default function CelebrationsPage({ params }: Props) {
         </Button>
       </div>
 
-      {loading ? (
+      {error ? (
+        <ErrorNotice message={error} />
+      ) : loading ? (
         <p className="text-muted-foreground">Chargement...</p>
       ) : celebrations.length === 0 ? (
-        <p className="text-center py-12 text-muted-foreground">Aucune célébration pour l&apos;instant.</p>
+        <p className="text-center py-12 text-muted-foreground">
+          Aucune célébration pour l&apos;instant.
+        </p>
       ) : (
         <div className="space-y-3">
           {celebrations.map((c) => (

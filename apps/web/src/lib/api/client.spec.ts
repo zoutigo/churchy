@@ -1,8 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { api } from './client';
+import { SESSION_EXPIRED_EVENT } from '@/lib/auth/session';
+import { api, ApiError } from './client';
 
 const jsonResponse = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
+
+const urlOf = (call: unknown[]) => String(call[0]);
 
 describe('api client', () => {
   const fetchMock = vi.fn();
@@ -13,43 +16,119 @@ describe('api client', () => {
     vi.unstubAllGlobals();
   });
 
-  it('envoie le jeton en Authorization: Bearer quand il existe', async () => {
-    localStorage.setItem('churchy_token', 'tok');
-    fetchMock.mockResolvedValue(jsonResponse({ ok: true }));
+  describe('requêtes', () => {
+    it('joint les cookies (credentials: include) et n’envoie jamais de jeton dans un en-tête', async () => {
+      fetchMock.mockResolvedValue(jsonResponse({ ok: true }));
+      localStorage.setItem('churchy_token', 'ancien-jeton-localstorage');
 
-    await api.get('/parishes/my');
+      await api.get('/parishes/my');
 
-    const [url, init] = fetchMock.mock.calls[0];
-    expect(url).toMatch(/\/parishes\/my$/);
-    expect(init.headers.Authorization).toBe('Bearer tok');
+      const [url, init] = fetchMock.mock.calls[0];
+      expect(url).toMatch(/\/parishes\/my$/);
+      expect(init.credentials).toBe('include');
+      expect(init.headers.Authorization).toBeUndefined();
+    });
+
+    it('sérialise le corps en JSON pour POST, sans corps si aucun n’est fourni', async () => {
+      fetchMock.mockImplementation(async () => jsonResponse({}));
+      await api.post('/auth/login', { email: 'a@b.fr' });
+      expect(fetchMock.mock.calls[0][1].method).toBe('POST');
+      expect(fetchMock.mock.calls[0][1].body).toBe('{"email":"a@b.fr"}');
+
+      await api.post('/auth/logout');
+      expect(fetchMock.mock.calls[1][1].body).toBeUndefined();
+    });
   });
 
-  it('n’envoie pas d’Authorization sans jeton', async () => {
-    fetchMock.mockResolvedValue(jsonResponse({}));
-    await api.get('/public/parishes');
-    expect(fetchMock.mock.calls[0][1].headers.Authorization).toBeUndefined();
-  });
+  describe('renouvellement automatique de la session', () => {
+    it('sur 401, rafraîchit la session puis rejoue la requête une fois', async () => {
+      fetchMock
+        .mockResolvedValueOnce(jsonResponse({ message: 'Unauthorized' }, 401)) // requête initiale
+        .mockResolvedValueOnce(jsonResponse({ user: {} }, 200)) // /auth/refresh
+        .mockResolvedValueOnce(jsonResponse([{ id: 'p1' }], 200)); // requête rejouée
 
-  it('sérialise le corps en JSON pour POST', async () => {
-    fetchMock.mockResolvedValue(jsonResponse({}));
-    await api.post('/auth/login', { email: 'a@b.fr' });
-    const init = fetchMock.mock.calls[0][1];
-    expect(init.method).toBe('POST');
-    expect(init.body).toBe('{"email":"a@b.fr"}');
+      await expect(api.get('/parishes/my')).resolves.toEqual([{ id: 'p1' }]);
+
+      expect(fetchMock.mock.calls.map(urlOf)).toEqual([
+        expect.stringMatching(/\/parishes\/my$/),
+        expect.stringMatching(/\/auth\/refresh$/),
+        expect.stringMatching(/\/parishes\/my$/),
+      ]);
+      expect(fetchMock.mock.calls[1][1]).toMatchObject({ method: 'POST', credentials: 'include' });
+    });
+
+    it('si le refresh échoue : émet l’événement de session expirée et lève l’erreur 401', async () => {
+      const onExpired = vi.fn();
+      window.addEventListener(SESSION_EXPIRED_EVENT, onExpired);
+      fetchMock
+        .mockResolvedValueOnce(jsonResponse({ message: 'Unauthorized' }, 401))
+        .mockResolvedValueOnce(jsonResponse({ message: 'Session expirée' }, 401));
+
+      await expect(api.get('/parishes/my')).rejects.toMatchObject({ status: 401 });
+
+      expect(onExpired).toHaveBeenCalledTimes(1);
+      window.removeEventListener(SESSION_EXPIRED_EVENT, onExpired);
+    });
+
+    it('ne boucle pas : un 401 sur la requête rejouée est une erreur, sans second refresh', async () => {
+      fetchMock
+        .mockResolvedValueOnce(jsonResponse({ message: 'Unauthorized' }, 401))
+        .mockResolvedValueOnce(jsonResponse({}, 200)) // refresh ok
+        .mockResolvedValueOnce(jsonResponse({ message: 'Unauthorized' }, 401)); // toujours 401
+
+      await expect(api.get('/parishes/my')).rejects.toBeInstanceOf(ApiError);
+      expect(fetchMock).toHaveBeenCalledTimes(3);
+    });
+
+    it('partage un seul refresh entre plusieurs requêtes simultanées en 401', async () => {
+      let refreshCalls = 0;
+      fetchMock.mockImplementation(async (url: string) => {
+        if (url.endsWith('/auth/refresh')) {
+          refreshCalls++;
+          await new Promise((r) => setTimeout(r, 20));
+          return jsonResponse({}, 200);
+        }
+        // Premier passage : 401 ; une fois rafraîchi : 200.
+        return refreshCalls === 0
+          ? jsonResponse({ message: 'Unauthorized' }, 401)
+          : jsonResponse({ ok: true }, 200);
+      });
+
+      await Promise.all([api.get('/a'), api.get('/b'), api.get('/c')]);
+
+      expect(refreshCalls).toBe(1);
+    });
+
+    it.each([
+      '/auth/login',
+      '/auth/register',
+      '/auth/forgot-password',
+      '/auth/reset-password',
+      '/auth/verify-email',
+    ])('ne tente pas de refresh sur un 401 de %s (réponse normale)', async (path) => {
+      fetchMock.mockResolvedValue(
+        jsonResponse({ message: { message: 'Identifiants invalides' } }, 401),
+      );
+      await expect(api.post(path, {})).rejects.toThrow('Identifiants invalides');
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('erreurs — format réel de HttpExceptionFilter (message est un objet)', () => {
-    it('extrait le message d’une erreur Nest (401)', async () => {
+    it('extrait le message d’une erreur Nest et expose le code HTTP', async () => {
       fetchMock.mockResolvedValue(
         jsonResponse(
           {
-            statusCode: 401,
-            message: { message: 'Identifiants invalides', error: 'Unauthorized', statusCode: 401 },
+            statusCode: 409,
+            message: { message: 'Email déjà utilisé', error: 'Conflict', statusCode: 409 },
           },
-          401,
+          409,
         ),
       );
-      await expect(api.post('/auth/login', {})).rejects.toThrow('Identifiants invalides');
+      const error = (await api.post('/auth/register', {}).catch((e: unknown) => e)) as ApiError;
+      expect(error).toBeInstanceOf(ApiError);
+      expect(error.message).toBe('Email déjà utilisé');
+      expect(error.status).toBe(409);
     });
 
     it('extrait le premier message d’une erreur de validation Zod (400)', async () => {

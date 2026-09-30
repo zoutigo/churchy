@@ -11,6 +11,8 @@ export default defineConfig({
   testDir: './e2e',
   fullyParallel: false,
   workers: 1,
+  timeout: 60_000,
+  expect: { timeout: 10_000 },
   retries: process.env.CI ? 1 : 0,
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
@@ -40,8 +42,12 @@ export default defineConfig({
         DATABASE_URL:
           process.env.TEST_DATABASE_URL ??
           'postgresql://postgres:password@localhost:5433/churchy_test?schema=public',
+        NODE_ENV: 'test',
         REDIS_DB: '15',
-        JWT_SECRET: 'test-secret',
+        JWT_SECRET: 'e2e-secret-e2e-secret-0123456789',
+        // Les scénarios enchaînent plus de connexions que la limite de production.
+        AUTH_THROTTLE_LIMIT: '10000',
+        THROTTLE_LIMIT: '100000',
       },
     },
     {

@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
 import { loginSchema, type LoginDto } from '@churchy/shared';
 import { useAuth } from '@/hooks/useAuth';
+import { AuthLink } from '@/components/auth/AuthCard';
 import {
   Form,
   FormControl,
@@ -13,9 +14,15 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/ui/password-input';
 import { Button } from '@/components/ui/button';
 
-export function LoginForm() {
+interface Props {
+  /** Destination après connexion (déjà validée par safeNextPath). */
+  next?: string;
+}
+
+export function LoginForm({ next = '/dashboard' }: Props) {
   const router = useRouter();
   const { login, loading } = useAuth();
 
@@ -28,7 +35,8 @@ export function LoginForm() {
   async function onSubmit(data: LoginDto) {
     try {
       await login(data);
-      router.push('/dashboard');
+      router.push(next);
+      router.refresh();
     } catch (err: unknown) {
       form.setError('root', {
         message: err instanceof Error ? err.message : 'Identifiants invalides',
@@ -38,7 +46,7 @@ export function LoginForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
         <FormField
           control={form.control}
           name="email"
@@ -62,20 +70,21 @@ export function LoginForm() {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Mot de passe</FormLabel>
+              <div className="flex items-center justify-between">
+                <FormLabel>Mot de passe</FormLabel>
+                <span className="text-xs">
+                  <AuthLink href="/forgot-password">Mot de passe oublié ?</AuthLink>
+                </span>
+              </div>
               <FormControl>
-                <Input
-                  type="password"
-                  autoComplete="current-password"
-                  {...field}
-                />
+                <PasswordInput autoComplete="current-password" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
         {form.formState.errors.root && (
-          <p className="text-sm text-destructive">
+          <p role="alert" className="text-sm text-destructive">
             {form.formState.errors.root.message}
           </p>
         )}

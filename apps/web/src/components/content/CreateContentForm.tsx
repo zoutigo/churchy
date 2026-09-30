@@ -121,9 +121,7 @@ export function CreateContentForm({ parishId, onSuccess }: Props) {
           )}
         />
         {form.formState.errors.root && (
-          <p className="text-sm text-destructive">
-            {form.formState.errors.root.message}
-          </p>
+          <p className="text-sm text-destructive">{form.formState.errors.root.message}</p>
         )}
         <Button type="submit" disabled={form.formState.isSubmitting}>
           {form.formState.isSubmitting ? 'Enregistrement...' : 'Ajouter le contenu'}

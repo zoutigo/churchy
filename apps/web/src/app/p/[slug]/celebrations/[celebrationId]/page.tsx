@@ -1,4 +1,10 @@
+import type { Celebration, CelebrationStep, Content } from '@churchy/shared';
 import { api } from '@/lib/api/client';
+
+type PublicCelebration = Celebration & {
+  parish?: { name: string };
+  steps?: (CelebrationStep & { content?: Content | null })[];
+};
 
 interface Props {
   params: { slug: string; celebrationId: string };
@@ -7,10 +13,10 @@ interface Props {
 export default async function PublicCelebrationPage({ params }: Props) {
   const { celebrationId } = params;
 
-  let celebration: any = null;
+  let celebration: PublicCelebration;
 
   try {
-    celebration = await api.get(`/public/celebrations/${celebrationId}`);
+    celebration = await api.get<PublicCelebration>(`/public/celebrations/${celebrationId}`);
   } catch {
     return (
       <main className="min-h-screen flex items-center justify-center">
@@ -35,15 +41,13 @@ export default async function PublicCelebrationPage({ params }: Props) {
           <p className="text-sm text-muted-foreground">{celebration.parish?.name}</p>
           <h1 className="text-3xl font-bold">{celebration.title}</h1>
           <p className="text-muted-foreground">{date}</p>
-          {celebration.location && (
-            <p className="text-muted-foreground">{celebration.location}</p>
-          )}
+          {celebration.location && <p className="text-muted-foreground">{celebration.location}</p>}
         </div>
 
         <div className="space-y-4">
           <h2 className="text-xl font-semibold">Déroulement</h2>
           <div className="space-y-3">
-            {(celebration.steps ?? []).map((step: any) => (
+            {(celebration.steps ?? []).map((step) => (
               <div key={step.id} className="rounded-lg border bg-card p-4 space-y-2">
                 <h3 className="font-medium text-sm uppercase tracking-wide text-muted-foreground">
                   {step.title}
@@ -51,7 +55,9 @@ export default async function PublicCelebrationPage({ params }: Props) {
                 {step.content ? (
                   <div>
                     <p className="font-medium">{step.content.title}</p>
-                    <p className="text-sm text-foreground whitespace-pre-wrap">{step.content.body}</p>
+                    <p className="text-sm text-foreground whitespace-pre-wrap">
+                      {step.content.body}
+                    </p>
                   </div>
                 ) : step.customText ? (
                   <p className="text-sm text-foreground whitespace-pre-wrap">{step.customText}</p>

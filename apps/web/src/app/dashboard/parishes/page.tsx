@@ -4,9 +4,10 @@ import { useMyParishes } from '@/hooks/useParish';
 import { ParishCard } from '@/components/parish/ParishCard';
 import { CreateParishForm } from '@/components/parish/CreateParishForm';
 import { Button } from '@/components/ui/button';
+import { ErrorNotice } from '@/components/ui/error-notice';
 
 export default function ParishesPage() {
-  const { parishes, loading, refresh } = useMyParishes();
+  const { parishes, loading, error, refresh } = useMyParishes();
   const [showForm, setShowForm] = useState(false);
 
   return (
@@ -33,7 +34,9 @@ export default function ParishesPage() {
         </div>
       )}
 
-      {loading ? (
+      {error ? (
+        <ErrorNotice message={error} />
+      ) : loading ? (
         <p className="text-muted-foreground">Chargement...</p>
       ) : parishes.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">

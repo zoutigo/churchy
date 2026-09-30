@@ -1,4 +1,5 @@
-import Link from 'next/link';
+import { HeroActions } from '@/components/layout/HeroActions';
+import { SiteHeader } from '@/components/layout/SiteHeader';
 
 const features = [
   {
@@ -25,15 +26,9 @@ export default function HomePage() {
   return (
     <main className="min-h-screen flex flex-col">
       {/* Hero */}
-      <section className="bg-churchy-700 text-white min-h-[65vh] flex items-center">
+      <section className="relative bg-churchy-700 text-white min-h-[65vh] flex items-center">
+        <SiteHeader />
         <div className="max-w-4xl mx-auto px-6 py-24 text-center">
-          <div className="flex items-center justify-center gap-3 mb-8">
-            <span className="text-churchy-300 text-3xl">✦</span>
-            <span className="font-playfair text-3xl font-bold tracking-widest uppercase text-white">
-              Churchy
-            </span>
-            <span className="text-churchy-300 text-3xl">✦</span>
-          </div>
           <h1 className="font-playfair text-5xl md:text-6xl font-bold leading-tight mb-6 text-white">
             Préparez et publiez
             <br />
@@ -43,20 +38,7 @@ export default function HomePage() {
             Messes, mariages, baptêmes et funérailles — gérez tout en un seul endroit, en toute
             sérénité.
           </p>
-          <div className="flex gap-4 justify-center flex-wrap">
-            <Link
-              href="/register"
-              className="bg-amber-500 hover:bg-amber-600 text-white px-8 py-3 rounded-lg font-semibold transition-colors shadow-md"
-            >
-              Commencer gratuitement
-            </Link>
-            <Link
-              href="/login"
-              className="border border-churchy-200 text-churchy-100 hover:bg-churchy-500 px-8 py-3 rounded-lg font-semibold transition-colors"
-            >
-              Se connecter
-            </Link>
-          </div>
+          <HeroActions />
         </div>
       </section>
 

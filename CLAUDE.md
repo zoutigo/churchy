@@ -5,7 +5,7 @@ SaaS de préparation et publication de célébrations religieuses. npm workspace
 ```
 apps/api         @churchy/api    NestJS + Prisma + PostgreSQL (schéma: apps/api/prisma)
 apps/web         @churchy/web    Next.js App Router + shadcn/ui
-apps/notifications @churchy/notifications microservice worker BullMQ (sans HTTP)
+apps/notifications @churchy/notifications microservice worker BullMQ (sans HTTP) : envoie les emails
 packages/shared  @churchy/shared types, enums, DTO, schemas Zod
 packages/contracts @churchy/contracts noms de files BullMQ + payloads de jobs (Zod)
 docs/charte      charte graphique
@@ -15,21 +15,64 @@ archive/mobile   app Expo archivée, ignorée par git
 ## Commandes (racine)
 ```bash
 npm install            # une seule installation pour tout le monorepo
-npm run infra:up       # postgres + redis (docker compose)
+npm run infra:up       # postgres + redis + mailpit (docker compose, attend qu'ils soient prêts)
 npm run build          # turbo : shared d'abord, puis api/web
 npm run typecheck
-npm run dev -w @churchy/api   # ou -w @churchy/web
+npm run dev -w @churchy/api   # ou -w @churchy/web, -w @churchy/notifications
 ```
+Première installation : copier `apps/api/.env.example` → `apps/api/.env` (et générer un `JWT_SECRET`
+aléatoire : `openssl rand -hex 32`), `apps/web/.env.local.example` → `.env.local`,
+`apps/notifications/.env.example` → `.env`, puis `npx prisma migrate dev` dans `apps/api`.
 
 ## Ports de dev
-web 3200 · api 3201 (Swagger: /api/docs) · postgres 5433 · redis 6380
+web 3200 · api 3201 (Swagger: /api/docs) · postgres 5433 · redis 6380 · SMTP Mailpit 1025 ·
+**Mailpit (emails reçus) http://localhost:8025**. Tests fonctionnels : web 3210 · api 3211.
+
+## Authentification
+Session par **cookies**, jamais de jeton lisible par le JavaScript du site :
+- `churchy_at` : JWT d'accès, court (15 min), httpOnly, `SameSite=Lax`, envoyé à toute l'API ;
+- `churchy_rt` : refresh token opaque (30 jours), httpOnly, limité au chemin `/api/auth`, **stocké haché**
+  en base (`RefreshToken`) et **rotatif** : chaque `POST /auth/refresh` révoque l'ancien jeton. Rejouer un
+  ancien jeton (hors d'un délai de tolérance de 10 s entre onglets) révoque toute la session (vol probable) ;
+- `churchy_session=1` : indicateur sans secret, **lisible** par le site (middleware + `AuthProvider`), pour ne
+  pas interroger l'API à chaque visiteur anonyme.
+
+Routes (`apps/api/src/modules/auth`) : `register`, `login`, `refresh`, `logout` (révoque côté serveur), `me`,
+`forgot-password`, `reset-password` (à usage unique, 1 h, déconnecte toutes les sessions), `verify-email`
+(24 h), `resend-verification`. Les réponses ne contiennent **aucun jeton** dans le corps. Le header
+`Authorization: Bearer` reste accepté pour les clients non navigateur. Les emails sont normalisés en minuscules.
+Les routes sensibles sont limitées (`AUTH_THROTTLE_LIMIT`, 10/min/IP par défaut) ; helmet est actif ; CORS
+n'autorise que `FRONTEND_URL`, avec credentials.
+
+**Configuration** (`apps/api/src/config/env.ts`, validée au démarrage, aucune valeur de secours) :
+`JWT_SECRET` obligatoire (16 car. min., refusé en production s'il ressemble à un exemple),
+`ACCESS_TOKEN_TTL_SECONDS`, `REFRESH_TOKEN_TTL_DAYS`, `FRONTEND_URL`, `AUTH_THROTTLE_LIMIT`, `THROTTLE_LIMIT`.
+En production : `NODE_ENV=production` (cookies `Secure`), web et API sur le même domaine racine (cookies
+`SameSite=Lax`), et `trust proxy` si l'API est derrière un reverse proxy (limitation par IP).
+
+**Autorisations par paroisse** : `@ParishAccess(ROLES, kind?, param?)` + `ParishRolesGuard`
+(`apps/api/src/common`). Le guard retrouve la paroisse via l'URL **ou via la ressource visée** (célébration,
+modèle, contenu, étape) pour qu'un identifiant d'une autre paroisse ne contourne pas le contrôle.
+`ALL_MEMBERS` (lecture) = ADMIN, PREPARER, READER, VIEWER ; `EDITORS` (écriture, publication) = ADMIN, PREPARER ;
+`ADMINS` (membres) = ADMIN ; `SUPER_ADMIN` passe partout. Les services vérifient aussi l'isolation (modèle ou
+contenu d'une autre paroisse refusé). Toute nouvelle route qui touche une ressource de paroisse doit porter
+`@ParishAccess`.
+
+**Web** : `AuthProvider` (contexte) + `useAuth`, `middleware.ts` (redirige les pages privées sans session vers
+`/login?next=…` ; `next` est validé par `safeNextPath`), `AuthGuard` (filet côté client), client API
+(`lib/api/client.ts`) qui rafraîchit la session en silence sur un 401 (un seul refresh partagé) et émet
+`churchy:session-expired` si c'est impossible. Pages : `/login`, `/register`, `/forgot-password`,
+`/reset-password?token=`, `/verify-email?token=`. Le `next` n'est jamais mémorisé après une déconnexion volontaire.
 
 ## Files de jobs (BullMQ)
 Les noms de files et payloads sont dans `@churchy/contracts`. L'API est le **producteur** :
-`NotificationsService` enfile par ex. `celebration.published` à la publication d'une célébration.
-Le **consommateur** est le microservice `apps/notifications` (NestJS sans HTTP, `NotificationsProcessor`).
+`NotificationsService` enfile `celebration.published` (publication d'une célébration),
+`auth.email-verification-requested` et `auth.password-reset-requested` (liens à usage unique : jobs sans
+rétention une fois traités).
+Le **consommateur** est le microservice `apps/notifications` (NestJS sans HTTP, `NotificationsProcessor`) :
+il envoie les emails d'authentification via SMTP (`MailService`, nodemailer ; Mailpit en local). Pour
+`celebration.published` il ne fait encore que journaliser (prévenir les fidèles : à définir).
 Sans worker démarré, les jobs restent en file dans Redis et sont traités au prochain démarrage.
-Pour l'instant le worker ne fait que journaliser : l'envoi réel (email/push) reste à écrire.
 Lancer : `npm run start:dev -w @churchy/notifications`. Note : BullMQ interdit `:` dans un `jobId`.
 
 ## Tests
@@ -43,7 +86,9 @@ Lancer : `npm run start:dev -w @churchy/notifications`. Note : BullMQ interdit `
 - Tout lancer : `npm test` (unitaires) et `npm run test:e2e` (fonctionnels) à la racine. Postgres + Redis doivent tourner (`npm run infra:up`).
 - La base `churchy_test` est créée/migrée/vidée automatiquement (`apps/api/scripts/reset-test-db.js`, qui refuse toute base dont le nom ne contient pas « test »). La base de dev n'est jamais touchée.
 - Convention : fichiers `*.spec.ts(x)` à côté du code ; tests fonctionnels API dans `apps/api/test/*.e2e-spec.ts`, web dans `apps/web/e2e/*.spec.ts`.
-- `it.failing` = faille connue documentée par un test (autorisations par paroisse, `app.e2e-spec.ts`) ; le retirer une fois corrigée.
+- Les tests fonctionnels lisent les emails d'authentification directement dans la file Redis (db 15) : pas besoin de serveur SMTP.
+- Sélecteurs Playwright : préférer `getByRole` / `getByLabel(…, { exact: true })` (le bouton « Afficher le mot de passe » partage des mots avec le libellé du champ).
+- Piège Vitest : `beforeEach(() => mock.mockReset())` renvoie la fonction mock, que Vitest appelle ensuite comme nettoyage ; utiliser des accolades.
 - En CI : `npx playwright install chromium` et `PW_CHANNEL=chromium`.
 
 ## Règles de travail (obligatoires)
@@ -64,12 +109,17 @@ exécute dans cet ordre, et bloque le commit au moindre échec :
 1. **cohérence `CLAUDE.md` / `AGENTS.md`** (`npm run docs:sync` pour les resynchroniser) ;
 2. **lint + formatage** des fichiers indexés : ESLint `--fix` puis Prettier `--write` (lint-staged) ;
 3. **typecheck** de tous les workspaces (`npm run typecheck`) ;
-4. **tests unitaires** de tous les workspaces (`npm test`).
+4. **tests unitaires** de tous les workspaces (`npm test`) ;
+5. **tests fonctionnels** : API (supertest, base `churchy_test`) puis web (Playwright)
+   (`npm run test:e2e`). Postgres + Redis sont démarrés automatiquement (`npm run infra:up`, qui attend
+   qu'ils soient prêts) ; Docker doit donc être lancé.
 
 - Même contrôle à la main : `npm run precommit`. Outils seuls : `npm run lint`, `npm run format`, `npm run format:check`.
+- **Si le précommit révèle un problème, il faut le corriger soi-même, dans le code, avant de commiter** :
+  erreur ou avertissement de lint, fichier mal formaté, erreur de typecheck, test en échec. On ne se contente pas
+  de le signaler, on ne le laisse pas « pour plus tard » et on ne supprime ni n'affaiblit la règle ou le test.
+  Puis on relance le précommit jusqu'à ce qu'il soit entièrement vert.
 - Ne jamais contourner le hook (`--no-verify`) : corriger la cause.
-- Les tests fonctionnels (`npm run test:e2e`) demandent Postgres + Redis et ne font pas partie du hook :
-  les lancer avant de pousser dès qu'un changement touche l'API, le web ou les files de jobs.
 - Les fichiers indexés sont reformatés/corrigés par le hook : les relire avant de valider le commit.
 
 ### 3. CLAUDE.md et AGENTS.md

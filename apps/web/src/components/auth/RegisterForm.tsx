@@ -13,6 +13,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/ui/password-input';
 import { Button } from '@/components/ui/button';
 
 export function RegisterForm() {
@@ -29,16 +30,17 @@ export function RegisterForm() {
     try {
       await register(data);
       router.push('/dashboard');
+      router.refresh();
     } catch (err: unknown) {
       form.setError('root', {
-        message: err instanceof Error ? err.message : 'Erreur lors de l\'inscription',
+        message: err instanceof Error ? err.message : "Erreur lors de l'inscription",
       });
     }
   }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
         <div className="grid grid-cols-2 gap-3">
           <FormField
             control={form.control}
@@ -92,8 +94,7 @@ export function RegisterForm() {
             <FormItem>
               <FormLabel>Mot de passe</FormLabel>
               <FormControl>
-                <Input
-                  type="password"
+                <PasswordInput
                   placeholder="8 caractères minimum"
                   autoComplete="new-password"
                   {...field}
@@ -104,9 +105,7 @@ export function RegisterForm() {
           )}
         />
         {form.formState.errors.root && (
-          <p className="text-sm text-destructive">
-            {form.formState.errors.root.message}
-          </p>
+          <p className="text-sm text-destructive">{form.formState.errors.root.message}</p>
         )}
         <Button type="submit" className="w-full" disabled={loading}>
           {loading ? 'Inscription...' : 'Créer mon compte'}

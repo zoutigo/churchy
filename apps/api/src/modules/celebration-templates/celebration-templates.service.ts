@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { CreateCelebrationTemplateDto, CreateTemplateStepDto } from '@churchy/shared';
 
@@ -37,6 +37,12 @@ export class CelebrationTemplatesService {
   }
 
   async removeStep(stepId: string) {
+    const used = await this.prisma.celebrationStep.count({ where: { templateStepId: stepId } });
+    if (used > 0) {
+      throw new ConflictException(
+        `Cette étape est utilisée par ${used} célébration(s) et ne peut pas être supprimée`,
+      );
+    }
     await this.prisma.celebrationTemplateStep.delete({ where: { id: stepId } });
   }
 }

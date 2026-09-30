@@ -1,4 +1,5 @@
 import { parishesApi } from '@/lib/api/parishes.api';
+import type { Celebration, Parish } from '@churchy/shared';
 import { celebrationsApi } from '@/lib/api/celebrations.api';
 import { CelebrationCard } from '@/components/celebration/CelebrationCard';
 
@@ -9,13 +10,13 @@ interface Props {
 export default async function PublicParishPage({ params }: Props) {
   const { slug } = params;
 
-  let parish = null;
-  let celebrations = [];
+  let parish: Parish | null = null;
+  let celebrations: Celebration[] = [];
 
   try {
     [parish, celebrations] = await Promise.all([
       parishesApi.findBySlug(slug),
-      celebrationsApi.findByParish(slug).catch(() => []),
+      celebrationsApi.findPublishedByParishSlug(slug).catch(() => []),
     ]);
   } catch {
     return (
@@ -60,14 +61,12 @@ export default async function PublicParishPage({ params }: Props) {
         {celebrations.length === 0 ? (
           <div className="bg-white rounded-xl border border-churchy-200 p-8 text-center">
             <span className="text-churchy-300 text-3xl block mb-2">✦</span>
-            <p className="text-muted-foreground">
-              Aucune célébration publiée pour l&apos;instant.
-            </p>
+            <p className="text-muted-foreground">Aucune célébration publiée pour l&apos;instant.</p>
           </div>
         ) : (
           <div className="space-y-3">
-            {(celebrations as any[]).map((c: any) => (
-              <CelebrationCard key={c.id} celebration={c} />
+            {celebrations.map((c) => (
+              <CelebrationCard key={c.id} celebration={c} publicSlug={slug} />
             ))}
           </div>
         )}

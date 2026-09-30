@@ -59,7 +59,9 @@ export function CreateParishForm({ onSuccess }: Props) {
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Description <span className="text-muted-foreground text-xs">(optionnel)</span></FormLabel>
+              <FormLabel>
+                Description <span className="text-muted-foreground text-xs">(optionnel)</span>
+              </FormLabel>
               <FormControl>
                 <Textarea
                   placeholder="Décrivez votre paroisse..."
@@ -101,15 +103,9 @@ export function CreateParishForm({ onSuccess }: Props) {
           />
         </div>
         {form.formState.errors.root && (
-          <p className="text-sm text-destructive">
-            {form.formState.errors.root.message}
-          </p>
+          <p className="text-sm text-destructive">{form.formState.errors.root.message}</p>
         )}
-        <Button
-          type="submit"
-          className="w-full"
-          disabled={form.formState.isSubmitting}
-        >
+        <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
           {form.formState.isSubmitting ? 'Création...' : 'Créer la paroisse'}
         </Button>
       </form>

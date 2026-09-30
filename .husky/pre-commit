@@ -1,5 +1,8 @@
-# Précommit : docs agents synchronisées, lint + formatage (fichiers indexés), typecheck, tests.
+# Précommit : docs agents synchronisées, lint + formatage (fichiers indexés), typecheck,
+# tests unitaires, puis tests fonctionnels (Postgres + Redis sont démarrés au besoin).
 node scripts/agent-docs.mjs check || exit 1
 npx lint-staged || exit 1
 npm run typecheck || exit 1
 npm test || exit 1
+npm run infra:up || exit 1
+npm run test:e2e || exit 1

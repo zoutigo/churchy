@@ -5,4 +5,5 @@ module.exports = {
   transform: { '^.+\\.ts$': 'ts-jest' },
   moduleFileExtensions: ['js', 'json', 'ts'],
   testEnvironment: 'node',
+  setupFiles: ['<rootDir>/../test/unit-env.js'],
 };

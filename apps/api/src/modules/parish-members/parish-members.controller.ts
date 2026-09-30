@@ -5,7 +5,7 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { ParishRolesGuard } from '../../common/guards/parish-roles.guard';
 import { ParishRoles } from '../../common/decorators/roles.decorator';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
-import { inviteMemberSchema, ParishRole } from '@churchy/shared';
+import { inviteMemberSchema, ParishRole, type InviteMemberDto } from '@churchy/shared';
 
 @ApiTags('parish-members')
 @ApiBearerAuth()
@@ -18,7 +18,7 @@ export class ParishMembersController {
   @ParishRoles(ParishRole.PARISH_ADMIN)
   invite(
     @Param('parishId') parishId: string,
-    @Body(new ZodValidationPipe(inviteMemberSchema)) dto: any,
+    @Body(new ZodValidationPipe(inviteMemberSchema)) dto: InviteMemberDto,
   ) {
     return this.service.invite(parishId, dto);
   }

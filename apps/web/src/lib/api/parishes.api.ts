@@ -6,5 +6,6 @@ export const parishesApi = {
   findMine: () => api.get<(Parish & { role: string })[]>('/parishes/my'),
   findById: (id: string) => api.get<Parish>(`/parishes/${id}`),
   findBySlug: (slug: string) => api.get<Parish>(`/parishes/slug/${slug}`),
-  findPublic: (q?: string) => api.get<Parish[]>(`/public/parishes${q ? `?q=${encodeURIComponent(q)}` : ''}`),
+  findPublic: (q?: string) =>
+    api.get<Parish[]>(`/public/parishes${q ? `?q=${encodeURIComponent(q)}` : ''}`),
 };

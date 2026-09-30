@@ -10,7 +10,7 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "typecheck": "turbo run typecheck",
-    "infra:up": "docker compose up -d",
+    "infra:up": "docker compose up -d --wait",
     "infra:down": "docker compose down",
     "test": "turbo run test",
     "test:e2e": "turbo run test:e2e --concurrency=1",
@@ -19,7 +19,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "docs:sync": "node scripts/agent-docs.mjs sync",
-    "precommit": "node scripts/agent-docs.mjs check && lint-staged && npm run typecheck && npm test",
+    "precommit": "node scripts/agent-docs.mjs check && lint-staged && npm run typecheck && npm test && npm run infra:up && npm run test:e2e",
     "prepare": "husky"
   },
   "devDependencies": {

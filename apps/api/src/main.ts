@@ -1,3 +1,4 @@
+import 'dotenv/config'; // doit rester le premier import : charge apps/api/.env avant le reste
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';

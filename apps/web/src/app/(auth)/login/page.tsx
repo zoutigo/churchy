@@ -1,34 +1,41 @@
-import Link from 'next/link';
+import { CheckCircle2, Clock } from 'lucide-react';
+import { AuthCard, AuthLink } from '@/components/auth/AuthCard';
 import { LoginForm } from '@/components/auth/LoginForm';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { safeNextPath } from '@/lib/auth/session';
 
-export default function LoginPage() {
+interface Props {
+  searchParams: { next?: string; expired?: string; reset?: string };
+}
+
+export default function LoginPage({ searchParams }: Props) {
   return (
-    <main className="min-h-screen flex items-center justify-center bg-churchy-50 px-4">
-      <div className="w-full max-w-sm space-y-6">
-        {/* Logo */}
-        <div className="text-center space-y-1">
-          <div className="flex items-center justify-center gap-2 mb-3">
-            <span className="text-churchy-300 text-2xl">✦</span>
-            <span className="font-playfair text-2xl font-bold text-churchy-700 tracking-wider">
-              Churchy
-            </span>
-            <span className="text-churchy-300 text-2xl">✦</span>
-          </div>
-          <h1 className="font-playfair text-2xl font-bold text-churchy-700">Connexion</h1>
-          <p className="text-sm text-muted-foreground">Accédez à votre espace Churchy</p>
-        </div>
-
-        {/* Card */}
-        <div className="bg-white border border-churchy-200 rounded-xl p-6 shadow-sm space-y-4">
-          <LoginForm />
-          <p className="text-center text-sm text-muted-foreground">
-            Pas encore de compte ?{' '}
-            <Link href="/register" className="text-churchy-500 hover:text-churchy-700 hover:underline font-medium">
-              S&apos;inscrire
-            </Link>
-          </p>
-        </div>
-      </div>
-    </main>
+    <AuthCard
+      title="Connexion"
+      subtitle="Accédez à votre espace Churchy"
+      footer={
+        <>
+          Pas encore de compte ? <AuthLink href="/register">S&apos;inscrire</AuthLink>
+        </>
+      }
+    >
+      {searchParams.expired && (
+        <Alert variant="warning">
+          <Clock size={16} />
+          <AlertDescription>
+            Votre session a expiré. Reconnectez-vous pour continuer.
+          </AlertDescription>
+        </Alert>
+      )}
+      {searchParams.reset && (
+        <Alert variant="success">
+          <CheckCircle2 size={16} />
+          <AlertDescription>
+            Mot de passe modifié. Vous pouvez maintenant vous connecter.
+          </AlertDescription>
+        </Alert>
+      )}
+      <LoginForm next={safeNextPath(searchParams.next)} />
+    </AuthCard>
   );
 }

@@ -1,10 +1,23 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
+import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
+import { env } from './config/env';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
 /** Configuration HTTP partagée entre main.ts et les tests fonctionnels. */
 export function configureApp(app: INestApplication) {
   app.setGlobalPrefix('api');
-  app.enableCors({ origin: process.env.FRONTEND_URL ?? '*' });
+  app.use(
+    helmet({
+      // L'API ne sert que du JSON (et l'UI Swagger, qui a besoin de scripts inline).
+      contentSecurityPolicy: false,
+      // Le site web (autre origine) lit les réponses de l'API via CORS.
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+    }),
+  );
+  app.use(cookieParser());
+  // Les cookies de session exigent une origine explicite : jamais '*' avec credentials.
+  app.enableCors({ origin: env.FRONTEND_URL, credentials: true });
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   app.useGlobalFilters(new HttpExceptionFilter());
 }

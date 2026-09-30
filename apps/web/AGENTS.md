@@ -16,8 +16,9 @@ npm run dev
 
 ```bash
 npx shadcn@latest init
-npx shadcn@latest add button input label form select textarea toast dialog card
+npx shadcn@latest add button input label form select textarea toast dialog card dropdown-menu alert
 ```
+(les composants sont déjà générés dans `src/components/ui`.)
 
 ## Standard UI OBLIGATOIRE — shadcn + RHF + Zod
 
@@ -61,20 +62,40 @@ const form = useForm<MyDto>({
 ```
 src/
 ├── app/              # Pages Next.js App Router
-│   ├── (auth)/       # Login, Register (layout sans sidebar)
-│   ├── dashboard/    # Dashboard admin/préparateur
+│   ├── (auth)/       # login, register, forgot-password, reset-password, verify-email
+│   ├── dashboard/    # Dashboard admin/préparateur (protégé : middleware + AuthGuard)
 │   └── p/[slug]/     # Pages publiques paroisse
+├── middleware.ts     # redirige les pages privées sans session, et /login & co. si session
 ├── components/
-│   ├── ui/           # Composants shadcn (NE PAS MODIFIER)
-│   ├── auth/         # LoginForm, RegisterForm
+│   ├── ui/           # Composants shadcn + PasswordInput, ErrorNotice (alert : variantes success/warning)
+│   ├── auth/         # AuthProvider, AuthGuard, AuthCard, formulaires, EmailVerificationBanner, VerifyEmail
 │   ├── parish/       # ParishCard, CreateParishForm
 │   ├── content/      # CreateContentForm, ContentCard
 │   ├── celebration/  # CelebrationCard, CreateCelebrationForm
-│   └── layout/       # Sidebar, Header
-├── lib/api/          # Clients API typés (auth, parishes, contents, celebrations)
-├── lib/auth/         # session.ts (localStorage token)
-└── hooks/            # useAuth, useParish
+│   └── layout/       # Sidebar, Header (menu utilisateur), SiteHeader + HeroActions (landing)
+├── lib/api/          # Clients API typés ; client.ts gère cookies + refresh silencieux
+├── lib/auth/         # session.ts : indicateur de session (cookie lisible) + safeNextPath
+└── hooks/            # useAuth (contexte AuthProvider), useParish
 ```
+
+## Authentification côté web
+
+Aucun jeton n'est manipulé par le JavaScript : ils sont dans des cookies httpOnly posés par l'API
+(voir « Authentification » dans le `CLAUDE.md` racine). Le site ne voit que `churchy_session=1`.
+
+- `AuthProvider` (dans `app/layout.tsx`) expose `useAuth()` : `user`, `initializing`, `loading`,
+  `sessionExpired`, `loggedOut`, `login`, `register`, `logout`, `refreshUser`. Il n'appelle `/auth/me` que si
+  le cookie `churchy_session` existe.
+- `lib/api/client.ts` : `credentials: 'include'` ; sur 401, **un seul** `POST /auth/refresh` partagé puis la
+  requête est rejouée une fois ; en cas d'échec, l'événement `churchy:session-expired` est émis. Les erreurs
+  sont des `ApiError` (message lisible + `status`).
+- `middleware.ts` ne valide pas la session (l'API le fait) : il évite d'afficher le privé sans session.
+  `/login?expired=1` n'est jamais redirigé (évite une boucle avec un cookie périmé).
+- Redirection après connexion : `?next=` **toujours** passé par `safeNextPath` (jamais d'URL externe).
+  Une déconnexion volontaire retourne à `/login` sans `next`.
+- Tout écran qui charge des données doit gérer l'erreur (`ErrorNotice`) : pas de `.then()` sans `.catch()`.
+- Champs mot de passe : `PasswordInput` (bouton afficher/masquer). Les `Input` invalides prennent une
+  bordure rouge via `aria-invalid` (posé par `FormControl`).
 
 ## Ajouter un composant shadcn
 
@@ -90,7 +111,7 @@ Après modification : `npm run build -w @churchy/shared`.
 ## Routes principales
 
 - `/` — Landing page publique
-- `/login` `/register` — Auth
+- `/login` `/register` `/forgot-password` `/reset-password?token=` `/verify-email?token=` — Auth
 - `/dashboard` — Dashboard (requiert auth)
 - `/dashboard/parishes` — Liste paroisses
 - `/dashboard/parishes/[id]` — Détail paroisse

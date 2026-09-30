@@ -17,7 +17,10 @@ export class CelebrationsService {
       where: { id: dto.templateId },
       include: { steps: { orderBy: { order: 'asc' } } },
     });
-    if (!template) throw new NotFoundException('Modèle introuvable');
+    // Un modèle d'une autre paroisse ne doit pas être utilisable.
+    if (!template || template.parishId !== parishId) {
+      throw new NotFoundException('Modèle introuvable');
+    }
 
     return this.prisma.celebration.create({
       data: {
@@ -62,7 +65,21 @@ export class CelebrationsService {
     return celebration;
   }
 
-  async updateStep(stepId: string, dto: UpdateCelebrationStepDto) {
+  async updateStep(celebrationId: string, stepId: string, dto: UpdateCelebrationStepDto) {
+    const step = await this.prisma.celebrationStep.findUnique({
+      where: { id: stepId },
+      include: { celebration: { select: { parishId: true } } },
+    });
+    // L'étape doit appartenir à la célébration de l'URL (celle dont on a contrôlé l'accès).
+    if (!step || step.celebrationId !== celebrationId) {
+      throw new NotFoundException('Étape introuvable');
+    }
+    if (dto.contentId) {
+      const content = await this.prisma.content.findUnique({ where: { id: dto.contentId } });
+      if (!content || content.parishId !== step.celebration.parishId) {
+        throw new BadRequestException('Contenu introuvable');
+      }
+    }
     return this.prisma.celebrationStep.update({
       where: { id: stepId },
       data: dto,
