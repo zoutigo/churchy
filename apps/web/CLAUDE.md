@@ -9,7 +9,7 @@ cp .env.local.example .env.local
 npm install
 # Installer les composants shadcn nécessaires (voir ci-dessous)
 npm run dev
-# Web sur http://localhost:3000
+# Web sur http://localhost:3200
 ```
 
 ## Installer les composants shadcn

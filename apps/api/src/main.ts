@@ -22,7 +22,7 @@ async function bootstrap() {
 
   SwaggerModule.setup('api/docs', app, SwaggerModule.createDocument(app, config));
 
-  const port = process.env.PORT ?? 3001;
+  const port = process.env.PORT ?? 3201;
   await app.listen(port);
   console.log(`Churchy API running on http://localhost:${port}/api`);
   console.log(`Swagger: http://localhost:${port}/api/docs`);

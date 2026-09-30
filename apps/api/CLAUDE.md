@@ -10,8 +10,8 @@ cp .env.example .env
 npm install
 npm run prisma:migrate
 npm run start:dev
-# API sur http://localhost:3001/api
-# Swagger sur http://localhost:3001/api/docs
+# API sur http://localhost:3201/api
+# Swagger sur http://localhost:3201/api/docs
 ```
 
 ## Structure des modules
@@ -69,5 +69,5 @@ Après modification de `packages/shared` : `npm run build -w @churchy/shared` (o
 - `DATABASE_URL` — PostgreSQL connection string
 - `JWT_SECRET` — Secret JWT (changer en prod !)
 - `JWT_EXPIRES_IN` — Durée token (défaut: 7d)
-- `PORT` — Port (défaut: 3001)
+- `PORT` — Port (défaut: 3201)
 - `FRONTEND_URL` — URL du frontend pour CORS
