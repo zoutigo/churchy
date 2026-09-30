@@ -13,3 +13,8 @@ archive/
 
 # Réglages locaux Claude Code
 .claude/settings.local.json
+
+# Playwright / e2e
+.next-e2e/
+playwright-report/
+test-results/

@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Param, Body, UseGuards, Query } from '@nestjs/common';
+import { Controller, Post, Get, Param, Body, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ParishesService } from './parishes.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -14,10 +14,7 @@ export class ParishesController {
   @Post()
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  create(
-    @Body(new ZodValidationPipe(createParishSchema)) dto: any,
-    @CurrentUser() user: any,
-  ) {
+  create(@Body(new ZodValidationPipe(createParishSchema)) dto: any, @CurrentUser() user: any) {
     return this.parishesService.create(dto, user.id);
   }
 

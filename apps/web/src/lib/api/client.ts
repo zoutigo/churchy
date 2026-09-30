@@ -5,6 +5,26 @@ function getToken(): string | null {
   return localStorage.getItem('churchy_token');
 }
 
+/**
+ * L'API renvoie { statusCode, message } où `message` est soit une chaîne, soit l'objet de
+ * l'exception Nest ({ message, error, statusCode }), soit l'erreur Zod ({ fieldErrors }).
+ */
+function extractMessage(body: { message?: unknown }): string {
+  const m = body?.message;
+  if (typeof m === 'string') return m;
+  if (m && typeof m === 'object') {
+    const { message, fieldErrors } = m as {
+      message?: string | string[];
+      fieldErrors?: Record<string, string[]>;
+    };
+    if (Array.isArray(message)) return message.join(', ');
+    if (typeof message === 'string') return message;
+    const first = fieldErrors && Object.values(fieldErrors).flat()[0];
+    if (first) return first;
+  }
+  return 'Erreur inconnue';
+}
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const token = getToken();
   const res = await fetch(`${API_URL}${path}`, {
@@ -18,7 +38,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 
   if (!res.ok) {
     const error = await res.json().catch(() => ({ message: 'Erreur réseau' }));
-    throw new Error(error.message ?? 'Erreur inconnue');
+    throw new Error(extractMessage(error));
   }
 
   return res.json() as T;

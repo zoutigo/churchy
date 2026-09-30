@@ -31,7 +31,7 @@ export default function NewCelebrationPage({ params }: Props) {
 
   async function onSubmit(data: CreateCelebrationDto) {
     try {
-      const celebration = await celebrationsApi.create(parishId, data);
+      await celebrationsApi.create(parishId, data);
       router.push(`/dashboard/parishes/${parishId}/celebrations`);
     } catch (err: unknown) {
       form.setError('root', {
@@ -93,7 +93,9 @@ export default function NewCelebrationPage({ params }: Props) {
               name="location"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Lieu <span className="text-muted-foreground text-xs">(optionnel)</span></FormLabel>
+                  <FormLabel>
+                    Lieu <span className="text-muted-foreground text-xs">(optionnel)</span>
+                  </FormLabel>
                   <FormControl>
                     <Input placeholder="Église Saint-Pierre" {...field} />
                   </FormControl>

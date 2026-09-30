@@ -10,4 +10,4 @@ export interface User {
   updatedAt: Date;
 }
 
-export interface UserPublic extends Omit<User, 'role'> {}
+export type UserPublic = Omit<User, 'role'>;
