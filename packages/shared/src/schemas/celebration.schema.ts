@@ -17,14 +17,14 @@ export const createTemplateStepSchema = z.object({
 });
 
 export const createCelebrationSchema = z.object({
-  templateId: z.string().uuid(),
+  templateId: z.string().min(1, 'Modèle requis'),
   title: z.string().min(1, 'Titre requis'),
   date: z.string().datetime(),
   location: z.string().optional(),
 });
 
 export const updateCelebrationStepSchema = z.object({
-  contentId: z.string().uuid().optional(),
+  contentId: z.string().min(1).optional(),
   customText: z.string().optional(),
 });
 
