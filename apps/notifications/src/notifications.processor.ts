@@ -8,8 +8,7 @@ import {
 } from '@churchy/contracts';
 
 /**
- * Consommateur de la file `notifications`. Il vit dans l'API pour l'instant ;
- * il pourra être déplacé tel quel dans un service dédié (apps/notifications).
+ * Consommateur de la file `notifications` (microservice autonome, sans HTTP).
  */
 @Processor(QUEUES.NOTIFICATIONS)
 export class NotificationsProcessor extends WorkerHost {
