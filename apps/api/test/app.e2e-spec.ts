@@ -70,8 +70,8 @@ describe('API — parcours principaux (vraie base churchy_test)', () => {
         expect.objectContaining({ id: created.body.id, role: 'PARISH_ADMIN' }),
       ]);
 
-      const publicList = await http().get('/api/public/parishes').expect(200);
-      expect(publicList.body.map((p: { slug: string }) => p.slug)).toContain('saint-pierre');
+      const publicList = await http().get('/api/public/parishes?q=saint%20pierre').expect(200);
+      expect(publicList.body.items.map((p: { id: string }) => p.id)).toContain(created.body.id);
     });
   });
 
@@ -79,6 +79,8 @@ describe('API — parcours principaux (vraie base churchy_test)', () => {
     let agent: ReturnType<typeof newAgent>;
     let parishId: string;
     let celebrationId: string;
+    // Date relative : le test ne doit pas dépendre du jour où il est lancé.
+    const inTwoDays = new Date(Date.now() + 2 * 24 * 3600 * 1000).toISOString();
 
     beforeAll(async () => {
       agent = await registerAgent(app, 'celebrant@test.fr');
@@ -95,14 +97,14 @@ describe('API — parcours principaux (vraie base churchy_test)', () => {
         .send({
           templateId: tpl.body.id,
           title: 'Messe du dimanche',
-          date: '2026-10-04T09:00:00.000Z',
+          date: inTwoDays,
         })
         .expect(201);
       celebrationId = celebration.body.id;
     });
 
     it('reste invisible publiquement tant qu’elle est en brouillon', async () => {
-      const res = await http().get('/api/public/parishes/notre-dame/celebrations').expect(200);
+      const res = await http().get(`/api/public/parishes/${parishId}/celebrations`).expect(200);
       expect(res.body).toEqual([]);
       await http().get(`/api/public/celebrations/${celebrationId}`).expect(404);
     });
@@ -110,7 +112,7 @@ describe('API — parcours principaux (vraie base churchy_test)', () => {
     it('se publie, devient publique et enfile un job de notification', async () => {
       await agent.post(`/api/celebrations/${celebrationId}/publish`).expect(201);
 
-      const pub = await http().get('/api/public/parishes/notre-dame/celebrations').expect(200);
+      const pub = await http().get(`/api/public/parishes/${parishId}/celebrations`).expect(200);
       expect(pub.body.map((c: { id: string }) => c.id)).toEqual([celebrationId]);
       await http().get(`/api/public/celebrations/${celebrationId}`).expect(200);
 

@@ -26,6 +26,19 @@ describe('Limitation du nombre de tentatives', () => {
     expect(blocked.headers['retry-after']).toBeDefined();
   });
 
+  it('limite aussi le formulaire de contact public (anti-spam)', async () => {
+    const send = () =>
+      request(app.getHttpServer()).post('/api/contact').send({
+        name: 'Marie',
+        email: 'marie@exemple.fr',
+        topic: 'QUESTION',
+        message: 'Un message assez long.',
+        website: 'robot',
+      });
+    for (let i = 0; i < 3; i++) await send().expect(202);
+    await send().expect(429);
+  });
+
   it('ne limite pas les routes ordinaires au même seuil', async () => {
     for (let i = 0; i < 6; i++) {
       await request(app.getHttpServer()).get('/api/health').expect(200);

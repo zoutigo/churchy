@@ -14,15 +14,14 @@ const STATUS_LABELS: Record<CelebrationStatus, string> = {
   [CelebrationStatus.ARCHIVED]: 'Archivée',
 };
 
-/** Soit la vue d'administration (`parishId`), soit la vue publique (`publicSlug`). */
-type Props = { celebration: Celebration } & ({ parishId: string } | { publicSlug: string });
+/** Vue d'administration. La vue publique est `CelebrationItem` (components/public). */
+interface Props {
+  celebration: Celebration;
+  parishId: string;
+}
 
-export function CelebrationCard(props: Props) {
-  const { celebration } = props;
-  const href =
-    'parishId' in props
-      ? `/dashboard/parishes/${props.parishId}/celebrations/${celebration.id}`
-      : `/p/${props.publicSlug}/celebrations/${celebration.id}`;
+export function CelebrationCard({ celebration, parishId }: Props) {
+  const href = `/dashboard/parishes/${parishId}/celebrations/${celebration.id}`;
 
   const date = new Date(celebration.date).toLocaleDateString('fr-FR', {
     weekday: 'long',
@@ -46,11 +45,18 @@ export function CelebrationCard(props: Props) {
               <p className="text-xs text-muted-foreground">{celebration.location}</p>
             )}
           </div>
-          <span
-            className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${STATUS_STYLES[celebration.status as CelebrationStatus]}`}
-          >
-            {STATUS_LABELS[celebration.status as CelebrationStatus]}
-          </span>
+          <div className="flex flex-col items-end gap-1 shrink-0">
+            <span
+              className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_STYLES[celebration.status as CelebrationStatus]}`}
+            >
+              {STATUS_LABELS[celebration.status as CelebrationStatus]}
+            </span>
+            {celebration.announced && celebration.status === CelebrationStatus.DRAFT && (
+              <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-amber-400/20 text-amber-600">
+                Annoncée au public
+              </span>
+            )}
+          </div>
         </div>
       </div>
     </Link>

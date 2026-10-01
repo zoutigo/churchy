@@ -57,3 +57,98 @@ export async function logoutViaUi(page: Page) {
   await page.getByRole('menuitem', { name: /Se déconnecter/ }).click();
   await expect(page).toHaveURL(/\/login$/);
 }
+
+export const VIEWPORTS = {
+  mobile: { width: 390, height: 844 },
+  tablet: { width: 820, height: 1180 },
+  desktop: { width: 1366, height: 800 },
+} as const;
+
+const API_URL = 'http://localhost:3211/api';
+const inDays = (days: number) => new Date(Date.now() + days * 24 * 3600 * 1000).toISOString();
+
+export interface SeededParish {
+  id: string;
+  /** Mot unique présent dans le nom : permet de retrouver CETTE paroisse par la recherche. */
+  token: string;
+  name: string;
+  publishedId: string;
+  announcedId: string;
+}
+
+/**
+ * Prépare une paroisse publique complète (identité, messe publiée, messe annoncée, brouillon caché,
+ * annonce, activité) via l'API, avec la session du navigateur (l'utilisateur doit être connecté).
+ */
+export async function seedParish(page: Page): Promise<SeededParish> {
+  const token = `Zq${Date.now()}${Math.floor(Math.random() * 1000)}`;
+  const name = `Saint ${token}`;
+  const post = async (path: string, data: object) => {
+    const res = await page.request.post(`${API_URL}${path}`, { data });
+    expect(res.ok(), `${path} → ${res.status()}`).toBe(true);
+    return res.json();
+  };
+
+  const parish = await post('/parishes', {
+    name,
+    city: 'Lyon',
+    country: 'France',
+    district: 'Croix-Rousse',
+    mainChurch: 'Église Saint-Pierre',
+    address: '1 place de l’Église',
+    phone: '04 00 00 00 00',
+    email: 'contact@paroisse-e2e.fr',
+    description: 'Une paroisse accueillante.',
+  });
+  const template = await post(`/parishes/${parish.id}/templates`, {
+    name: 'Messe dominicale',
+    type: 'SUNDAY_MASS',
+  });
+  const celebrate = async (title: string, days: number, extra: object = {}) =>
+    (
+      await post(`/parishes/${parish.id}/celebrations`, {
+        templateId: template.id,
+        title,
+        date: inDays(days),
+        location: 'Église Saint-Pierre',
+        ...extra,
+      })
+    ).id as string;
+
+  await celebrate('Messe brouillon cachée', 2);
+  const announcedId = await celebrate('Messe annoncée', 3, { announced: true });
+  const publishedId = await celebrate('Messe publiée', 4);
+  await post(`/celebrations/${publishedId}/publish`, {});
+
+  await post(`/parishes/${parish.id}/announcements`, {
+    title: 'Changement d’horaire',
+    summary: 'La messe du dimanche est avancée',
+    body: 'Dès dimanche prochain, la messe commence à 9 h.',
+  });
+  await post(`/parishes/${parish.id}/activities`, {
+    title: 'Groupe de jeunes',
+    description: 'Rencontre mensuelle des jeunes.',
+    startsAt: inDays(10),
+    location: 'Salle paroissiale',
+  });
+  return { id: parish.id, token, name, publishedId, announcedId };
+}
+
+/** Dernier message de contact enfilé pour cette adresse (la file Redis tient lieu de boîte mail). */
+export async function latestContactJob(email: string) {
+  return withQueue(async (queue) => {
+    for (let attempt = 0; attempt < 30; attempt++) {
+      const jobs = await queue.getJobs(['waiting', 'delayed', 'active', 'completed', 'failed']);
+      const job = jobs
+        .filter((j) => j.name === 'contact.message-received' && j.data.email === email)
+        .sort((a, b) => b.timestamp - a.timestamp)[0];
+      if (job) return job.data as Record<string, string>;
+      await new Promise((r) => setTimeout(r, 200));
+    }
+    return null;
+  });
+}
+
+/** Vrai si la page déborde horizontalement (le défilement horizontal est un défaut sur mobile). */
+export const hasHorizontalOverflow = (page: Page) =>
+  page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);

@@ -6,8 +6,9 @@ import {
   QUEUES,
   authLinkEmailPayloadSchema,
   celebrationPublishedPayloadSchema,
+  contactMessagePayloadSchema,
 } from '@churchy/contracts';
-import { emailVerificationEmail, passwordResetEmail } from './email-templates';
+import { contactMessageEmail, emailVerificationEmail, passwordResetEmail } from './email-templates';
 import { MailService } from './mail.service';
 
 /**
@@ -40,6 +41,14 @@ export class NotificationsProcessor extends WorkerHost {
       case NotificationJob.PASSWORD_RESET_REQUESTED: {
         const payload = authLinkEmailPayloadSchema.parse(job.data);
         await this.mail.send(payload.email, passwordResetEmail(payload));
+        return;
+      }
+      case NotificationJob.CONTACT_MESSAGE_RECEIVED: {
+        const payload = contactMessagePayloadSchema.parse(job.data);
+        await this.mail.send(
+          process.env.CONTACT_EMAIL ?? 'contact@churchy.local',
+          contactMessageEmail(payload),
+        );
         return;
       }
       default:

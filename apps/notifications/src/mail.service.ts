@@ -27,6 +27,7 @@ export class MailService {
     await this.transport.sendMail({
       from: this.from,
       to,
+      replyTo: content.replyTo,
       subject: content.subject,
       text: content.text,
       html: content.html,

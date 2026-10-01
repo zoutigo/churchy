@@ -30,6 +30,8 @@ export interface Celebration {
   date: Date;
   location?: string;
   status: CelebrationStatus;
+  /** Visible du public avant la publication de la feuille. */
+  announced?: boolean;
   createdById: string;
   publishedAt?: Date;
   createdAt: Date;

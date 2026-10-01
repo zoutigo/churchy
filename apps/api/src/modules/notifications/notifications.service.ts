@@ -4,6 +4,7 @@ import { Queue } from 'bullmq';
 import {
   AuthLinkEmailPayload,
   CelebrationPublishedPayload,
+  ContactMessagePayload,
   NotificationJob,
   QUEUES,
 } from '@churchy/contracts';
@@ -40,5 +41,13 @@ export class NotificationsService {
       payload,
       NotificationsService.AUTH_EMAIL_JOB_OPTIONS,
     );
+  }
+
+  /** Message d'un visiteur anonyme : données personnelles, donc conservées le moins longtemps possible. */
+  contactMessageReceived(payload: ContactMessagePayload) {
+    return this.queue.add(NotificationJob.CONTACT_MESSAGE_RECEIVED, payload, {
+      removeOnComplete: true,
+      removeOnFail: { age: 86400 },
+    });
   }
 }

@@ -6,8 +6,10 @@ import { CurrentUser, type AuthUser } from '../../common/decorators/current-user
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
 import {
   createCelebrationSchema,
+  setCelebrationAnnouncedSchema,
   updateCelebrationStepSchema,
   type CreateCelebrationDto,
+  type SetCelebrationAnnouncedDto,
   type UpdateCelebrationStepDto,
 } from '@churchy/shared';
 import { ParishRolesGuard } from '../../common/guards/parish-roles.guard';
@@ -50,6 +52,15 @@ export class CelebrationsController {
     @Body(new ZodValidationPipe(updateCelebrationStepSchema)) dto: UpdateCelebrationStepDto,
   ) {
     return this.service.updateStep(id, stepId, dto);
+  }
+
+  @Patch('celebrations/:id/announced')
+  @ParishAccess(EDITORS, 'celebration')
+  setAnnounced(
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(setCelebrationAnnouncedSchema)) dto: SetCelebrationAnnouncedDto,
+  ) {
+    return this.service.setAnnounced(id, dto);
   }
 
   @Post('celebrations/:id/publish')

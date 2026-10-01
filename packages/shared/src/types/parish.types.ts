@@ -4,9 +4,16 @@ export interface Parish {
   id: string;
   name: string;
   slug: string;
-  description?: string;
+  description?: string | null;
   city: string;
   country: string;
+  district?: string | null;
+  address?: string | null;
+  mainChurch?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  website?: string | null;
+  imageUrl?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }

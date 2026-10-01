@@ -64,15 +64,17 @@ src/
 ├── app/              # Pages Next.js App Router
 │   ├── (auth)/       # login, register, forgot-password, reset-password, verify-email
 │   ├── dashboard/    # Dashboard admin/préparateur (protégé : middleware + AuthGuard)
-│   └── p/[slug]/     # Pages publiques paroisse
+│   └── (public)/     # Site public : landing, /paroisses (+ [parishId]/messes|annonces|activites), contact, légal
 ├── middleware.ts     # redirige les pages privées sans session, et /login & co. si session
 ├── components/
 │   ├── ui/           # Composants shadcn + PasswordInput, ErrorNotice (alert : variantes success/warning)
 │   ├── auth/         # AuthProvider, AuthGuard, AuthCard, formulaires, EmailVerificationBanner, VerifyEmail
-│   ├── parish/       # ParishCard, CreateParishForm
+│   ├── public/       # PublicHeader/Footer, ParishSearchForm (GET), CelebrationItem, SheetCard, ContactForm…
+│   ├── news/         # Formulaires annonces/activités du tableau de bord, DeleteButton (suppression en 2 temps)
+│   ├── parish/       # ParishCard, CreateParishForm, ParishInfoForm
 │   ├── content/      # CreateContentForm, ContentCard
 │   ├── celebration/  # CelebrationCard, CreateCelebrationForm
-│   └── layout/       # Sidebar, Header (menu utilisateur), SiteHeader + HeroActions (landing)
+│   └── layout/       # Sidebar (≥ md), MobileNav (< md), Header (menu utilisateur)
 ├── lib/api/          # Clients API typés ; client.ts gère cookies + refresh silencieux
 ├── lib/auth/         # session.ts : indicateur de session (cookie lisible) + safeNextPath
 └── hooks/            # useAuth (contexte AuthProvider), useParish
@@ -110,7 +112,7 @@ Après modification : `npm run build -w @churchy/shared`.
 
 ## Routes principales
 
-- `/` — Landing page publique
+- `/` — Landing publique (recherche de paroisse) ; `/paroisses`, `/paroisses/[id]/…` — voir « Site public » du CLAUDE.md racine
 - `/login` `/register` `/forgot-password` `/reset-password?token=` `/verify-email?token=` — Auth
 - `/dashboard` — Dashboard (requiert auth)
 - `/dashboard/parishes` — Liste paroisses
@@ -122,3 +124,13 @@ Après modification : `npm run build -w @churchy/shared`.
 - `/p/[slug]/celebrations/[id]` — Célébration publique
 
 > Règles communes (tests obligatoires pour tout changement, précommit lint/format/typecheck/tests) : voir le `CLAUDE.md` à la racine du dépôt.
+
+## Site public — conventions
+- Pages serveur (`lib/api/public.api.ts`, `orNotFound` → 404 Next) ; `(public)/layout.tsx` est `force-dynamic`.
+- Responsive : mobile d'abord. En-tête = logo + menu repliable (< `md`) / liens en ligne (≥ `md`) ; fiche pratique de
+  la paroisse dans la page (mobile, tablette) / colonne latérale collante (≥ `lg`) ; sous-navigation de paroisse en
+  onglets défilants. Aucun défilement horizontal (testé en e2e sur 390, 820 et 1366 px).
+- La recherche est un `<form method="get" action="/paroisses">` : elle marche sans JavaScript.
+- Élément de marque : la « feuille » (`SheetCard`, classes `.sheet` / `.sheet-shadow`).
+- Les champs `datetime-local` donnent une heure locale sans fuseau : passer par `lib/datetime.ts`
+  (`localInputToIso`) avant d'appeler l'API.

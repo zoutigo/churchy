@@ -1,0 +1,43 @@
+import { MapPin } from 'lucide-react';
+import type { PublicActivity } from '@churchy/shared';
+import { formatDateParts, formatDateLong, formatTime } from '@/lib/format';
+
+export function ActivityItem({ activity: a }: { activity: PublicActivity }) {
+  const d = formatDateParts(a.startsAt);
+  return (
+    <article className="flex gap-4 overflow-hidden rounded-xl border border-churchy-100 bg-white p-4">
+      <div
+        className="flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-lg bg-amber-500 text-white"
+        aria-hidden
+      >
+        <span className="text-xs">{d.weekday}</span>
+        <span className="font-playfair text-2xl font-bold leading-none">{d.day}</span>
+        <span className="text-xs">{d.month}</span>
+      </div>
+      <div className="min-w-0 flex-1 space-y-1.5">
+        <h2 className="font-playfair text-lg font-semibold text-churchy-700">{a.title}</h2>
+        <p className="text-sm font-medium text-churchy-900">
+          <time dateTime={a.startsAt}>
+            {formatDateLong(a.startsAt)} à {formatTime(a.startsAt)}
+          </time>
+        </p>
+        {a.location && (
+          <p className="flex items-center gap-1 text-sm text-churchy-900/70">
+            <MapPin size={14} aria-hidden /> {a.location}
+          </p>
+        )}
+        <p className="whitespace-pre-wrap text-sm leading-relaxed text-churchy-900/85">
+          {a.description}
+        </p>
+        {a.imageUrl && (
+          <img
+            src={a.imageUrl}
+            alt=""
+            loading="lazy"
+            className="mt-2 h-40 w-full rounded-lg object-cover"
+          />
+        )}
+      </div>
+    </article>
+  );
+}

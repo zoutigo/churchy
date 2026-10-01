@@ -59,6 +59,9 @@ function refreshSession(): Promise<boolean> {
 
 async function request<T>(path: string, options?: RequestInit, canRetry = true): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
+    // Rendu serveur (pages publiques) : Next met les `fetch` en cache par défaut ; une annonce supprimée
+    // doit disparaître immédiatement, donc jamais de copie en cache.
+    ...(typeof window === 'undefined' ? { cache: 'no-store' as const } : {}),
     ...options,
     // Les jetons sont dans des cookies httpOnly : le navigateur les joint, le JavaScript ne les voit pas.
     credentials: 'include',

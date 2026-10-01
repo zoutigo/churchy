@@ -64,11 +64,33 @@ contenu d'une autre paroisse refusé). Toute nouvelle route qui touche une resso
 `churchy:session-expired` si c'est impossible. Pages : `/login`, `/register`, `/forgot-password`,
 `/reset-password?token=`, `/verify-email?token=`. Le `next` n'est jamais mémorisé après une déconnexion volontaire.
 
+## Site public (sans authentification)
+Pages servies par le web (rendu serveur, `force-dynamic`, URL **par id** de paroisse, pas par slug) :
+`/` (landing : recherche en premier), `/paroisses?q=&page=` (résultats), `/paroisses/[id]` (mini-site : accueil,
+`/messes`, `/messes/[celebrationId]`, `/annonces`, `/activites`), `/pour-les-paroisses`, `/a-propos`, `/contact`,
+`/conditions-generales`, `/confidentialite`, `/mentions-legales` (textes légaux **provisoires** : à faire valider).
+L'API expose `GET /api/public/parishes` (recherche paginée : tous les mots dans nom/ville/quartier/église/adresse,
+insensible à la casse mais **pas aux accents**), `/public/parishes/:id` (+ `/celebrations`, `/announcements`,
+`/activities`), `/public/celebrations/:id` et `POST /api/contact` (limité comme l'auth, piège à robots `website`).
+Ces routes n'ont volontairement **pas** de `@ParishAccess` : elles ne renvoient que des vues publiques
+(`PublicService`, liste blanche de champs, types `Public*` de `@churchy/shared`), jamais les entités Prisma.
+- Une célébration est visible si elle est **publiée** (« feuille disponible ») ou **brouillon annoncé**
+  (`announced`, « feuille en préparation », sans déroulement). Brouillons non annoncés et archivées : 404.
+- « À venir » = depuis 3 h avant l'heure de début. Les dates sont formatées dans le fuseau du serveur web
+  (le fuseau d'une paroisse n'est pas modélisé).
+- Les paroisses sont toutes publiques pour l'instant (pas de drapeau de visibilité).
+- Gestion : `PATCH /parishes/:id` (identité publique, ADMINS), `announcements` et `activities` (`/parishes/:parishId/…`,
+  lecture ALL_MEMBERS, écriture/suppression EDITORS), `PATCH /celebrations/:id/announced`.
+- Les pages sont rendues par le serveur web : toutes les requêtes publiques partent de **la même IP**. En production,
+  transmettre l'IP du visiteur (`X-Forwarded-For` + `trust proxy`) pour que la limite `THROTTLE_LIMIT` ne
+  s'applique pas à l'ensemble des visiteurs.
+
 ## Files de jobs (BullMQ)
 Les noms de files et payloads sont dans `@churchy/contracts`. L'API est le **producteur** :
 `NotificationsService` enfile `celebration.published` (publication d'une célébration),
 `auth.email-verification-requested` et `auth.password-reset-requested` (liens à usage unique : jobs sans
-rétention une fois traités).
+rétention une fois traités) et `contact.message-received` (page Contact : le worker l'envoie à `CONTACT_EMAIL`,
+avec `Reply-To` = visiteur ; données personnelles, supprimées une fois traitées).
 Le **consommateur** est le microservice `apps/notifications` (NestJS sans HTTP, `NotificationsProcessor`) :
 il envoie les emails d'authentification via SMTP (`MailService`, nodemailer ; Mailpit en local). Pour
 `celebration.published` il ne fait encore que journaliser (prévenir les fidèles : à définir).
@@ -102,6 +124,19 @@ qui le consolident, dans le même commit :
 - correction de bug → un **test de non-régression** qui échoue avant le correctif et passe après ;
 - ne jamais supprimer ni affaiblir un test pour faire passer une modification : corriger le code ou
   discuter du comportement attendu.
+
+### 1 bis. UI : responsive mobile first, traité et testé
+Toute création ou modification d'interface (page, composant, formulaire, navigation) doit traiter **et tester**
+le responsive sur les trois vues : **mobile, tablette et desktop**. Logique **mobile first** : on conçoit
+d'abord la vue mobile, puis on adapte les vues tablette et desktop pour qu'elles soient chacune **ergonomiques
+dans leur contexte** (taille d'écran, pointeur tactile ou souris, zones de clic, lisibilité).
+- Les trois vues n'ont **pas** à se ressembler : la mise en page desktop peut être radicalement différente de
+  celle du mobile (navigation latérale vs barre basse, tableau vs cartes, panneaux côte à côte, etc.). Ne pas
+  simplement étirer ou réduire la vue mobile.
+- Utiliser le plugin/skill de design front (`frontend-design:frontend-design`) pour les choix de mise en page
+  et de design.
+- Vérifier visuellement les trois vues dans le navigateur (claude-in-chrome, redimensionnement de fenêtre) et
+  couvrir les parcours par des tests Playwright avec des viewports mobile, tablette et desktop (voir règle 1).
 
 ### 2. Précommit avant chaque commit
 Avant chaque commit, le précommit (hook Husky `.husky/pre-commit`, lancé automatiquement par `git commit`)

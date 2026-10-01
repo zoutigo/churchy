@@ -164,7 +164,7 @@ test.describe('navigation de la page d’accueil', () => {
   test('propose connexion et inscription aux visiteurs', async ({ page }) => {
     await page.goto('/');
     const nav = page.getByRole('navigation', { name: 'Navigation principale' });
-    await expect(nav.getByRole('link', { name: 'Se connecter' })).toBeVisible();
+    await expect(nav.getByRole('link', { name: 'Connexion' })).toBeVisible();
     await expect(nav.getByRole('link', { name: 'Créer un compte' })).toBeVisible();
   });
 
@@ -173,8 +173,8 @@ test.describe('navigation de la page d’accueil', () => {
     await page.goto('/');
     const nav = page.getByRole('navigation', { name: 'Navigation principale' });
     await expect(nav.getByRole('link', { name: 'Mon espace' })).toBeVisible();
-    await expect(nav.getByRole('link', { name: 'Se connecter' })).toHaveCount(0);
-    await expect(page.getByRole('link', { name: 'Accéder à mon espace' })).toBeVisible();
+    await expect(nav.getByRole('link', { name: 'Connexion' })).toHaveCount(0);
+    await expect(nav.getByRole('link', { name: 'Créer un compte' })).toHaveCount(0);
   });
 });
 

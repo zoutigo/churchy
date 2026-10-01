@@ -9,11 +9,14 @@ const navItems = [
   { href: '/dashboard/parishes', label: 'Paroisses', exact: false, icon: Church },
 ];
 
+/** Entrées de navigation du tableau de bord (partagées avec la barre mobile). */
+export const dashboardNav = navItems;
+
 export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-60 shrink-0 bg-churchy-700 h-full flex flex-col">
+    <aside className="hidden md:flex w-60 shrink-0 bg-churchy-700 h-full flex-col">
       {/* Logo */}
       <div className="p-5 border-b border-churchy-500/40">
         <Link href="/dashboard" className="flex items-center gap-2 group">

@@ -1,0 +1,48 @@
+import Link from 'next/link';
+import { MapPin } from 'lucide-react';
+import type { PublicCelebrationSummary } from '@churchy/shared';
+import { CELEBRATION_TYPE_LABELS, formatDateParts, formatTime } from '@/lib/format';
+import { SheetStatusBadge } from './SheetStatusBadge';
+
+interface Props {
+  celebration: PublicCelebrationSummary;
+  parishId: string;
+}
+
+/** Une messe dans une liste : bloc-date, intitulé, heure, lieu, état de la feuille. */
+export function CelebrationItem({ celebration: c, parishId }: Props) {
+  const d = formatDateParts(c.date);
+  return (
+    <Link
+      href={`/paroisses/${parishId}/messes/${c.id}`}
+      className="group flex gap-4 rounded-xl border border-churchy-100 bg-white p-4 transition-shadow hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-churchy-500"
+    >
+      <div
+        className="flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-lg bg-churchy-700 text-white"
+        aria-hidden
+      >
+        <span className="text-xs">{d.weekday}</span>
+        <span className="font-playfair text-2xl font-bold leading-none">{d.day}</span>
+        <span className="text-xs">{d.month}</span>
+      </div>
+      <div className="min-w-0 flex-1 space-y-1">
+        <h3 className="font-playfair text-lg font-semibold text-churchy-700 group-hover:text-churchy-500">
+          {c.title}
+        </h3>
+        <p className="text-sm text-churchy-900/80">
+          <time dateTime={c.date}>{formatTime(c.date)}</time>
+          {' — '}
+          {CELEBRATION_TYPE_LABELS[c.type]}
+        </p>
+        {c.location && (
+          <p className="flex items-center gap-1 text-sm text-churchy-900/70">
+            <MapPin size={14} aria-hidden /> {c.location}
+          </p>
+        )}
+        <div className="pt-1">
+          <SheetStatusBadge status={c.sheetStatus} />
+        </div>
+      </div>
+    </Link>
+  );
+}

@@ -1,33 +1,45 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { ParishesService } from '../parishes/parishes.service';
-import { CelebrationsService } from '../celebrations/celebrations.service';
+import { searchParishesSchema, type SearchParishesQuery } from '@churchy/shared';
+import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
+import { PublicService } from './public.service';
 
+/**
+ * Routes sans authentification (pages publiques) : aucun `@ParishAccess` ici, volontairement.
+ * Elles ne renvoient que des vues publiques (voir PublicService), jamais les entités Prisma.
+ */
 @ApiTags('public')
 @Controller('public')
 export class PublicController {
-  constructor(
-    private parishes: ParishesService,
-    private celebrations: CelebrationsService,
-  ) {}
+  constructor(private service: PublicService) {}
 
   @Get('parishes')
-  findAll(@Query('q') q?: string) {
-    return this.parishes.findAll(q);
+  search(@Query(new ZodValidationPipe(searchParishesSchema)) query: SearchParishesQuery) {
+    return this.service.searchParishes(query);
   }
 
-  @Get('parishes/:slug')
-  findBySlug(@Param('slug') slug: string) {
-    return this.parishes.findBySlug(slug);
+  @Get('parishes/:id')
+  getParish(@Param('id') id: string) {
+    return this.service.getParish(id);
   }
 
-  @Get('parishes/:slug/celebrations')
-  findCelebrations(@Param('slug') slug: string) {
-    return this.celebrations.findPublishedByParishSlug(slug);
+  @Get('parishes/:id/celebrations')
+  listCelebrations(@Param('id') id: string) {
+    return this.service.listCelebrations(id);
+  }
+
+  @Get('parishes/:id/announcements')
+  listAnnouncements(@Param('id') id: string) {
+    return this.service.listAnnouncements(id);
+  }
+
+  @Get('parishes/:id/activities')
+  listActivities(@Param('id') id: string) {
+    return this.service.listActivities(id);
   }
 
   @Get('celebrations/:id')
-  findOne(@Param('id') id: string) {
-    return this.celebrations.findPublishedById(id);
+  getCelebration(@Param('id') id: string) {
+    return this.service.getCelebration(id);
   }
 }

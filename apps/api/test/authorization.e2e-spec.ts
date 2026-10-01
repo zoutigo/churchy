@@ -25,6 +25,8 @@ describe('Autorisations par paroisse', () => {
     contentId: '',
     celebrationId: '',
     celebStepId: '',
+    announcementId: '',
+    activityId: '',
   };
   const b = {
     parishId: '',
@@ -33,6 +35,8 @@ describe('Autorisations par paroisse', () => {
     contentId: '',
     celebrationId: '',
     celebStepId: '',
+    announcementId: '',
+    activityId: '',
   };
 
   const makeParish = async (owner: Agent, name: string) =>
@@ -61,7 +65,21 @@ describe('Autorisations par paroisse', () => {
       .post(`/api/parishes/${parishId}/celebrations`)
       .send({ templateId: tpl.body.id, title: `Messe ${suffix}`, date: '2026-10-04T09:00:00.000Z' })
       .expect(201);
+    const announcement = await owner
+      .post(`/api/parishes/${parishId}/announcements`)
+      .send({ title: `Annonce ${suffix}`, body: 'Texte' })
+      .expect(201);
+    const activity = await owner
+      .post(`/api/parishes/${parishId}/activities`)
+      .send({
+        title: `Activité ${suffix}`,
+        description: 'Texte',
+        startsAt: '2027-01-10T18:00:00.000Z',
+      })
+      .expect(201);
     return {
+      announcementId: announcement.body.id as string,
+      activityId: activity.body.id as string,
       templateId: tpl.body.id as string,
       stepId: step.body.id as string,
       contentId: content.body.id as string,
@@ -144,6 +162,37 @@ describe('Autorisations par paroisse', () => {
           .patch(`/api/celebrations/${a.celebrationId}/steps/${a.celebStepId}`)
           .send({ customText: 'Texte libre' }),
     },
+    'GET  announcements': {
+      read: true,
+      call: (x) => x.get(`/api/parishes/${a.parishId}/announcements`),
+    },
+    'POST announcement': {
+      read: false,
+      call: (x) =>
+        x.post(`/api/parishes/${a.parishId}/announcements`).send({ title: 'N', body: 'Texte' }),
+    },
+    'GET  activities': {
+      read: true,
+      call: (x) => x.get(`/api/parishes/${a.parishId}/activities`),
+    },
+    'POST activity': {
+      read: false,
+      call: (x) =>
+        x.post(`/api/parishes/${a.parishId}/activities`).send({
+          title: 'A',
+          description: 'Texte',
+          startsAt: '2027-02-01T18:00:00.000Z',
+        }),
+    },
+    'PATCH celebration announced': {
+      read: false,
+      call: (x) =>
+        x.patch(`/api/celebrations/${a.celebrationId}/announced`).send({ announced: true }),
+    },
+    'PATCH parish (infos publiques)': {
+      read: false,
+      call: (x) => x.patch(`/api/parishes/${a.parishId}`).send({ address: '1 rue du Test' }),
+    },
     'GET  members': { read: false, call: (x) => x.get(`/api/parishes/${a.parishId}/members`) },
   });
 
@@ -152,6 +201,9 @@ describe('Autorisations par paroisse', () => {
     'POST publish': (x) => x.post(`/api/celebrations/${a.celebrationId}/publish`),
     'POST archive': (x) => x.post(`/api/celebrations/${a.celebrationId}/archive`),
     'PATCH content': (x) => x.patch(`/api/contents/${a.contentId}`).send({ title: 'Modifié' }),
+    'DELETE announcement': (x) =>
+      x.delete(`/api/parishes/${a.parishId}/announcements/${a.announcementId}`),
+    'DELETE activity': (x) => x.delete(`/api/parishes/${a.parishId}/activities/${a.activityId}`),
     'DELETE content': (x) => x.delete(`/api/contents/${a.contentId}`),
     'DELETE template step': (x) => x.delete(`/api/templates/steps/${a.stepId}`),
   });
@@ -190,6 +242,21 @@ describe('Autorisations par paroisse', () => {
     await preparer.delete(`/api/parishes/${a.parishId}/members/whoever`).expect(403);
   });
 
+  it('PREPARER : ne peut pas modifier l’identité publique de la paroisse (admin seulement)', async () => {
+    await preparer.patch(`/api/parishes/${a.parishId}`).send({ address: 'Piraté' }).expect(403);
+  });
+
+  it('PREPARER : publie annonces et activités', async () => {
+    await preparer
+      .post(`/api/parishes/${a.parishId}/announcements`)
+      .send({ title: 'Par le préparateur', body: 'Texte' })
+      .expect(201);
+    await preparer
+      .post(`/api/parishes/${a.parishId}/activities`)
+      .send({ title: 'Rencontre', description: 'Texte', startsAt: '2027-03-01T18:00:00.000Z' })
+      .expect(201);
+  });
+
   it('PREPARER : prépare et publie (contenus, modèles, célébrations)', async () => {
     await preparer
       .post(`/api/parishes/${a.parishId}/contents`)
@@ -225,6 +292,30 @@ describe('Autorisations par paroisse', () => {
         .send({ title: 'Piraté', key: 'x', order: 5 })
         .expect(403);
       await admin.delete(`/api/templates/steps/${b.stepId}`).expect(403);
+    });
+
+    it('ne peut ni lire, ni publier, ni supprimer les annonces et activités de la paroisse B', async () => {
+      await admin.get(`/api/parishes/${b.parishId}/announcements`).expect(403);
+      await admin
+        .post(`/api/parishes/${b.parishId}/announcements`)
+        .send({ title: 'Piraté', body: 'x' })
+        .expect(403);
+      await admin.get(`/api/parishes/${b.parishId}/activities`).expect(403);
+      await admin
+        .delete(`/api/parishes/${b.parishId}/announcements/${b.announcementId}`)
+        .expect(403);
+      await admin.patch(`/api/parishes/${b.parishId}`).send({ address: 'Piraté' }).expect(403);
+      await admin
+        .patch(`/api/celebrations/${b.celebrationId}/announced`)
+        .send({ announced: true })
+        .expect(403);
+    });
+
+    it('ne peut pas supprimer l’annonce ou l’activité de B en passant par l’URL de sa paroisse', async () => {
+      await admin
+        .delete(`/api/parishes/${a.parishId}/announcements/${b.announcementId}`)
+        .expect(404);
+      await admin.delete(`/api/parishes/${a.parishId}/activities/${b.activityId}`).expect(404);
     });
 
     it('ne peut pas créer une célébration à partir d’un modèle de l’autre paroisse', async () => {
@@ -270,6 +361,32 @@ describe('Autorisations par paroisse', () => {
         .expect(201);
       await admin.delete(`/api/templates/steps/${free.body.id}`).expect(200);
       await admin.delete(`/api/contents/${a.contentId}`).expect(200);
+    });
+
+    it('complète l’identité publique, annonce une célébration, supprime annonces et activités', async () => {
+      const updated = await admin
+        .patch(`/api/parishes/${a.parishId}`)
+        .send({ address: '1 rue du Test', phone: '' })
+        .expect(200);
+      expect(updated.body.address).toBe('1 rue du Test');
+      await admin
+        .patch(`/api/parishes/${a.parishId}`)
+        .send({ website: 'javascript:alert(1)' })
+        .expect(400);
+
+      const announced = await admin
+        .patch(`/api/celebrations/${a.celebrationId}/announced`)
+        .send({ announced: true })
+        .expect(200);
+      expect(announced.body.announced).toBe(true);
+
+      await admin
+        .delete(`/api/parishes/${a.parishId}/announcements/${a.announcementId}`)
+        .expect(200);
+      await admin.delete(`/api/parishes/${a.parishId}/activities/${a.activityId}`).expect(200);
+      await admin
+        .delete(`/api/parishes/${a.parishId}/announcements/${a.announcementId}`)
+        .expect(404);
     });
   });
 });

@@ -1,7 +1,11 @@
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
-import type { CreateCelebrationDto, UpdateCelebrationStepDto } from '@churchy/shared';
+import type {
+  CreateCelebrationDto,
+  SetCelebrationAnnouncedDto,
+  UpdateCelebrationStepDto,
+} from '@churchy/shared';
 
 @Injectable()
 export class CelebrationsService {
@@ -29,6 +33,7 @@ export class CelebrationsService {
         title: dto.title,
         date: new Date(dto.date),
         location: dto.location,
+        announced: dto.announced ?? false,
         createdById: userId,
         steps: {
           create: template.steps.map((step) => ({
@@ -110,33 +115,16 @@ export class CelebrationsService {
     return published;
   }
 
+  /** Rend la célébration visible du public (« feuille en préparation ») avant la publication de la feuille. */
+  async setAnnounced(id: string, dto: SetCelebrationAnnouncedDto) {
+    await this.findById(id);
+    return this.prisma.celebration.update({ where: { id }, data: { announced: dto.announced } });
+  }
+
   async archive(id: string) {
     return this.prisma.celebration.update({
       where: { id },
       data: { status: 'ARCHIVED' },
     });
-  }
-
-  async findPublishedByParishSlug(slug: string) {
-    const parish = await this.prisma.parish.findUnique({ where: { slug } });
-    if (!parish) throw new NotFoundException('Paroisse introuvable');
-    return this.prisma.celebration.findMany({
-      where: { parishId: parish.id, status: 'PUBLISHED' },
-      include: { template: { select: { name: true, type: true } } },
-      orderBy: { date: 'desc' },
-    });
-  }
-
-  async findPublishedById(id: string) {
-    const celebration = await this.prisma.celebration.findUnique({
-      where: { id, status: 'PUBLISHED' },
-      include: {
-        steps: { include: { content: true }, orderBy: { order: 'asc' } },
-        template: true,
-        parish: { select: { name: true, slug: true, city: true } },
-      },
-    });
-    if (!celebration) throw new NotFoundException('Célébration introuvable');
-    return celebration;
   }
 }

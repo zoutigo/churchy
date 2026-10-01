@@ -3,4 +3,5 @@ export type {
   CreateTemplateStepDto,
   CreateCelebrationDto,
   UpdateCelebrationStepDto,
+  SetCelebrationAnnouncedDto,
 } from '../schemas/celebration.schema';

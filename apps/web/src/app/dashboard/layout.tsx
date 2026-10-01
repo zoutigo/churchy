@@ -2,6 +2,7 @@ import { AuthGuard } from '@/components/auth/AuthGuard';
 import { EmailVerificationBanner } from '@/components/auth/EmailVerificationBanner';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
+import { MobileNav } from '@/components/layout/MobileNav';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -10,7 +11,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <Sidebar />
         <div className="flex flex-col flex-1 overflow-hidden">
           <Header />
-          <main className="flex-1 overflow-y-auto p-6 bg-muted/30">
+          <MobileNav />
+          <main className="flex-1 overflow-y-auto p-4 sm:p-6 bg-muted/30">
             <EmailVerificationBanner />
             {children}
           </main>

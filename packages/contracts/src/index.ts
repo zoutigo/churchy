@@ -10,6 +10,7 @@ export const NotificationJob = {
   CELEBRATION_PUBLISHED: 'celebration.published',
   EMAIL_VERIFICATION_REQUESTED: 'auth.email-verification-requested',
   PASSWORD_RESET_REQUESTED: 'auth.password-reset-requested',
+  CONTACT_MESSAGE_RECEIVED: 'contact.message-received',
 } as const;
 
 export const celebrationPublishedPayloadSchema = z.object({
@@ -32,3 +33,15 @@ export const authLinkEmailPayloadSchema = z.object({
 });
 
 export type AuthLinkEmailPayload = z.infer<typeof authLinkEmailPayloadSchema>;
+
+/** Message envoyé depuis la page Contact du site public : le worker le transmet à l'équipe Churchy. */
+export const contactMessagePayloadSchema = z.object({
+  name: z.string().min(1).max(100),
+  /** Adresse de l'expéditeur : sert de « répondre à » (jamais d'expéditeur du message). */
+  email: z.string().email(),
+  topic: z.enum(['QUESTION', 'PARISH', 'PROBLEM', 'OTHER']),
+  message: z.string().min(1).max(3000),
+  receivedAt: z.string().datetime(),
+});
+
+export type ContactMessagePayload = z.infer<typeof contactMessagePayloadSchema>;

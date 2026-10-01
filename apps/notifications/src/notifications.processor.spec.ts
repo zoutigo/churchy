@@ -89,6 +89,45 @@ describe('NotificationsProcessor', () => {
     });
   });
 
+  describe('contact.message-received', () => {
+    const message = {
+      name: 'Marie',
+      email: 'marie@exemple.fr',
+      topic: 'PARISH',
+      message: 'Nous voulons rejoindre Churchy',
+      receivedAt: '2026-10-01T10:00:00.000Z',
+    };
+
+    afterEach(() => delete process.env.CONTACT_EMAIL);
+
+    it('transmet le message à l’équipe, en répondant à l’expéditeur', async () => {
+      process.env.CONTACT_EMAIL = 'equipe@churchy.test';
+      await processor.process(job(NotificationJob.CONTACT_MESSAGE_RECEIVED, message));
+      expect(send).toHaveBeenCalledWith(
+        'equipe@churchy.test',
+        expect.objectContaining({
+          replyTo: 'marie@exemple.fr',
+          subject: expect.stringContaining('Paroisse'),
+          text: expect.stringContaining('Nous voulons rejoindre Churchy'),
+        }),
+      );
+    });
+
+    it('utilise l’adresse locale par défaut sans CONTACT_EMAIL', async () => {
+      await processor.process(job(NotificationJob.CONTACT_MESSAGE_RECEIVED, message));
+      expect(send).toHaveBeenCalledWith('contact@churchy.local', expect.anything());
+    });
+
+    it('rejette un payload invalide sans rien envoyer', async () => {
+      await expect(
+        processor.process(
+          job(NotificationJob.CONTACT_MESSAGE_RECEIVED, { ...message, email: 'nope' }),
+        ),
+      ).rejects.toThrow();
+      expect(send).not.toHaveBeenCalled();
+    });
+  });
+
   it('ignore un job inconnu sans échouer', async () => {
     await expect(processor.process(job('inconnu', {}))).resolves.toBeUndefined();
     expect(warn).toHaveBeenCalled();

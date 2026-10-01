@@ -1,9 +1,11 @@
-import type { AuthLinkEmailPayload } from '@churchy/contracts';
+import type { AuthLinkEmailPayload, ContactMessagePayload } from '@churchy/contracts';
 
 export interface EmailContent {
   subject: string;
   text: string;
   html: string;
+  /** Adresse à laquelle répondre (ex. l'expéditeur d'un message de contact). */
+  replyTo?: string;
 }
 
 /** Les prénoms viennent d'utilisateurs : toujours échapper avant de les mettre dans du HTML. */
@@ -64,5 +66,29 @@ export function passwordResetEmail(p: AuthLinkEmailPayload): EmailContent {
       p.url,
       expiry,
     ),
+  };
+}
+
+const CONTACT_TOPIC_LABELS: Record<ContactMessagePayload['topic'], string> = {
+  QUESTION: 'Question',
+  PARISH: 'Paroisse',
+  PROBLEM: 'Problème',
+  OTHER: 'Autre',
+};
+
+/** Message de la page Contact, à destination de l'équipe : tout le contenu vient d'un visiteur anonyme. */
+export function contactMessageEmail(p: ContactMessagePayload): EmailContent {
+  const topic = CONTACT_TOPIC_LABELS[p.topic];
+  // Un nom contenant un saut de ligne ne doit pas pouvoir injecter d'en-tête dans le sujet.
+  const safeName = p.name.replace(/[\r\n]+/g, ' ').trim();
+  return {
+    subject: `[Contact · ${topic}] ${safeName}`,
+    replyTo: p.email,
+    text: `Message reçu le ${formatExpiry(p.receivedAt)}\nDe : ${safeName} <${p.email}>\nSujet : ${topic}\n\n${p.message}`,
+    html: `<!doctype html><html lang="fr"><body style="font-family:Arial,sans-serif;color:#2b2112">
+  <p style="font-weight:bold;color:#2f6b47">✦ Churchy — nouveau message de contact</p>
+  <p><strong>De :</strong> ${escapeHtml(safeName)} &lt;${escapeHtml(p.email)}&gt;<br><strong>Sujet :</strong> ${topic}</p>
+  <p style="white-space:pre-wrap;line-height:1.5">${escapeHtml(p.message)}</p>
+</body></html>`,
   };
 }

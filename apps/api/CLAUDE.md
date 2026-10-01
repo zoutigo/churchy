@@ -24,12 +24,14 @@ src/
 │   ├── auth/        # register, login, refresh, logout, me, forgot/reset-password, verify-email, resend-verification
 │   ├── notifications/ # producteur BullMQ (emails, publication) — le consommateur est apps/notifications
 │   ├── users/       # GET /api/users/me
-│   ├── parishes/    # CRUD paroisses + recherche
+│   ├── parishes/    # création, identité publique (PATCH), mes paroisses
 │   ├── parish-members/ # Invitation et gestion des membres
 │   ├── contents/    # Bibliothèque de contenus liturgiques
 │   ├── celebration-templates/ # Modèles de célébration + étapes
 │   ├── celebrations/ # Célébrations + publication
-│   └── public/      # Routes publiques sans auth
+│   ├── announcements/ activities/ # annonces et activités (écriture EDITORS)
+│   ├── contact/     # POST /contact → file BullMQ
+│   └── public/      # Lecture publique sans auth (PublicService : vues publiques uniquement)
 └── health/          # GET /api/health
 ```
 

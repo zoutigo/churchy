@@ -29,6 +29,25 @@ describe('api client', () => {
       expect(init.headers.Authorization).toBeUndefined();
     });
 
+    it('non-régression : côté serveur (pages publiques), jamais de cache Next sur les requêtes', async () => {
+      fetchMock.mockResolvedValue(jsonResponse({}));
+      const win = globalThis.window;
+      // @ts-expect-error simule le rendu serveur (pas de window)
+      delete globalThis.window;
+      try {
+        await api.get('/public/parishes/p1/announcements');
+      } finally {
+        globalThis.window = win;
+      }
+      expect(fetchMock.mock.calls[0][1].cache).toBe('no-store');
+    });
+
+    it('côté navigateur, ne force pas de politique de cache', async () => {
+      fetchMock.mockResolvedValue(jsonResponse({}));
+      await api.get('/parishes/my');
+      expect(fetchMock.mock.calls[0][1].cache).toBeUndefined();
+    });
+
     it('sérialise le corps en JSON pour POST, sans corps si aucun n’est fourni', async () => {
       fetchMock.mockImplementation(async () => jsonResponse({}));
       await api.post('/auth/login', { email: 'a@b.fr' });

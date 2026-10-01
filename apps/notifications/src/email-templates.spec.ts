@@ -1,4 +1,9 @@
-import { emailVerificationEmail, escapeHtml, passwordResetEmail } from './email-templates';
+import {
+  contactMessageEmail,
+  emailVerificationEmail,
+  escapeHtml,
+  passwordResetEmail,
+} from './email-templates';
 
 const payload = {
   email: 'jean@paroisse.fr',
@@ -29,5 +34,38 @@ describe('email templates', () => {
     const mail = passwordResetEmail({ ...payload, firstName: '<img src=x onerror=alert(1)>' });
     expect(mail.html).not.toContain('<img src=x');
     expect(mail.html).toContain('&lt;img src=x onerror=alert(1)&gt;');
+  });
+});
+
+describe('contactMessageEmail', () => {
+  const message = {
+    name: 'Marie',
+    email: 'marie@exemple.fr',
+    topic: 'PROBLEM' as const,
+    message: 'Ça ne marche pas',
+    receivedAt: '2026-10-01T10:00:00.000Z',
+  };
+
+  it('répond à l’expéditeur et indique le sujet', () => {
+    const mail = contactMessageEmail(message);
+    expect(mail.replyTo).toBe('marie@exemple.fr');
+    expect(mail.subject).toContain('Problème');
+    expect(mail.text).toContain('Ça ne marche pas');
+  });
+
+  it('échappe le HTML venant du visiteur (nom, email, message)', () => {
+    const mail = contactMessageEmail({
+      ...message,
+      name: '<b>Marie</b>',
+      message: '<script>alert(1)</script>',
+    });
+    expect(mail.html).not.toContain('<script>');
+    expect(mail.html).not.toContain('<b>Marie</b>');
+    expect(mail.html).toContain('&lt;script&gt;');
+  });
+
+  it('empêche l’injection d’en-tête par un saut de ligne dans le nom', () => {
+    const mail = contactMessageEmail({ ...message, name: 'Marie\r\nBcc: x@y.z' });
+    expect(mail.subject).not.toMatch(/[\r\n]/);
   });
 });

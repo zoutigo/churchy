@@ -1,0 +1,325 @@
+import { expect, test, type Page } from '@playwright/test';
+import {
+  VIEWPORTS,
+  hasHorizontalOverflow,
+  latestContactJob,
+  registerViaUi,
+  seedParish,
+  uniqueEmail,
+  type SeededParish,
+} from './helpers';
+
+test.describe('site public', () => {
+  let parish: SeededParish;
+
+  // Une seule paroisse préparée pour tous les scénarios en lecture seule.
+  test.beforeAll(async ({ browser }) => {
+    const page = await browser.newPage();
+    await registerViaUi(page, uniqueEmail('public-seed'));
+    parish = await seedParish(page);
+    await page.close();
+  });
+
+  for (const [device, viewport] of Object.entries(VIEWPORTS)) {
+    test.describe(`${device} (${viewport.width}×${viewport.height})`, () => {
+      test.use({ viewport });
+
+      test('landing → recherche → résultats → paroisse → messes → messe', async ({ page }) => {
+        await page.goto('/');
+        await expect(
+          page.getByRole('heading', { level: 1, name: 'Votre paroisse, à portée de main' }),
+        ).toBeVisible();
+
+        // La recherche est le premier élément interactif et tient dans le premier écran.
+        const search = page.getByRole('searchbox').first();
+        await expect(search).toBeVisible();
+        const box = await search.boundingBox();
+        expect(box!.y + box!.height).toBeLessThan(viewport.height);
+        await expect(search).toHaveAttribute(
+          'placeholder',
+          'Rechercher une paroisse, une ville ou un quartier',
+        );
+
+        await search.fill(parish.token.toLowerCase());
+        await page.getByRole('button', { name: 'Rechercher' }).first().click();
+        await expect(page).toHaveURL(/\/paroisses\?q=/);
+
+        const card = page.getByRole('article').filter({ hasText: parish.name });
+        await expect(card).toBeVisible();
+        await expect(card).toContainText('Croix-Rousse, Lyon');
+        await expect(card).toContainText('Église Saint-Pierre');
+        // La prochaine messe visible est la messe annoncée (le brouillon est caché).
+        await expect(card).toContainText('Prochaine messe');
+        await expect(card).toContainText('Feuille en préparation');
+
+        await card.getByRole('link', { name: 'Voir la paroisse' }).click();
+        await expect(page).toHaveURL(`/paroisses/${parish.id}`);
+        await expect(page.getByRole('heading', { level: 1, name: parish.name })).toBeVisible();
+
+        await page
+          .getByRole('navigation', { name: 'Pages de la paroisse' })
+          .getByRole('link', { name: 'Messes' })
+          .click();
+        await expect(page).toHaveURL(`/paroisses/${parish.id}/messes`);
+        await expect(page.getByText('Messe brouillon cachée')).toHaveCount(0);
+        await expect(page.getByText('Feuille disponible')).toBeVisible();
+        await expect(page.getByText('Feuille en préparation')).toBeVisible();
+
+        await page.getByRole('link', { name: /Messe publiée/ }).click();
+        await expect(page).toHaveURL(`/paroisses/${parish.id}/messes/${parish.publishedId}`);
+        await expect(page.getByRole('heading', { name: 'Messe publiée' })).toBeVisible();
+        await expect(page.getByText('Feuille disponible')).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Déroulement' })).toBeVisible();
+      });
+
+      test('page de paroisse : identité, messes, annonces, activités, infos pratiques', async ({
+        page,
+      }) => {
+        await page.goto(`/paroisses/${parish.id}`);
+        await expect(page.getByText('Une paroisse accueillante.')).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Prochaines messes' })).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Changement d’horaire' })).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Groupe de jeunes' })).toBeVisible();
+
+        // Les infos pratiques s'affichent une seule fois : colonne de droite (desktop) ou dans la page
+        // (la copie masquée par CSS est ignorée par getByRole).
+        await expect(page.getByRole('heading', { name: 'Informations pratiques' })).toHaveCount(1);
+        await expect(page.getByRole('link', { name: '04 00 00 00 00' })).toHaveAttribute(
+          'href',
+          'tel:0400000000',
+        );
+      });
+
+      test('annonces et activités', async ({ page }) => {
+        await page.goto(`/paroisses/${parish.id}/annonces`);
+        await expect(page.getByText('La messe du dimanche est avancée')).toBeVisible();
+        await expect(page.getByText(/commence à 9 h/)).toBeVisible();
+
+        await page.goto(`/paroisses/${parish.id}/activites`);
+        await expect(page.getByRole('heading', { name: 'Groupe de jeunes' })).toBeVisible();
+        await expect(page.getByText('Salle paroissiale')).toBeVisible();
+      });
+
+      test('la messe annoncée est visible sans déroulement', async ({ page }) => {
+        await page.goto(`/paroisses/${parish.id}/messes/${parish.announcedId}`);
+        await expect(page.getByRole('heading', { name: 'Messe annoncée' })).toBeVisible();
+        await expect(page.getByText('Feuille en préparation')).toBeVisible();
+        await expect(page.getByText(/La paroisse prépare la feuille/)).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Déroulement' })).toHaveCount(0);
+      });
+
+      test('aucun débordement horizontal sur les pages publiques', async ({ page }) => {
+        const paths = [
+          '/',
+          '/paroisses',
+          `/paroisses/${parish.id}`,
+          `/paroisses/${parish.id}/messes`,
+          `/paroisses/${parish.id}/annonces`,
+          `/paroisses/${parish.id}/activites`,
+          `/paroisses/${parish.id}/messes/${parish.publishedId}`,
+          '/pour-les-paroisses',
+          '/a-propos',
+          '/contact',
+          '/mentions-legales',
+        ];
+        for (const path of paths) {
+          await page.goto(path);
+          expect(await hasHorizontalOverflow(page), `débordement sur ${path}`).toBe(false);
+        }
+      });
+
+      test('en-tête : liens en ligne dès la tablette, menu repliable sur mobile', async ({
+        page,
+      }) => {
+        await page.goto('/');
+        const header = page.locator('header');
+        const menuButton = header.getByRole('button', { name: 'Ouvrir le menu' });
+        if (viewport.width < 768) {
+          await expect(menuButton).toBeVisible();
+          await expect(header.getByRole('link', { name: 'Connexion' })).toBeHidden();
+          await menuButton.click();
+          await expect(header.getByRole('link', { name: 'Pour les paroisses' })).toBeVisible();
+          await expect(header.getByRole('link', { name: 'Connexion' })).toBeVisible();
+          await header.getByRole('link', { name: 'Connexion' }).click();
+          await expect(page).toHaveURL(/\/login$/);
+        } else {
+          await expect(menuButton).toBeHidden();
+          await expect(header.getByRole('link', { name: 'Pour les paroisses' })).toBeVisible();
+          await expect(header.getByRole('link', { name: 'Connexion' })).toBeVisible();
+          await expect(header.getByRole('link', { name: 'Créer un compte' })).toBeVisible();
+        }
+      });
+
+      test('mise en page adaptée : fiche pratique en colonne latérale uniquement sur desktop', async ({
+        page,
+      }) => {
+        await page.goto(`/paroisses/${parish.id}`);
+        const aside = page.locator('aside');
+        if (viewport.width >= 1024) await expect(aside).toBeVisible();
+        else await expect(aside).toBeHidden();
+      });
+    });
+  }
+
+  test('recherche : insensible à la casse, par ville, sans résultat et pagination d’URL', async ({
+    page,
+  }) => {
+    await page.goto(`/paroisses?q=${encodeURIComponent(parish.token.toUpperCase())}`);
+    await expect(page.getByRole('article').filter({ hasText: parish.name })).toBeVisible();
+
+    await page.goto(`/paroisses?q=${encodeURIComponent('croix-rousse lyon ' + parish.token)}`);
+    await expect(page.getByRole('article').filter({ hasText: parish.name })).toBeVisible();
+
+    await page.goto('/paroisses?q=aucune-paroisse-avec-ce-nom-xyz');
+    await expect(page.getByText('Aucune paroisse ne correspond à votre recherche')).toBeVisible();
+    await page.getByRole('link', { name: 'Voir toutes les paroisses' }).click();
+    await expect(page).toHaveURL(/\/paroisses$/);
+    await expect(page.getByRole('heading', { name: 'Toutes les paroisses' })).toBeVisible();
+
+    // Paramètres hors bornes : pas d'erreur serveur.
+    const res = await page.goto('/paroisses?page=-4&q=' + 'x'.repeat(300));
+    expect(res!.status()).toBe(200);
+  });
+
+  test('une paroisse ou une messe inconnue répond 404 avec un message clair', async ({ page }) => {
+    const res = await page.goto('/paroisses/paroisse-qui-nexiste-pas');
+    expect(res!.status()).toBe(404);
+    await expect(page.getByText('Paroisse introuvable.')).toBeVisible();
+
+    const res2 = await page.goto(`/paroisses/${parish.id}/messes/inconnue`);
+    expect(res2!.status()).toBe(404);
+
+    // Une messe existante ne s'ouvre pas sous l'URL d'une autre paroisse.
+    const res3 = await page.goto(`/paroisses/autre-paroisse/messes/${parish.publishedId}`);
+    expect(res3!.status()).toBe(404);
+  });
+
+  test('pages d’information : pour les paroisses, à propos, textes légaux, pied de page', async ({
+    page,
+  }) => {
+    await page.goto('/pour-les-paroisses');
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('depuis un seul espace');
+    await expect(
+      page.getByRole('link', { name: 'Créer le compte de ma paroisse' }),
+    ).toHaveAttribute('href', '/register');
+
+    await page.goto('/a-propos');
+    await expect(page.getByRole('heading', { name: 'À propos de Churchy' })).toBeVisible();
+
+    for (const [path, title] of [
+      ['/conditions-generales', 'Conditions générales d’utilisation'],
+      ['/confidentialite', 'Politique de confidentialité'],
+      ['/mentions-legales', 'Mentions légales'],
+    ]) {
+      await page.goto(path);
+      await expect(page.getByRole('heading', { level: 1, name: title })).toBeVisible();
+      await expect(page.getByRole('note')).toContainText('Version provisoire');
+    }
+
+    await page.goto('/');
+    const footer = page.locator('footer');
+    for (const label of [
+      'Trouver une paroisse',
+      'Pour les paroisses',
+      'Connexion',
+      'À propos',
+      'Contact',
+      'Conditions générales',
+      'Politique de confidentialité',
+      'Mentions légales',
+    ]) {
+      await expect(footer.getByRole('link', { name: label })).toBeVisible();
+    }
+  });
+
+  test('landing : sections attendues et second champ de recherche', async ({ page }) => {
+    await page.goto('/');
+    for (const t of ['Messes', 'Feuilles de célébration', 'Annonces', 'Activités']) {
+      await expect(page.getByRole('heading', { level: 3, name: t })).toBeVisible();
+    }
+    await expect(
+      page.getByRole('heading', {
+        name: 'Préparez votre messe avant même d’arriver à l’église.',
+      }),
+    ).toBeVisible();
+    await expect(page.getByLabel('Exemple de feuille de célébration').first()).toContainText(
+      'Feuille disponible',
+    );
+    await expect(
+      page.getByRole('heading', { name: 'Vous représentez une paroisse ?' }),
+    ).toBeVisible();
+    await page.getByRole('link', { name: 'Découvrir Churchy pour les paroisses' }).click();
+    await expect(page).toHaveURL(/\/pour-les-paroisses$/);
+
+    await page.goto('/');
+    const final = page.getByRole('heading', { name: 'Trouvez votre paroisse sur Churchy' });
+    await expect(final).toBeVisible();
+    await page.locator('#final-search').fill('Lyon');
+    await page.locator('#final-search').press('Enter');
+    await expect(page).toHaveURL(/\/paroisses\?q=Lyon$/);
+  });
+
+  test('la recherche fonctionne aussi sans JavaScript', async ({ browser }) => {
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    const page = await context.newPage();
+    await page.goto('/');
+    await page.getByRole('searchbox').first().fill(parish.token);
+    await page.getByRole('button', { name: 'Rechercher' }).first().click();
+    await expect(page.getByRole('article').filter({ hasText: parish.name })).toBeVisible();
+    await context.close();
+  });
+});
+
+test.describe('contact', () => {
+  async function fill(
+    page: Page,
+    email: string,
+    message = 'Bonjour, nous voulons utiliser Churchy.',
+  ) {
+    await page.getByLabel('Nom', { exact: true }).fill('Marie Dupont');
+    await page.getByLabel('Email').fill(email);
+    await page.getByLabel('Message').fill(message);
+  }
+
+  for (const [device, viewport] of Object.entries(VIEWPORTS)) {
+    test(`envoi d’un message (${device})`, async ({ page }) => {
+      await page.setViewportSize(viewport);
+      const email = uniqueEmail('contact');
+      await page.goto('/contact?sujet=PARISH');
+      await expect(page.getByRole('combobox')).toContainText('Je représente une paroisse');
+      await fill(page, email);
+      await page.getByRole('button', { name: 'Envoyer le message' }).click();
+      await expect(page.getByText('Message envoyé')).toBeVisible();
+
+      const job = await latestContactJob(email);
+      expect(job).toMatchObject({ name: 'Marie Dupont', topic: 'PARISH', email });
+      expect(await hasHorizontalOverflow(page)).toBe(false);
+    });
+  }
+
+  test('choisit un autre sujet, valide les champs et ignore les robots', async ({ page }) => {
+    await page.goto('/contact');
+    await page.getByRole('button', { name: 'Envoyer le message' }).click();
+    await expect(page.getByText('Nom requis')).toBeVisible();
+    await expect(page.getByText('Email invalide')).toBeVisible();
+    await expect(page.getByText('Message trop court (min 10 caractères)')).toBeVisible();
+
+    const email = uniqueEmail('contact-pb');
+    await page.getByRole('combobox').click();
+    await page.getByRole('option', { name: 'Signaler un problème' }).click();
+    await fill(page, email);
+    await page.getByRole('button', { name: 'Envoyer le message' }).click();
+    await expect(page.getByText('Message envoyé')).toBeVisible();
+    expect(await latestContactJob(email)).toMatchObject({ topic: 'PROBLEM' });
+
+    // Robot : il remplit le champ invisible → le message est accepté mais n'est pas transmis.
+    const botEmail = uniqueEmail('bot');
+    await page.goto('/contact');
+    await fill(page, botEmail);
+    await page.locator('#contact-website').fill('http://spam.example', { force: true });
+    await page.getByRole('button', { name: 'Envoyer le message' }).click();
+    await expect(page.getByText('Message envoyé')).toBeVisible();
+    // Aucun job n'est enfilé (la recherche dans la file dure quelques secondes avant d'abandonner).
+    expect(await latestContactJob(botEmail)).toBeNull();
+  });
+});

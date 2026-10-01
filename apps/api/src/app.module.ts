@@ -10,6 +10,9 @@ import { ParishMembersModule } from './modules/parish-members/parish-members.mod
 import { ContentsModule } from './modules/contents/contents.module';
 import { CelebrationTemplatesModule } from './modules/celebration-templates/celebration-templates.module';
 import { CelebrationsModule } from './modules/celebrations/celebrations.module';
+import { AnnouncementsModule } from './modules/announcements/announcements.module';
+import { ActivitiesModule } from './modules/activities/activities.module';
+import { ContactModule } from './modules/contact/contact.module';
 import { PublicModule } from './modules/public/public.module';
 import { HealthModule } from './health/health.module';
 
@@ -24,6 +27,9 @@ import { HealthModule } from './health/health.module';
     ContentsModule,
     CelebrationTemplatesModule,
     CelebrationsModule,
+    AnnouncementsModule,
+    ActivitiesModule,
+    ContactModule,
     PublicModule,
     HealthModule,
   ],

@@ -4,6 +4,7 @@ import {
   QUEUES,
   authLinkEmailPayloadSchema,
   celebrationPublishedPayloadSchema,
+  contactMessagePayloadSchema,
 } from './index';
 
 describe('noms de files et de jobs', () => {
@@ -56,5 +57,25 @@ describe('authLinkEmailPayloadSchema', () => {
       false,
     );
     expect(authLinkEmailPayloadSchema.safeParse({ ...valid, email: 'nope' }).success).toBe(false);
+  });
+});
+
+describe('contactMessagePayloadSchema', () => {
+  const valid = {
+    name: 'Marie',
+    email: 'marie@exemple.fr',
+    topic: 'QUESTION',
+    message: 'Bonjour',
+    receivedAt: '2026-10-01T10:00:00.000Z',
+  };
+
+  it('accepte un payload complet', () => {
+    expect(contactMessagePayloadSchema.safeParse(valid).success).toBe(true);
+  });
+
+  it('rejette un sujet inconnu, un email invalide ou un message vide', () => {
+    expect(contactMessagePayloadSchema.safeParse({ ...valid, topic: 'SPAM' }).success).toBe(false);
+    expect(contactMessagePayloadSchema.safeParse({ ...valid, email: 'nope' }).success).toBe(false);
+    expect(contactMessagePayloadSchema.safeParse({ ...valid, message: '' }).success).toBe(false);
   });
 });

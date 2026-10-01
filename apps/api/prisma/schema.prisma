@@ -56,11 +56,13 @@ model User {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  refreshTokens       RefreshToken[]
-  authTokens          AuthToken[]
-  parishMembers       ParishMember[]
-  createdContents     Content[]
-  createdCelebrations Celebration[]
+  refreshTokens        RefreshToken[]
+  authTokens           AuthToken[]
+  parishMembers        ParishMember[]
+  createdContents      Content[]
+  createdCelebrations  Celebration[]
+  createdAnnouncements Announcement[]
+  createdActivities    Activity[]
 }
 
 /// Jeton de rafraîchissement (stocké haché). `familyId` regroupe les jetons issus d'une même
@@ -107,6 +109,16 @@ model Parish {
   description String?
   city        String
   country     String
+  /// Quartier, pour la recherche publique.
+  district    String?
+  address     String?
+  /// Nom de l'église principale.
+  mainChurch  String?
+  phone       String?
+  email       String?
+  website     String?
+  /// Photo ou identité visuelle (URL).
+  imageUrl    String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -114,6 +126,10 @@ model Parish {
   contents             Content[]
   celebrationTemplates CelebrationTemplate[]
   celebrations         Celebration[]
+  announcements        Announcement[]
+  activities           Activity[]
+
+  @@index([city])
 }
 
 model ParishMember {
@@ -186,6 +202,8 @@ model Celebration {
   date        DateTime
   location    String?
   status      CelebrationStatus @default(DRAFT)
+  /// Annoncée au public avant la publication de la feuille (« feuille en préparation »).
+  announced   Boolean           @default(false)
   createdById String
   publishedAt DateTime?
   createdAt   DateTime          @default(now())
@@ -195,6 +213,8 @@ model Celebration {
   template  CelebrationTemplate @relation(fields: [templateId], references: [id])
   createdBy User                @relation(fields: [createdById], references: [id])
   steps     CelebrationStep[]
+
+  @@index([parishId, date])
 }
 
 model CelebrationStep {
@@ -209,4 +229,42 @@ model CelebrationStep {
   celebration  Celebration             @relation(fields: [celebrationId], references: [id], onDelete: Cascade)
   templateStep CelebrationTemplateStep @relation(fields: [templateStepId], references: [id])
   content      Content?                @relation(fields: [contentId], references: [id])
+}
+
+/// Annonce de la paroisse, publiée dès sa création.
+model Announcement {
+  id          String   @id @default(cuid())
+  parishId    String
+  title       String
+  summary     String?
+  body        String   @db.Text
+  imageUrl    String?
+  createdById String
+  publishedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  parish    Parish @relation(fields: [parishId], references: [id], onDelete: Cascade)
+  createdBy User   @relation(fields: [createdById], references: [id])
+
+  @@index([parishId, publishedAt])
+}
+
+/// Activité ou événement de la paroisse (rencontre, retraite, pèlerinage…).
+model Activity {
+  id          String   @id @default(cuid())
+  parishId    String
+  title       String
+  description String   @db.Text
+  startsAt    DateTime
+  location    String?
+  imageUrl    String?
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  parish    Parish @relation(fields: [parishId], references: [id], onDelete: Cascade)
+  createdBy User   @relation(fields: [createdById], references: [id])
+
+  @@index([parishId, startsAt])
 }

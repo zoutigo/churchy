@@ -1,1 +1,6 @@
-export type { CreateParishDto, InviteMemberDto } from '../schemas/parish.schema';
+export type {
+  CreateParishDto,
+  UpdateParishDto,
+  InviteMemberDto,
+  SearchParishesQuery,
+} from '../schemas/parish.schema';

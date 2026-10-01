@@ -19,8 +19,11 @@ test.describe('paroisses', () => {
 
     await expect(page.getByRole('heading', { name: parishName })).toBeVisible();
 
-    const slug = parishName.toLowerCase().replace(/\s+/g, '-');
-    await page.goto(`/p/${slug}`);
-    await expect(page.getByText(parishName).first()).toBeVisible();
+    // La page publique est servie par id (et non plus par slug).
+    await page.getByRole('link', { name: new RegExp(parishName) }).click();
+    await page.waitForURL(/\/dashboard\/parishes\/[^/]+$/);
+    const parishId = page.url().split('/').pop();
+    await page.goto(`/paroisses/${parishId}`);
+    await expect(page.getByRole('heading', { level: 1, name: parishName })).toBeVisible();
   });
 });

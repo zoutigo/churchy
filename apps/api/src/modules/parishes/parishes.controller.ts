@@ -1,12 +1,17 @@
-import { Controller, Post, Get, Param, Body, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Patch, Param, Body, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ParishesService } from './parishes.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser, type AuthUser } from '../../common/decorators/current-user.decorator';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
-import { createParishSchema, type CreateParishDto } from '@churchy/shared';
+import {
+  createParishSchema,
+  updateParishSchema,
+  type CreateParishDto,
+  type UpdateParishDto,
+} from '@churchy/shared';
 import { ParishRolesGuard } from '../../common/guards/parish-roles.guard';
-import { ALL_MEMBERS, ParishAccess } from '../../common/decorators/roles.decorator';
+import { ADMINS, ALL_MEMBERS, ParishAccess } from '../../common/decorators/roles.decorator';
 
 @ApiTags('parishes')
 @Controller('parishes')
@@ -30,16 +35,23 @@ export class ParishesController {
     return this.parishesService.findByUser(user.id);
   }
 
-  @Get('slug/:slug')
-  findBySlug(@Param('slug') slug: string) {
-    return this.parishesService.findBySlug(slug);
-  }
-
   @Get(':id')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, ParishRolesGuard)
   @ParishAccess(ALL_MEMBERS)
   findOne(@Param('id') id: string) {
     return this.parishesService.findById(id);
+  }
+
+  /** Informations publiques de la paroisse (adresse, coordonnées, photo…) : réservé aux administrateurs. */
+  @Patch(':id')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, ParishRolesGuard)
+  @ParishAccess(ADMINS)
+  update(
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(updateParishSchema)) dto: UpdateParishDto,
+  ) {
+    return this.parishesService.update(id, dto);
   }
 }
