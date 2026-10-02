@@ -145,6 +145,7 @@ jobs:
       contents: read
     outputs:
       matrix: ${{ steps.plan.outputs.matrix }}
+      total: ${{ steps.plan.outputs.total }}
 
     steps:
       - uses: actions/checkout@v4
@@ -160,12 +161,14 @@ jobs:
         id: plan
         working-directory: apps/web
         run: |
-          matrix=$(npx playwright test --list --reporter=json | node scripts/e2e-shards.mjs)
-          echo "$matrix"
-          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+          plan=$(npx playwright test --list --reporter=json | node scripts/e2e-shards.mjs)
+          echo "$plan"
+          # Une matrice ne contient que des listes : {"shard":[1,2,3]} ; le total est exposé à part.
+          echo "matrix=$(echo "$plan" | node -p 'JSON.stringify({ shard: JSON.parse(require("fs").readFileSync(0, "utf8")).shard })')" >> "$GITHUB_OUTPUT"
+          echo "total=$(echo "$plan" | node -p 'JSON.parse(require("fs").readFileSync(0, "utf8")).total')" >> "$GITHUB_OUTPUT"
 
   e2e-web:
-    name: Tests fonctionnels web (${{ matrix.shard }}/${{ fromJSON(needs.e2e-web-plan.outputs.matrix).total }})
+    name: Tests fonctionnels web (${{ matrix.shard }}/${{ needs.e2e-web-plan.outputs.total }})
     needs: e2e-web-plan
     strategy:
       fail-fast: false
@@ -228,7 +231,7 @@ jobs:
         working-directory: apps/web
 
       - name: Tests fonctionnels web (Playwright)
-        run: npx turbo run test:e2e --filter=@churchy/web -- --shard=${{ matrix.shard }}/${{ fromJSON(needs.e2e-web-plan.outputs.matrix).total }}
+        run: npx turbo run test:e2e --filter=@churchy/web -- --shard=${{ matrix.shard }}/${{ needs.e2e-web-plan.outputs.total }}
 
       - name: Rapport Playwright
         if: failure()
