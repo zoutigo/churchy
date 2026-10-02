@@ -56,6 +56,9 @@ jobs:
 
       - run: npm ci
 
+      - name: Client Prisma
+        run: npm run prisma:generate -w @churchy/api
+
       - name: Cohérence CLAUDE.md / AGENTS.md
         run: node scripts/agent-docs.mjs check
 
