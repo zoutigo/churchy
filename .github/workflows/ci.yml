@@ -105,7 +105,8 @@ jobs:
           tar \
             --exclude=.git --exclude=node_modules --exclude=.github \
             --exclude=docker/.env --exclude='apps/*/.env' --exclude=apps/web/.env.local \
-            -czf churchy-release.tar.gz .
+            -czf /tmp/churchy-release.tar.gz .
+          mv /tmp/churchy-release.tar.gz ./churchy-release.tar.gz
 
       - name: Envoi sur le VPS
         uses: appleboy/scp-action@v0.1.7
