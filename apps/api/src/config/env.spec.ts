@@ -23,6 +23,12 @@ describe('loadEnv', () => {
     expect(loadEnv({ ...base, AUTH_THROTTLE_LIMIT: '3' }).AUTH_THROTTLE_LIMIT).toBe(3);
   });
 
+  it('TRUST_PROXY_HOPS : 0 par défaut (aucun proxy), nombre entier positif accepté, négatif refusé', () => {
+    expect(loadEnv(base).TRUST_PROXY_HOPS).toBe(0);
+    expect(loadEnv({ ...base, TRUST_PROXY_HOPS: '1' }).TRUST_PROXY_HOPS).toBe(1);
+    expect(() => loadEnv({ ...base, TRUST_PROXY_HOPS: '-1' })).toThrow(/TRUST_PROXY_HOPS/);
+  });
+
   it('refuse un secret d’exemple en production', () => {
     expect(() =>
       loadEnv({

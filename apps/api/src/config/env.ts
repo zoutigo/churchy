@@ -13,6 +13,11 @@ const envSchema = z
     AUTH_THROTTLE_LIMIT: z.coerce.number().int().positive().default(10),
     /** Nombre de requêtes par minute et par IP, sur le reste de l'API. */
     THROTTLE_LIMIT: z.coerce.number().int().positive().default(120),
+    /**
+     * Nombre de reverse proxies devant l'API (0 = aucun, connexion directe). Si > 0, l'IP du client
+     * est lue dans X-Forwarded-For : sans cela, la limitation par IP voit l'IP du proxy pour tout le monde.
+     */
+    TRUST_PROXY_HOPS: z.coerce.number().int().min(0).default(0),
   })
   .superRefine((env, ctx) => {
     if (env.NODE_ENV === 'production' && /change-me|fallback|secret$/i.test(env.JWT_SECRET)) {

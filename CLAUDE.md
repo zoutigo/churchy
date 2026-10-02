@@ -97,6 +97,28 @@ il envoie les emails d'authentification via SMTP (`MailService`, nodemailer ; Ma
 Sans worker démarré, les jobs restent en file dans Redis et sont traités au prochain démarrage.
 Lancer : `npm run start:dev -w @churchy/notifications`. Note : BullMQ interdit `:` dans un `jobId`.
 
+## Déploiement (VPS OVH)
+Site : **https://churchy.tigilabs.com** (DNS OVH : enregistrement A `churchy` → IP du VPS). Une seule origine :
+nginx envoie `/api/*` à l'API et le reste au web, donc pas de CORS et cookies de session sans attribut `Domain`.
+Le VPS (`ssh vps-ovh`, user `ubuntu`) héberge d'autres projets (scolive, tigilabs, taxi-tignieu…) : **ne jamais
+toucher à leurs conf nginx / conteneurs**. Modèle repris de scolive/tigilabs :
+- code dans `~/apps/churchy`, compose `docker/docker-compose.vps.yml` (projet `churchy` : `web`, `api`,
+  `notifications`, `redis`), secrets dans `docker/.env` (jamais commité, modèle `docker/.env.example`) ;
+- **nginx central** (conteneur `nginx-proxy`, `~/infra/nginx`, réseau Docker `proxy`) : vhost
+  `~/infra/nginx/conf.d/churchy.tigilabs.com.conf` (copie versionnée : `docker/nginx/`), joint les services via
+  les alias `churchy-web:3200` et `churchy-api:3201`. Swagger (`/api/docs`) y est masqué (404) ;
+- **Postgres central** (`postgres-central`, réseau `db`) : base `churchy`, utilisateur dédié ; Redis propre au projet ;
+- **HTTPS** : certbot en webroot (`~/infra/nginx/certbot`), renouvellement par la crontab de `ubuntu`. Nouveau
+  certificat : installer d'abord `churchy.tigilabs.com.phase1-http-only`, `nginx -t`, recharger, `certbot certonly
+  --webroot -w /var/www/certbot -d churchy.tigilabs.com`, puis installer la conf complète ;
+- après toute modif nginx : `docker exec nginx-proxy nginx -t` puis recharger (`nginx -s reload`) ;
+- production : `NODE_ENV=production`, `TRUST_PROXY_HOPS=1` (l'API lit l'IP cliente dans `X-Forwarded-For`, que nginx
+  **écrase** avec `$remote_addr`), `THROTTLE_LIMIT` élevé car le rendu serveur du web appelle l'API depuis une seule
+  IP Docker (`API_INTERNAL_URL=http://api:3201/api`, sans repasser par nginx) ;
+- `NEXT_PUBLIC_API_URL` est **inlinée au build** du web (build arg) : la changer impose de reconstruire l'image ;
+- mise à jour : `docker compose -f docker/docker-compose.vps.yml --env-file docker/.env build`, puis
+  `run --rm api npx prisma migrate deploy` (avant de démarrer le nouveau code), puis `up -d`.
+
 ## Tests
 | Quoi | Outil | Commande |
 |---|---|---|

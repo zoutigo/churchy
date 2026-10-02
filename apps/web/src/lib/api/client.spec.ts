@@ -42,6 +42,27 @@ describe('api client', () => {
       expect(fetchMock.mock.calls[0][1].cache).toBe('no-store');
     });
 
+    it('côté serveur, utilise API_INTERNAL_URL si défini ; le navigateur garde l’URL publique', async () => {
+      fetchMock.mockImplementation(async () => jsonResponse({}));
+      vi.stubEnv('API_INTERNAL_URL', 'http://api:3201/api');
+      try {
+        await api.get('/parishes/my');
+        expect(urlOf(fetchMock.mock.calls[0])).not.toContain('api:3201');
+
+        const win = globalThis.window;
+        // @ts-expect-error simule le rendu serveur (pas de window)
+        delete globalThis.window;
+        try {
+          await api.get('/public/parishes');
+        } finally {
+          globalThis.window = win;
+        }
+        expect(urlOf(fetchMock.mock.calls[1])).toBe('http://api:3201/api/public/parishes');
+      } finally {
+        vi.unstubAllEnvs();
+      }
+    });
+
     it('côté navigateur, ne force pas de politique de cache', async () => {
       fetchMock.mockResolvedValue(jsonResponse({}));
       await api.get('/parishes/my');

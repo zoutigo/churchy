@@ -2,6 +2,13 @@ import { SESSION_EXPIRED_EVENT } from '@/lib/auth/session';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3201/api';
 
+/**
+ * Rendu serveur : si `API_INTERNAL_URL` est défini (réseau Docker), l'API est jointe directement, sans
+ * repasser par le reverse proxy public. Le navigateur utilise toujours l'URL publique.
+ */
+const apiUrl = () =>
+  typeof window === 'undefined' ? (process.env.API_INTERNAL_URL ?? API_URL) : API_URL;
+
 /** Erreur renvoyée par l'API, avec son code HTTP. */
 export class ApiError extends Error {
   constructor(
@@ -58,7 +65,7 @@ function refreshSession(): Promise<boolean> {
 }
 
 async function request<T>(path: string, options?: RequestInit, canRetry = true): Promise<T> {
-  const res = await fetch(`${API_URL}${path}`, {
+  const res = await fetch(`${apiUrl()}${path}`, {
     // Rendu serveur (pages publiques) : Next met les `fetch` en cache par défaut ; une annonce supprimée
     // doit disparaître immédiatement, donc jamais de copie en cache.
     ...(typeof window === 'undefined' ? { cache: 'no-store' as const } : {}),

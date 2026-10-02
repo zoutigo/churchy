@@ -1,0 +1,17 @@
+# Phase 1 : à installer AVANT d'avoir un certificat (nginx refuserait de démarrer avec un
+# ssl_certificate inexistant). Sert uniquement le challenge Let's Encrypt.
+server {
+  listen 80;
+  listen [::]:80;
+
+  server_name churchy.tigilabs.com;
+
+  location ^~ /.well-known/acme-challenge/ {
+    root /var/www/certbot;
+    default_type "text/plain";
+  }
+
+  location / {
+    return 301 https://$host$request_uri;
+  }
+}

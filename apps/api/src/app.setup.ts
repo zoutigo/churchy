@@ -7,6 +7,8 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 /** Configuration HTTP partagée entre main.ts et les tests fonctionnels. */
 export function configureApp(app: INestApplication) {
   app.setGlobalPrefix('api');
+  // Derrière nginx, l'IP du client (limitation de débit) vient de X-Forwarded-For. 0 = ne fait confiance à rien.
+  app.getHttpAdapter().getInstance().set('trust proxy', env.TRUST_PROXY_HOPS);
   app.use(
     helmet({
       // L'API ne sert que du JSON (et l'UI Swagger, qui a besoin de scripts inline).

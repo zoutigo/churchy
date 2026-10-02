@@ -1,0 +1,95 @@
+name: churchy
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: '10m'
+    max-file: '3'
+
+# Déploiement sur le VPS : nginx central (réseau "proxy") + Postgres central (réseau "db").
+# Les services web/api sont joignables par nginx via les alias churchy-web / churchy-api.
+services:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ['redis-server', '--appendonly', 'yes']
+    logging: *default-logging
+    volumes:
+      - ${UPLOADS_ROOT:-/home/ubuntu/uploads/churchy}/redis:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ..
+      dockerfile: docker/api.Dockerfile
+    restart: unless-stopped
+    logging: *default-logging
+    env_file:
+      - ./.env
+    environment:
+      NODE_ENV: production
+      PORT: 3201
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_DB: 0
+    expose:
+      - '3201'
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      default:
+      db:
+      nginx:
+        aliases: [churchy-api]
+
+  notifications:
+    build:
+      context: ..
+      dockerfile: docker/notifications.Dockerfile
+    restart: unless-stopped
+    logging: *default-logging
+    env_file:
+      - ./.env
+    environment:
+      NODE_ENV: production
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_DB: 0
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ..
+      dockerfile: docker/web.Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+    restart: unless-stopped
+    logging: *default-logging
+    environment:
+      NODE_ENV: production
+      PORT: 3200
+      # Rendu serveur : l'API est jointe directement sur le réseau Docker.
+      API_INTERNAL_URL: http://api:3201/api
+    expose:
+      - '3200'
+    depends_on:
+      - api
+    networks:
+      default:
+      nginx:
+        aliases: [churchy-web]
+
+networks:
+  db:
+    external: true
+    name: db
+  nginx:
+    external: true
+    name: ${NGINX_NETWORK:-proxy}
