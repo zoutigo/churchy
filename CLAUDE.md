@@ -197,8 +197,10 @@ exécute dans cet ordre, et bloque le commit au moindre échec :
 
 #### CI (GitHub Actions, `.github/workflows`)
 - `ci.yml` (push sur `dev`, PR vers `dev`/`main`) : **tous** les contrôles et tests — cohérence CLAUDE.md/AGENTS.md,
-  lint, format, typecheck, build, tests unitaires, tests fonctionnels API et web. Quatre jobs **en parallèle**
-  (`quality`, `unit`, `e2e-api`, `e2e-web` ; Postgres + Redis en services pour les deux derniers). Ne déploie rien.
+  lint, format, typecheck, build, tests unitaires, tests fonctionnels API et web. Jobs **en parallèle** : `quality`,
+  `unit`, `e2e-api`, et `e2e-web` **découpé en shards dont le nombre suit la taille de la suite** (job `e2e-web-plan` :
+  `apps/web/scripts/e2e-shards.mjs`, 20 tests par shard, 8 shards max, `fullyParallel` → découpage par test ; les tests
+  Playwright doivent donc rester **indépendants**, avec des données uniques). Postgres + Redis en services pour les e2e. Ne déploie rien.
 - `deploy-vps.yml` (push et PR sur `main`) : contrôles **basiques** seulement (docs, lint, format, typecheck, build), puis, sur
   push uniquement, **déploiement** sur le VPS. `main` ne reçoit que des fusions de `dev` déjà vert.
 

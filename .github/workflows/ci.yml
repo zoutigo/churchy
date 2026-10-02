@@ -135,8 +135,41 @@ jobs:
       - name: Tests fonctionnels API
         run: npx turbo run test:e2e --filter=@churchy/api
 
+  # Calcule le nombre de shards d'après le nombre de tests (apps/web/scripts/e2e-shards.mjs) :
+  # il augmente tout seul quand la suite Playwright grossit.
+  e2e-web-plan:
+    name: Découpage Playwright
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Nombre de shards
+        id: plan
+        working-directory: apps/web
+        run: |
+          matrix=$(npx playwright test --list --reporter=json | node scripts/e2e-shards.mjs)
+          echo "$matrix"
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+
   e2e-web:
-    name: Tests fonctionnels web
+    name: Tests fonctionnels web (${{ matrix.shard }}/${{ fromJSON(needs.e2e-web-plan.outputs.matrix).total }})
+    needs: e2e-web-plan
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.e2e-web-plan.outputs.matrix) }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -195,13 +228,13 @@ jobs:
         working-directory: apps/web
 
       - name: Tests fonctionnels web (Playwright)
-        run: npx turbo run test:e2e --filter=@churchy/web
+        run: npx turbo run test:e2e --filter=@churchy/web -- --shard=${{ matrix.shard }}/${{ fromJSON(needs.e2e-web-plan.outputs.matrix).total }}
 
       - name: Rapport Playwright
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.shard }}
           path: |
             apps/web/playwright-report
             apps/web/test-results
