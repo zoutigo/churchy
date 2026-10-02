@@ -186,6 +186,10 @@ jobs:
       - name: Client Prisma
         run: npm run prisma:generate -w @churchy/api
 
+      # Le serveur API lancé par Playwright a besoin des paquets partagés compilés (shared, contracts).
+      - name: Build des paquets partagés
+        run: npx turbo run build --filter='./packages/*'
+
       - name: Navigateur pour les tests fonctionnels
         run: npx playwright install --with-deps chromium
         working-directory: apps/web
