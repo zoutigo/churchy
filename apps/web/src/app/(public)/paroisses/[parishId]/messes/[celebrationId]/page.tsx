@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Clock, MapPin } from 'lucide-react';
+import { RichContent } from '@/components/rich-text/RichContent';
 import { SheetStatusBadge } from '@/components/public/SheetStatusBadge';
 import { orNotFound, publicApi } from '@/lib/api/public.api';
 import { CELEBRATION_TYPE_LABELS, formatDateLong, formatTime } from '@/lib/format';
@@ -72,7 +73,7 @@ export default async function PublicCelebrationPage({ params }: Props) {
               {step.content ? (
                 <>
                   <p className="font-medium">{step.content.title}</p>
-                  <p className="whitespace-pre-wrap text-sm leading-relaxed">{step.content.body}</p>
+                  <RichContent html={step.content.body} />
                 </>
               ) : step.customText ? (
                 <p className="whitespace-pre-wrap text-sm leading-relaxed">{step.customText}</p>

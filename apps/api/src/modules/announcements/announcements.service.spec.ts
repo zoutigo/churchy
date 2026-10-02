@@ -16,7 +16,7 @@ describe('AnnouncementsService', () => {
   it('crée l’annonce dans la paroisse de l’URL, avec son auteur', async () => {
     await service.create('p1', { title: 'Horaires', body: 'Texte' }, 'u1');
     expect(prisma.announcement.create).toHaveBeenCalledWith({
-      data: { title: 'Horaires', body: 'Texte', parishId: 'p1', createdById: 'u1' },
+      data: { title: 'Horaires', body: '<p>Texte</p>', parishId: 'p1', createdById: 'u1' },
     });
   });
 

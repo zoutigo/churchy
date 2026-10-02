@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import type { CreateAnnouncementDto } from '@churchy/shared';
+import { sanitizeRichText } from '../../common/rich-text';
 import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
@@ -7,7 +8,9 @@ export class AnnouncementsService {
   constructor(private prisma: PrismaService) {}
 
   create(parishId: string, dto: CreateAnnouncementDto, userId: string) {
-    return this.prisma.announcement.create({ data: { ...dto, parishId, createdById: userId } });
+    return this.prisma.announcement.create({
+      data: { ...dto, body: sanitizeRichText(dto.body), parishId, createdById: userId },
+    });
   }
 
   findByParish(parishId: string) {

@@ -90,6 +90,20 @@ Ces routes n'ont volontairement **pas** de `@ParishAccess` : elles ne renvoient 
   transmettre l'IP du visiteur (`X-Forwarded-For` + `trust proxy`) pour que la limite `THROTTLE_LIMIT` ne
   s'applique pas à l'ensemble des visiteurs.
 
+## Texte riche (éditeur)
+`RichTextEditor` (`apps/web/src/components/rich-text`, Tiptap) sert pour le contenu des chants/psaumes/lectures
+(`Content.body`), des annonces (`body`) et des activités (`description`) ; `allowImages` (activités) ajoute les images
+inline (bouton, collage, glisser-déposer : redimensionnées ≤ 1280 px, JPEG, **base64 dans le texte** — pas de stockage
+de fichiers pour l'instant). Le texte est stocké en **HTML** dans les mêmes colonnes ; un ancien texte brut reste valide
+(`isRichHtml`/`toRichHtml` dans `@churchy/shared`, affiché par `RichContent` sans être interprété).
+- Le HTML est **nettoyé par l'API à l'écriture** (`sanitizeRichText`, liste blanche sanitize-html : pas de script, styles
+  limités à couleur/surlignage/alignement, images `data:image` ou http(s) seulement) : le site public l'affiche tel quel.
+  Toute nouvelle route qui accepte du texte riche doit passer par `sanitizeRichText`.
+- Limites : `RICH_TEXT_MAX_LENGTH` (1,5 M caractères) ; corps JSON de l'API à 2 Mo ; nginx `client_max_body_size 5m`.
+- Responsive : barre d'outils essentielle sur mobile (bouton « Plus d'options » pour le reste), ruban complet + compteur
+  de mots dès `md`. Pour l'utiliser dans un autre champ : `<RichTextEditor value onChange … />` dans un `FormField`.
+- Tests : jsdom n'a pas la géométrie utilisée par ProseMirror, d'où des polyfills dans `apps/web/vitest.setup.ts`.
+
 ## Files de jobs (BullMQ)
 Les noms de files et payloads sont dans `@churchy/contracts`. L'API est le **producteur** :
 `NotificationsService` enfile `celebration.published` (publication d'une célébration),

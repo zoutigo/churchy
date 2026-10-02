@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { RichTextEditor } from '@/components/rich-text/RichTextEditor';
 import { Button } from '@/components/ui/button';
 
 const CONTENT_TYPE_LABELS: Record<ContentType, string> = {
@@ -110,10 +110,12 @@ export function CreateContentForm({ parishId, onSuccess }: Props) {
             <FormItem>
               <FormLabel>Contenu</FormLabel>
               <FormControl>
-                <Textarea
-                  placeholder="Saisissez le texte ici..."
-                  className="min-h-[150px] resize-y"
-                  {...field}
+                <RichTextEditor
+                  aria-label="Contenu"
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  invalid={!!form.formState.errors.body}
                 />
               </FormControl>
               <FormMessage />

@@ -1,5 +1,6 @@
 import { MapPin } from 'lucide-react';
 import type { PublicActivity } from '@churchy/shared';
+import { RichContent } from '@/components/rich-text/RichContent';
 import { formatDateParts, formatDateLong, formatTime } from '@/lib/format';
 
 export function ActivityItem({ activity: a }: { activity: PublicActivity }) {
@@ -26,9 +27,7 @@ export function ActivityItem({ activity: a }: { activity: PublicActivity }) {
             <MapPin size={14} aria-hidden /> {a.location}
           </p>
         )}
-        <p className="whitespace-pre-wrap text-sm leading-relaxed text-churchy-900/85">
-          {a.description}
-        </p>
+        <RichContent html={a.description} className="text-churchy-900/85" />
         {a.imageUrl && (
           <img
             src={a.imageUrl}

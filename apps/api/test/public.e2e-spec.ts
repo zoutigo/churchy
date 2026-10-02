@@ -233,6 +233,49 @@ describe('API publique', () => {
       expect(res.body[0]).not.toHaveProperty('createdById');
     });
 
+    it('texte riche : HTML nettoyé, images inline conservées, ancien texte brut converti', async () => {
+      const png = 'data:image/png;base64,iVBORw0KGgo=';
+      const created = await admin
+        .post(`/api/parishes/${parishId}/activities`)
+        .send({
+          title: 'Riche',
+          description: `<p onclick="x()"><strong>Gras</strong><script>alert(1)</script></p><img src="${png}" data-width="50"><img src="javascript:alert(1)">`,
+          startsAt: inDays(2),
+        })
+        .expect(201);
+      await admin
+        .post(`/api/parishes/${parishId}/announcements`)
+        .send({ title: 'Brut', body: 'Ligne 1\nLigne 2 <b>' })
+        .expect(201);
+      // image seule (sans texte) : contenu valide
+      await admin
+        .post(`/api/parishes/${parishId}/announcements`)
+        .send({ title: 'Image', body: `<img src="${png}">` })
+        .expect(201);
+
+      const acts = await http().get(`/api/public/parishes/${parishId}/activities`).expect(200);
+      const rich = acts.body.find((a: { title: string }) => a.title === 'Riche');
+      expect(rich.description).toBe(
+        `<p><strong>Gras</strong></p><img src="${png}" data-width="50" />`,
+      );
+      await admin.delete(`/api/parishes/${parishId}/activities/${created.body.id}`).expect(200);
+      const anns = await http().get(`/api/public/parishes/${parishId}/announcements`).expect(200);
+      const plain = anns.body.find((a: { title: string }) => a.title === 'Brut');
+      expect(plain.body).toBe('<p>Ligne 1<br />Ligne 2 &lt;b&gt;</p>');
+    });
+
+    it('accepte un corps de plus de 100 ko (images) mais refuse un contenu trop volumineux', async () => {
+      const big = `<p>x</p><img src="data:image/png;base64,${'A'.repeat(300_000)}">`;
+      await admin
+        .post(`/api/parishes/${parishId}/announcements`)
+        .send({ title: 'Grosse', body: big })
+        .expect(201);
+      await admin
+        .post(`/api/parishes/${parishId}/announcements`)
+        .send({ title: 'Énorme', body: `<p>${'x'.repeat(1_600_000)}</p>` })
+        .expect(400);
+    });
+
     it('valide les annonces (400) : titre, contenu, image non http(s)', async () => {
       const post = (body: object) =>
         admin.post(`/api/parishes/${parishId}/announcements`).send(body);

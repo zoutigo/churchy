@@ -13,7 +13,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { RichTextEditor } from '@/components/rich-text/RichTextEditor';
 
 const optionalHint = <span className="text-muted-foreground text-xs">(optionnel)</span>;
 
@@ -78,7 +78,13 @@ export function CreateAnnouncementForm({
             <FormItem>
               <FormLabel>Contenu</FormLabel>
               <FormControl>
-                <Textarea rows={5} {...field} />
+                <RichTextEditor
+                  aria-label="Contenu"
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  invalid={!!form.formState.errors.body}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

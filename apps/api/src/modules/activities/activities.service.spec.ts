@@ -20,7 +20,7 @@ describe('ActivitiesService', () => {
     expect(prisma.activity.create).toHaveBeenCalledWith({
       data: {
         title: 'Retraite',
-        description: 'Week-end',
+        description: '<p>Week-end</p>',
         startsAt: new Date('2026-11-01T18:00:00.000Z'),
         parishId: 'p1',
         createdById: 'u1',

@@ -72,6 +72,7 @@ src/
 │   ├── public/       # PublicHeader/Footer, ParishSearchForm (GET), CelebrationItem, SheetCard, ContactForm…
 │   ├── news/         # Formulaires annonces/activités du tableau de bord, DeleteButton (suppression en 2 temps)
 │   ├── parish/       # ParishCard, CreateParishForm, ParishInfoForm
+│   ├── rich-text/    # RichTextEditor (Tiptap, champ de formulaire), RichContent (rendu public)
 │   ├── content/      # CreateContentForm, ContentCard
 │   ├── celebration/  # CelebrationCard, CreateCelebrationForm
 │   └── layout/       # Sidebar (≥ md), MobileNav (< md), Header (menu utilisateur)

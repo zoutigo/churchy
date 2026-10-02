@@ -15,7 +15,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { RichTextEditor } from '@/components/rich-text/RichTextEditor';
 
 /** Le champ date du navigateur donne une heure locale sans fuseau : convertie en ISO à l'envoi. */
 const formSchema = createActivitySchema.extend({
@@ -78,7 +78,14 @@ export function CreateActivityForm({
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Textarea rows={4} {...field} />
+                <RichTextEditor
+                  aria-label="Description"
+                  allowImages
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  invalid={!!form.formState.errors.description}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
