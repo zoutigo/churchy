@@ -10,8 +10,133 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# Jobs en parallèle : la durée totale est celle du plus long (Playwright), pas la somme.
 jobs:
-  checks:
+  quality:
+    name: Qualité (docs, lint, typecheck, build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+
+    env:
+      CI: 'true'
+      HUSKY: '0'
+      PW_CHANNEL: chromium
+      NEXT_TELEMETRY_DISABLED: '1'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Client Prisma
+        run: npm run prisma:generate -w @churchy/api
+
+      - name: Cohérence CLAUDE.md / AGENTS.md
+        run: node scripts/agent-docs.mjs check
+
+      - name: Lint et formatage
+        run: |
+          npm run lint
+          npm run format:check
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+  unit:
+    name: Tests unitaires
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+
+    env:
+      CI: 'true'
+      HUSKY: '0'
+      PW_CHANNEL: chromium
+      NEXT_TELEMETRY_DISABLED: '1'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Client Prisma
+        run: npm run prisma:generate -w @churchy/api
+
+      - name: Tests unitaires
+        run: npm test
+
+  e2e-api:
+    name: Tests fonctionnels API
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+
+    # Mêmes ports que le docker-compose.yml de dev : les tests fonctionnels n'ont rien à configurer.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: churchy_db
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d churchy_db"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6380:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+    env:
+      CI: 'true'
+      HUSKY: '0'
+      PW_CHANNEL: chromium
+      NEXT_TELEMETRY_DISABLED: '1'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Client Prisma
+        run: npm run prisma:generate -w @churchy/api
+
+      - name: Tests fonctionnels API
+        run: npx turbo run test:e2e --filter=@churchy/api
+
+  e2e-web:
+    name: Tests fonctionnels web
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -61,29 +186,12 @@ jobs:
       - name: Client Prisma
         run: npm run prisma:generate -w @churchy/api
 
-      - name: Cohérence CLAUDE.md / AGENTS.md
-        run: node scripts/agent-docs.mjs check
-
-      - name: Lint et formatage
-        run: |
-          npm run lint
-          npm run format:check
-
-      - name: Typecheck
-        run: npm run typecheck
-
-      - name: Build
-        run: npm run build
-
-      - name: Tests unitaires
-        run: npm test
-
       - name: Navigateur pour les tests fonctionnels
         run: npx playwright install --with-deps chromium
         working-directory: apps/web
 
-      - name: Tests fonctionnels (API puis web)
-        run: npm run test:e2e
+      - name: Tests fonctionnels web (Playwright)
+        run: npx turbo run test:e2e --filter=@churchy/web
 
       - name: Rapport Playwright
         if: failure()
