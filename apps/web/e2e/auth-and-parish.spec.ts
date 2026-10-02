@@ -13,8 +13,11 @@ test.describe('paroisses', () => {
     await page.goto('/dashboard/parishes');
     await page.getByRole('button', { name: '+ Nouvelle paroisse' }).click();
     await page.getByLabel('Nom de la paroisse').fill(parishName);
-    await page.getByLabel('Ville').fill('Douala');
-    await page.getByLabel('Pays').fill('Cameroun');
+    // Cameroun par défaut : région → ville → quartier en listes déroulantes.
+    await expect(page.getByLabel('Pays', { exact: true })).toHaveValue('Cameroun');
+    await page.getByLabel('Région', { exact: false }).selectOption('Littoral');
+    await page.getByLabel('Ville', { exact: true }).selectOption('Douala');
+    await page.getByLabel('Quartier', { exact: false }).selectOption('Bonanjo');
     await page.getByRole('button', { name: 'Créer la paroisse' }).click();
 
     await expect(page.getByRole('heading', { name: parishName })).toBeVisible();

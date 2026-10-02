@@ -41,7 +41,7 @@ export function formatDateParts(iso: string, tz?: Tz) {
   };
 }
 
-/** Ville, avec le quartier s'il est connu : « Croix-Rousse, Lyon ». */
+/** Ville, avec le quartier s'il est connu : « Bastos, Yaoundé ». */
 export const placeLabel = (p: { city: string; district?: string | null }) =>
   p.district ? `${p.district}, ${p.city}` : p.city;
 

@@ -7,8 +7,11 @@ export interface Parish {
   description?: string | null;
   city: string;
   country: string;
+  region?: string | null;
   district?: string | null;
   address?: string | null;
+  /** Indication pour retrouver l'église (« en face de la poste centrale »). */
+  addressComplement?: string | null;
   mainChurch?: string | null;
   phone?: string | null;
   email?: string | null;

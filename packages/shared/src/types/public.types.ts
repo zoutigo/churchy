@@ -16,6 +16,8 @@ export type PublicParish = Pick<
   | 'country'
   | 'district'
   | 'address'
+  | 'addressComplement'
+  | 'region'
   | 'mainChurch'
   | 'phone'
   | 'email'

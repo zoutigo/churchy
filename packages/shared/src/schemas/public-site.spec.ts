@@ -154,3 +154,38 @@ describe('célébrations — annonce publique', () => {
     expect(setCelebrationAnnouncedSchema.safeParse({ announced: false }).success).toBe(true);
   });
 });
+
+describe('région et complément d’adresse', () => {
+  it('sont facultatifs à la création ; une chaîne vide équivaut à non renseigné', () => {
+    const res = createParishSchema.parse({
+      name: 'Saint Joseph',
+      city: 'Yaoundé',
+      country: 'Cameroun',
+      region: '',
+      addressComplement: '',
+    });
+    expect(res.region).toBeUndefined();
+    expect(res.addressComplement).toBeUndefined();
+  });
+
+  it('sont conservés, et le complément est limité à 200 caractères', () => {
+    const base = { name: 'Saint Joseph', city: 'Yaoundé', country: 'Cameroun' };
+    expect(
+      createParishSchema.parse({
+        ...base,
+        region: 'Centre',
+        addressComplement: 'En face de la poste',
+      }),
+    ).toMatchObject({ region: 'Centre', addressComplement: 'En face de la poste' });
+    expect(
+      createParishSchema.safeParse({ ...base, addressComplement: 'x'.repeat(201) }).success,
+    ).toBe(false);
+  });
+
+  it('à la modification, une chaîne vide efface la valeur (null)', () => {
+    expect(updateParishSchema.parse({ region: '', addressComplement: '' })).toEqual({
+      region: null,
+      addressComplement: null,
+    });
+  });
+});

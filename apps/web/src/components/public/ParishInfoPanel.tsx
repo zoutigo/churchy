@@ -21,6 +21,9 @@ export function ParishInfoPanel({ parish }: { parish: PublicParish }) {
               <strong className="block font-medium">{parish.mainChurch}</strong>
             )}
             {address}
+            {parish.addressComplement && (
+              <span className="block text-churchy-700">{parish.addressComplement}</span>
+            )}
           </span>
         </li>
         {parish.phone && (

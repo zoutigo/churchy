@@ -14,13 +14,18 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { LocationFields } from './LocationFields';
 
 type Field = keyof UpdateParishDto;
 
 const TEXT_FIELDS: { name: Field; label: string; placeholder?: string; type?: string }[] = [
-  { name: 'district', label: 'Quartier', placeholder: 'Croix-Rousse' },
   { name: 'mainChurch', label: 'Église principale', placeholder: 'Église Saint-Pierre' },
   { name: 'address', label: 'Adresse', placeholder: '1 place de l’Église' },
+  {
+    name: 'addressComplement',
+    label: 'Complément d’adresse',
+    placeholder: 'En face de la poste centrale',
+  },
   { name: 'phone', label: 'Téléphone', placeholder: '04 00 00 00 00', type: 'tel' },
   { name: 'email', label: 'Email de la paroisse', type: 'email' },
   { name: 'website', label: 'Site web', placeholder: 'https://…', type: 'url' },
@@ -39,9 +44,13 @@ export function ParishInfoForm({
     resolver: zodResolver(updateParishSchema),
     defaultValues: {
       description: parish.description ?? '',
+      country: parish.country,
+      region: parish.region ?? '',
+      city: parish.city,
       district: parish.district ?? '',
       mainChurch: parish.mainChurch ?? '',
       address: parish.address ?? '',
+      addressComplement: parish.addressComplement ?? '',
       phone: parish.phone ?? '',
       email: parish.email ?? '',
       website: parish.website ?? '',
@@ -83,6 +92,7 @@ export function ParishInfoForm({
             </FormItem>
           )}
         />
+        <LocationFields />
         <div className="grid gap-4 sm:grid-cols-2">
           {TEXT_FIELDS.map((f) => (
             <FormField

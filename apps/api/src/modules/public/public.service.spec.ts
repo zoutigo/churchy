@@ -128,6 +128,7 @@ describe('PublicService', () => {
       expect(Object.keys(select).sort()).toEqual(
         [
           'address',
+          'addressComplement',
           'city',
           'country',
           'description',
@@ -138,6 +139,7 @@ describe('PublicService', () => {
           'mainChurch',
           'name',
           'phone',
+          'region',
           'website',
         ].sort(),
       );

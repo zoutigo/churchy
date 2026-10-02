@@ -48,6 +48,31 @@ describe('ParishInfoForm', () => {
     expect(dto.phone).toBe('04 00');
   });
 
+  it('modifie le quartier et le complément d’adresse ; une ville hors liste reste éditable', async () => {
+    update.mockResolvedValue(parish);
+    const user = userEvent.setup();
+    render(
+      <ParishInfoForm
+        parish={{ ...parish, country: 'Cameroun', region: 'Centre', city: 'Minkama' }}
+      />,
+    );
+    // Minkama n'est pas dans la liste : la ville s'affiche en saisie manuelle.
+    expect(screen.getByLabelText('Ville', { exact: true })).toHaveValue('__other__');
+    expect(screen.getByLabelText('Nom de la ville')).toHaveValue('Minkama');
+
+    await user.type(screen.getByLabelText('Quartier', { exact: false }), 'Centre');
+    await user.type(screen.getByLabelText(/Complément d’adresse/), 'Derrière le marché');
+    await user.click(screen.getByRole('button', { name: 'Enregistrer' }));
+
+    await waitFor(() => expect(update).toHaveBeenCalled());
+    expect(update.mock.calls[0][1]).toMatchObject({
+      region: 'Centre',
+      city: 'Minkama',
+      district: 'Centre',
+      addressComplement: 'Derrière le marché',
+    });
+  });
+
   it('refuse un site web qui n’est pas en http(s)', async () => {
     const user = userEvent.setup();
     render(<ParishInfoForm parish={parish} />);

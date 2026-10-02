@@ -18,7 +18,8 @@ test.describe('gestion du contenu public d’une paroisse (tableau de bord → s
     await page.goto('/dashboard/parishes');
     await page.getByRole('button', { name: '+ Nouvelle paroisse' }).click();
     await page.getByLabel('Nom de la paroisse').fill(name);
-    await page.getByLabel('Ville').fill('Nantes');
+    await page.getByLabel('Pays', { exact: true }).selectOption('France');
+    await page.getByLabel('Ville', { exact: true }).fill('Nantes');
     await page.getByRole('button', { name: 'Créer la paroisse' }).click();
     await page.getByRole('link', { name: new RegExp(name) }).click();
     await page.waitForURL(/\/dashboard\/parishes\/[^/]+$/);
@@ -27,7 +28,8 @@ test.describe('gestion du contenu public d’une paroisse (tableau de bord → s
 
     // Identité publique.
     await page.getByLabel('Adresse', { exact: true }).fill('3 rue de la Paix');
-    await page.getByLabel('Quartier').fill('Centre');
+    await page.getByLabel('Quartier', { exact: false }).fill('Centre');
+    await page.getByLabel(/Complément d’adresse/).fill('Face à la mairie');
     await page.getByLabel('Site web').fill('javascript:alert(1)');
     await expect(page.getByText('Adresse web invalide (http ou https)')).toBeVisible();
     await page.getByLabel('Site web').fill('https://paroisse-nantes.example');

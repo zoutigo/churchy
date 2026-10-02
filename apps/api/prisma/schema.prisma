@@ -103,24 +103,28 @@ model AuthToken {
 }
 
 model Parish {
-  id          String   @id @default(cuid())
-  name        String
-  slug        String   @unique
-  description String?
-  city        String
-  country     String
+  id                String   @id @default(cuid())
+  name              String
+  slug              String   @unique
+  description       String?
+  city              String
+  country           String
+  /// Région (Cameroun : liste fermée côté interface).
+  region            String?
   /// Quartier, pour la recherche publique.
-  district    String?
-  address     String?
+  district          String?
+  address           String?
+  /// Indication pour retrouver l'église (« en face de la poste centrale »).
+  addressComplement String?
   /// Nom de l'église principale.
-  mainChurch  String?
-  phone       String?
-  email       String?
-  website     String?
+  mainChurch        String?
+  phone             String?
+  email             String?
+  website           String?
   /// Photo ou identité visuelle (URL).
-  imageUrl    String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  imageUrl          String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   members              ParishMember[]
   contents             Content[]

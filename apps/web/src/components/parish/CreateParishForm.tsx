@@ -1,7 +1,7 @@
 'use client';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { createParishSchema, type CreateParishDto } from '@churchy/shared';
+import { DEFAULT_COUNTRY, createParishSchema, type CreateParishDto } from '@churchy/shared';
 import { parishesApi } from '@/lib/api/parishes.api';
 import {
   Form,
@@ -14,6 +14,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { LocationFields } from './LocationFields';
 
 interface Props {
   onSuccess?: () => void;
@@ -22,7 +23,15 @@ interface Props {
 export function CreateParishForm({ onSuccess }: Props) {
   const form = useForm<CreateParishDto>({
     resolver: zodResolver(createParishSchema),
-    defaultValues: { name: '', description: '', city: '', country: 'France' },
+    defaultValues: {
+      name: '',
+      description: '',
+      country: DEFAULT_COUNTRY,
+      region: '',
+      city: '',
+      district: '',
+      addressComplement: '',
+    },
     mode: 'onChange',
   });
 
@@ -48,7 +57,7 @@ export function CreateParishForm({ onSuccess }: Props) {
             <FormItem>
               <FormLabel>Nom de la paroisse</FormLabel>
               <FormControl>
-                <Input placeholder="Saint-Pierre de Montmartre" {...field} />
+                <Input placeholder="Paroisse Saint-Joseph de Mvog-Ada" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -74,34 +83,23 @@ export function CreateParishForm({ onSuccess }: Props) {
             </FormItem>
           )}
         />
-        <div className="grid grid-cols-2 gap-3">
-          <FormField
-            control={form.control}
-            name="city"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Ville</FormLabel>
-                <FormControl>
-                  <Input placeholder="Paris" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="country"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Pays</FormLabel>
-                <FormControl>
-                  <Input placeholder="France" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+        <LocationFields />
+        <FormField
+          control={form.control}
+          name="addressComplement"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>
+                Complément d’adresse{' '}
+                <span className="text-muted-foreground text-xs">(optionnel)</span>
+              </FormLabel>
+              <FormControl>
+                <Input placeholder="En face de la poste centrale" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         {form.formState.errors.root && (
           <p className="text-sm text-destructive">{form.formState.errors.root.message}</p>
         )}

@@ -137,6 +137,12 @@ toucher à leurs conf nginx / conteneurs**. Modèle repris de scolive/tigilabs :
 
 ## Règles de travail (obligatoires)
 
+### 0. Branche de travail : `dev`
+Tous les travaux (code, tests, documentation) se font **toujours dans la branche `dev`**, jamais directement
+sur `main`. Vérifier la branche courante (`git branch --show-current`) avant de modifier quoi que ce soit ;
+si on n'est pas sur `dev`, basculer dessus (`git switch dev`, ou la créer depuis `main` si elle n'existe pas).
+`main` ne reçoit que des fusions de `dev`.
+
 ### 1. Tout changement de code est consolidé par des tests
 Toute modification ou tout ajout de code (fonctionnalité, correction, refactoring) doit être accompagné de tests
 qui le consolident, dans le même commit :
@@ -178,6 +184,22 @@ exécute dans cet ordre, et bloque le commit au moindre échec :
   Puis on relance le précommit jusqu'à ce qu'il soit entièrement vert.
 - Ne jamais contourner le hook (`--no-verify`) : corriger la cause.
 - Les fichiers indexés sont reformatés/corrigés par le hook : les relire avant de valider le commit.
+
+### 2 bis. Fin de travail : précommit complet, commit, push, suivi du CI
+À la fin de **chaque** travail, sans qu'on ait à le demander :
+1. lancer le **précommit complet** (`npm run precommit`) et corriger tout problème (règle 2) ;
+2. **commiter** dans `dev` (le hook rejoue le précommit) puis **pousser** (`git push origin dev`) ;
+3. **suivre le CI de la branche `dev`** (GitHub Actions, `gh run list --branch dev` / `gh run watch`) jusqu'à
+   sa fin (workflow `ci-dev.yml`, voir « CI » ci-dessous) ;
+4. **si le CI échoue** : lire les logs (`gh run view --log-failed`), corriger la cause dans le code (jamais en
+   supprimant ni en affaiblissant un test, jamais de `--no-verify`), recommiter, repousser et suivre à nouveau
+   le CI, jusqu'à ce qu'il soit vert. Le travail n'est terminé que lorsque le CI de `dev` est vert.
+
+#### CI (GitHub Actions, `.github/workflows`)
+- `ci-dev.yml` (push et PR sur `dev`) : **tous** les contrôles et tests — cohérence CLAUDE.md/AGENTS.md, lint,
+  format, typecheck, tests unitaires, tests fonctionnels API puis web (Postgres + Redis en services). Ne déploie rien.
+- `ci-main.yml` (push et PR sur `main`) : contrôles **basiques** seulement (docs, lint, format, typecheck), puis, sur
+  push uniquement, **déploiement** sur le VPS. `main` ne reçoit que des fusions de `dev` déjà vert.
 
 ### 3. CLAUDE.md et AGENTS.md
 Ces deux fichiers contiennent exactement le même contenu (chaque dossier qui a un `CLAUDE.md` a un `AGENTS.md`
