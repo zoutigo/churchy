@@ -190,15 +190,15 @@ exécute dans cet ordre, et bloque le commit au moindre échec :
 1. lancer le **précommit complet** (`npm run precommit`) et corriger tout problème (règle 2) ;
 2. **commiter** dans `dev` (le hook rejoue le précommit) puis **pousser** (`git push origin dev`) ;
 3. **suivre le CI de la branche `dev`** (GitHub Actions, `gh run list --branch dev` / `gh run watch`) jusqu'à
-   sa fin (workflow `ci-dev.yml`, voir « CI » ci-dessous) ;
+   sa fin (workflow `ci.yml`, voir « CI » ci-dessous) ;
 4. **si le CI échoue** : lire les logs (`gh run view --log-failed`), corriger la cause dans le code (jamais en
    supprimant ni en affaiblissant un test, jamais de `--no-verify`), recommiter, repousser et suivre à nouveau
    le CI, jusqu'à ce qu'il soit vert. Le travail n'est terminé que lorsque le CI de `dev` est vert.
 
 #### CI (GitHub Actions, `.github/workflows`)
-- `ci-dev.yml` (push et PR sur `dev`) : **tous** les contrôles et tests — cohérence CLAUDE.md/AGENTS.md, lint,
-  format, typecheck, tests unitaires, tests fonctionnels API puis web (Postgres + Redis en services). Ne déploie rien.
-- `ci-main.yml` (push et PR sur `main`) : contrôles **basiques** seulement (docs, lint, format, typecheck), puis, sur
+- `ci.yml` (push sur `dev`, PR vers `dev`/`main`) : **tous** les contrôles et tests — cohérence CLAUDE.md/AGENTS.md,
+  lint, format, typecheck, build, tests unitaires, tests fonctionnels API puis web (Postgres + Redis en services). Ne déploie rien.
+- `deploy-vps.yml` (push et PR sur `main`) : contrôles **basiques** seulement (docs, lint, format, typecheck, build), puis, sur
   push uniquement, **déploiement** sur le VPS. `main` ne reçoit que des fusions de `dev` déjà vert.
 
 ### 3. CLAUDE.md et AGENTS.md

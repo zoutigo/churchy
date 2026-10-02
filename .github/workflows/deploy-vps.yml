@@ -1,6 +1,6 @@
-name: CI main (contrôles basiques et déploiement)
+name: Churchy - Checks & Deploy (VPS)
 
-# Les tests complets (unitaires + fonctionnels) tournent sur `dev` (ci-dev.yml) : `main` ne reçoit que
+# Les tests complets (unitaires + fonctionnels) tournent sur `dev` (ci.yml) : `main` ne reçoit que
 # du code déjà validé, on y refait seulement les contrôles rapides avant de déployer.
 on:
   push:
@@ -9,13 +9,15 @@ on:
     branches: [main]
 
 concurrency:
-  group: ci-main-${{ github.ref }}
+  group: deploy-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   checks:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: read
 
     env:
       CI: 'true'
@@ -45,6 +47,9 @@ jobs:
 
       - name: Typecheck
         run: npm run typecheck
+
+      - name: Build
+        run: npm run build
 
   deploy:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'

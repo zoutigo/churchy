@@ -1,10 +1,10 @@
-name: CI dev (contrôles complets)
+name: CI
 
 on:
   push:
     branches: [dev]
   pull_request:
-    branches: [dev]
+    branches: [dev, main]
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -14,6 +14,8 @@ jobs:
   checks:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    permissions:
+      contents: read
 
     # Mêmes ports que le docker-compose.yml de dev : les tests fonctionnels n'ont rien à configurer.
     services:
@@ -69,6 +71,9 @@ jobs:
 
       - name: Typecheck
         run: npm run typecheck
+
+      - name: Build
+        run: npm run build
 
       - name: Tests unitaires
         run: npm test
