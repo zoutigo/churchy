@@ -1,7 +1,12 @@
 'use client';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { DEFAULT_COUNTRY, createParishSchema, type CreateParishDto } from '@churchy/shared';
+import {
+  DEFAULT_COUNTRY,
+  createParishSchema,
+  withCompletePhone,
+  type CreateParishDto,
+} from '@churchy/shared';
 import { parishesApi } from '@/lib/api/parishes.api';
 import {
   Form,
@@ -15,6 +20,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { LocationFields } from './LocationFields';
+import { PhoneField } from './PhoneField';
 
 interface Props {
   onSuccess?: () => void;
@@ -22,7 +28,7 @@ interface Props {
 
 export function CreateParishForm({ onSuccess }: Props) {
   const form = useForm<CreateParishDto>({
-    resolver: zodResolver(createParishSchema),
+    resolver: zodResolver(withCompletePhone(createParishSchema)),
     defaultValues: {
       name: '',
       description: '',
@@ -31,6 +37,8 @@ export function CreateParishForm({ onSuccess }: Props) {
       city: '',
       district: '',
       addressComplement: '',
+      phone: '',
+      email: '',
     },
     mode: 'onChange',
   });
@@ -95,6 +103,23 @@ export function CreateParishForm({ onSuccess }: Props) {
               </FormLabel>
               <FormControl>
                 <Input placeholder="En face de la poste centrale" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <PhoneField optionalHint />
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>
+                Email de la paroisse{' '}
+                <span className="text-muted-foreground text-xs">(optionnel)</span>
+              </FormLabel>
+              <FormControl>
+                <Input type="email" placeholder="contact@paroisse.org" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

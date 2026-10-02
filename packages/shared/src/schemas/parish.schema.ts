@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { ParishRole } from '../enums/parish-role.enum';
+import { isCompletePhone } from '../constants/phone.constants';
 
 /** Texte facultatif : une chaîne vide (champ de formulaire non rempli) équivaut à « non renseigné ». */
 const optional = (schema: z.ZodType<string>) =>
@@ -36,7 +37,7 @@ const publicFields = {
   address: text(200),
   addressComplement: text(200),
   mainChurch: text(150),
-  phone: text(40),
+  phone: text(40).regex(/^[\d\s+().-]+$/, 'Numéro de téléphone invalide'),
   email,
   website: httpUrl,
   imageUrl: httpUrl,
@@ -74,6 +75,18 @@ export const updateParishSchema = z.object({
   website: clearable(publicFields.website),
   imageUrl: clearable(publicFields.imageUrl),
 });
+
+/**
+ * Contrôle de formulaire : le numéro doit être complet pour le pays choisi (le serveur, lui, accepte tout
+ * numéro bien formé, pour ne pas rejeter d'anciennes saisies ni les pays sans format connu).
+ */
+export const withCompletePhone = <T extends z.ZodTypeAny>(schema: T) =>
+  schema.superRefine((data, ctx) => {
+    const { phone, country } = data as { phone?: string | null; country?: string };
+    if (phone && country && !isCompletePhone(country, phone)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['phone'], message: 'Numéro incomplet' });
+    }
+  });
 
 export const inviteMemberSchema = z.object({
   email: z.string().email('Email invalide'),

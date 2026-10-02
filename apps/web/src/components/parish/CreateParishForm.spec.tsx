@@ -136,4 +136,35 @@ describe('CreateParishForm — localisation', () => {
     expect(field('Région')).toHaveValue('');
     expect(field('Ville')).toHaveValue('');
   });
+
+  it('téléphone et email sont facultatifs ; renseignés, ils sont envoyés (téléphone au format international)', async () => {
+    const user = userEvent.setup();
+    render(<CreateParishForm />);
+    const phone = screen.getByLabelText(/^Téléphone/);
+    expect(phone).toHaveAttribute('placeholder', '6 77 12 34 56');
+    await user.type(field('Nom de la paroisse'), 'Saint Joseph');
+    await user.selectOptions(field('Région'), 'Centre');
+    await user.selectOptions(field('Ville'), 'Yaoundé');
+    await user.type(phone, '677123456');
+    await user.type(screen.getByLabelText(/^Email de la paroisse/), 'contact@paroisse.cm');
+    await user.click(screen.getByRole('button', { name: 'Créer la paroisse' }));
+
+    await waitFor(() => expect(create).toHaveBeenCalled());
+    expect(create.mock.calls[0][0]).toMatchObject({
+      phone: '+237 6 77 12 34 56',
+      email: 'contact@paroisse.cm',
+    });
+  });
+
+  it('un numéro incomplet empêche la création', async () => {
+    const user = userEvent.setup();
+    render(<CreateParishForm />);
+    await user.type(field('Nom de la paroisse'), 'Saint Joseph');
+    await user.selectOptions(field('Région'), 'Centre');
+    await user.selectOptions(field('Ville'), 'Yaoundé');
+    await user.type(screen.getByLabelText(/^Téléphone/), '6771');
+    await user.click(screen.getByRole('button', { name: 'Créer la paroisse' }));
+    expect(await screen.findByText('Numéro incomplet')).toBeInTheDocument();
+    expect(create).not.toHaveBeenCalled();
+  });
 });

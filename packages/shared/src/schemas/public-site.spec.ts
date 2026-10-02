@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { createParishSchema, searchParishesSchema, updateParishSchema } from './parish.schema';
+import {
+  createParishSchema,
+  searchParishesSchema,
+  updateParishSchema,
+  withCompletePhone,
+} from './parish.schema';
 import { createActivitySchema, createAnnouncementSchema } from './announcement.schema';
 import { contactMessageSchema } from './contact.schema';
 import { createCelebrationSchema, setCelebrationAnnouncedSchema } from './celebration.schema';
@@ -187,5 +192,23 @@ describe('région et complément d’adresse', () => {
       region: null,
       addressComplement: null,
     });
+  });
+});
+
+describe('téléphone d’une paroisse', () => {
+  const base = { name: 'Saint Pierre', city: 'Yaoundé', country: 'Cameroun' };
+
+  it('refuse des caractères qui ne sont pas ceux d’un numéro', () => {
+    expect(createParishSchema.safeParse({ ...base, phone: 'appelez-moi' }).success).toBe(false);
+    expect(createParishSchema.safeParse({ ...base, phone: '+237 6 77 12 34 56' }).success).toBe(
+      true,
+    );
+  });
+
+  it('withCompletePhone exige un numéro complet pour le pays, mais pas de numéro du tout', () => {
+    const schema = withCompletePhone(createParishSchema);
+    expect(schema.safeParse({ ...base, phone: '+237 6 77' }).success).toBe(false);
+    expect(schema.safeParse({ ...base, phone: '+237 6 77 12 34 56' }).success).toBe(true);
+    expect(schema.safeParse(base).success).toBe(true);
   });
 });

@@ -79,6 +79,11 @@ Ces routes n'ont volontairement **pas** de `@ParishAccess` : elles ne renvoient 
 - « À venir » = depuis 3 h avant l'heure de début. Les dates sont formatées dans le fuseau du serveur web
   (le fuseau d'une paroisse n'est pas modélisé).
 - Les paroisses sont toutes publiques pour l'instant (pas de drapeau de visibilité).
+- Contact (facultatif) : `phone` et `email` de la paroisse. Le téléphone suit le format du pays (`PHONE_FORMATS` dans
+  `@churchy/shared` : indicatif, regroupement, exemple) ; le champ web (`PhoneField`) affiche l'indicatif, un placeholder
+  d'exemple et masque la saisie, et enregistre le numéro international (« +237 6 77 12 34 56 »). Pays sans format :
+  saisie libre. Le contrôle « numéro complet » est côté formulaire (`withCompletePhone`) ; l'API n'exige que des
+  caractères de numéro. Sur la page publique, téléphone et email sont des liens `tel:` / `mailto:`.
 - Gestion : `PATCH /parishes/:id` (identité publique, ADMINS), `announcements` et `activities` (`/parishes/:parishId/…`,
   lecture ALL_MEMBERS, écriture/suppression EDITORS), `PATCH /celebrations/:id/announced`.
 - Les pages sont rendues par le serveur web : toutes les requêtes publiques partent de **la même IP**. En production,

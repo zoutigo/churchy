@@ -1,7 +1,12 @@
 'use client';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { updateParishSchema, type Parish, type UpdateParishDto } from '@churchy/shared';
+import {
+  updateParishSchema,
+  withCompletePhone,
+  type Parish,
+  type UpdateParishDto,
+} from '@churchy/shared';
 import { parishesApi } from '@/lib/api/parishes.api';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,6 +20,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { LocationFields } from './LocationFields';
+import { PhoneField } from './PhoneField';
 
 type Field = keyof UpdateParishDto;
 
@@ -26,8 +32,12 @@ const TEXT_FIELDS: { name: Field; label: string; placeholder?: string; type?: st
     label: 'Complément d’adresse',
     placeholder: 'En face de la poste centrale',
   },
-  { name: 'phone', label: 'Téléphone', placeholder: '04 00 00 00 00', type: 'tel' },
-  { name: 'email', label: 'Email de la paroisse', type: 'email' },
+  {
+    name: 'email',
+    label: 'Email de la paroisse',
+    placeholder: 'contact@paroisse.org',
+    type: 'email',
+  },
   { name: 'website', label: 'Site web', placeholder: 'https://…', type: 'url' },
   { name: 'imageUrl', label: 'Adresse de la photo', placeholder: 'https://…', type: 'url' },
 ];
@@ -41,7 +51,7 @@ export function ParishInfoForm({
   onSaved?: (p: Parish) => void;
 }) {
   const form = useForm<UpdateParishDto>({
-    resolver: zodResolver(updateParishSchema),
+    resolver: zodResolver(withCompletePhone(updateParishSchema)),
     defaultValues: {
       description: parish.description ?? '',
       country: parish.country,
@@ -94,6 +104,7 @@ export function ParishInfoForm({
         />
         <LocationFields />
         <div className="grid gap-4 sm:grid-cols-2">
+          <PhoneField />
           {TEXT_FIELDS.map((f) => (
             <FormField
               key={f.name}
