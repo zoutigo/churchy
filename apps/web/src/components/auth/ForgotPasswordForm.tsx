@@ -16,6 +16,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { handleSubmitError } from '@/lib/forms/submit-error';
 
 export function ForgotPasswordForm() {
   const [sentTo, setSentTo] = useState<string | null>(null);
@@ -31,9 +32,7 @@ export function ForgotPasswordForm() {
       await authApi.forgotPassword(data);
       setSentTo(data.email);
     } catch (err: unknown) {
-      form.setError('root', {
-        message: err instanceof Error ? err.message : "Impossible d'envoyer le lien",
-      });
+      handleSubmitError(form, err, "Impossible d'envoyer le lien");
     }
   }
 

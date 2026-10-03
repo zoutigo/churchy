@@ -17,6 +17,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { FormView } from '@/components/layout/FormView';
+import { handleSubmitError } from '@/lib/forms/submit-error';
+import { notify } from '@/lib/notify';
 
 /** Le champ date du navigateur donne une heure locale sans fuseau : convertie en ISO à l'envoi. */
 const formSchema = createCelebrationSchema.extend({
@@ -46,11 +48,10 @@ export default function NewCelebrationPage({ params }: Props) {
     }
     try {
       await celebrationsApi.create(parishId, { ...data, date });
+      notify.success('Célébration créée');
       router.push(`/dashboard/parishes/${parishId}/celebrations`);
     } catch (err: unknown) {
-      form.setError('root', {
-        message: err instanceof Error ? err.message : 'Erreur lors de la création',
-      });
+      handleSubmitError(form, err, 'Erreur lors de la création');
     }
   }
 

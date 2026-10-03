@@ -7,6 +7,8 @@ import { FormView } from '@/components/layout/FormView';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
 import { ErrorNotice } from '@/components/ui/error-notice';
+import { errorMessage } from '@/lib/forms/submit-error';
+import { notify } from '@/lib/notify';
 import { formatDateLong, formatTime } from '@/lib/format';
 
 interface Props {
@@ -85,9 +87,13 @@ export default function Page({ params }: Props) {
                 onConfirm={async () => {
                   try {
                     await activitiesApi.remove(parishId, item.id);
+                    notify.success('Activité supprimée', `« ${item.title} »`);
                     await load();
                   } catch (err: unknown) {
-                    setError(err instanceof Error ? err.message : 'Suppression impossible');
+                    notify.error(
+                      'Suppression impossible',
+                      errorMessage(err, 'Réessayez plus tard.'),
+                    );
                   }
                 }}
               />

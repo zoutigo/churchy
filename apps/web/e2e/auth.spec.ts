@@ -47,7 +47,7 @@ test.describe('protection des pages privées', () => {
 test.describe('connexion et déconnexion', () => {
   test('une connexion refusée affiche un message lisible', async ({ page }) => {
     await loginViaUi(page, 'inconnu@e2e.test', 'mauvais-mot-de-passe');
-    await expect(page.getByText('Identifiants invalides')).toBeVisible();
+    await expect(page.getByRole('main').getByText('Identifiants invalides')).toBeVisible();
     await expect(page).toHaveURL(/\/login$/);
   });
 
@@ -209,7 +209,7 @@ test.describe('vérification de l’email', () => {
 
     await page.goto(link);
     await expect(page.getByText('Impossible de confirmer')).toBeVisible();
-    await expect(page.getByText('Lien invalide ou expiré')).toBeVisible();
+    await expect(page.getByRole('main').getByText('Lien invalide ou expiré')).toBeVisible();
   });
 
   test('un lien sans jeton affiche une erreur claire', async ({ page }) => {
@@ -247,7 +247,7 @@ test.describe('mot de passe oublié', () => {
     await expect(page.getByText('Mot de passe modifié')).toBeVisible();
 
     await loginViaUi(page, email, PASSWORD);
-    await expect(page.getByText('Identifiants invalides')).toBeVisible();
+    await expect(page.getByRole('main').getByText('Identifiants invalides')).toBeVisible();
 
     await loginViaUi(page, email, 'nouveaumdp1');
     await expect(page).toHaveURL(/\/dashboard$/);
@@ -267,7 +267,7 @@ test.describe('mot de passe oublié', () => {
     await page.getByLabel('Confirmer le mot de passe').fill('nouveaumdp1');
     await page.getByRole('button', { name: 'Modifier le mot de passe' }).click();
 
-    await expect(page.getByText('Lien invalide ou expiré')).toBeVisible();
+    await expect(page.getByRole('main').getByText('Lien invalide ou expiré')).toBeVisible();
     await page.getByRole('link', { name: 'Demander un nouveau lien' }).click();
     await expect(page).toHaveURL(/\/forgot-password$/);
   });

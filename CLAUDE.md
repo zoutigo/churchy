@@ -90,6 +90,12 @@ Ces routes n'ont volontairement **pas** de `@ParishAccess` : elles ne renvoient 
   transmettre l'IP du visiteur (`X-Forwarded-For` + `trust proxy`) pour que la limite `THROTTLE_LIMIT` ne
   s'applique pas à l'ensemble des visiteurs.
 
+## Retour d'information : toasts et erreurs (obligatoire)
+Toute action de l'utilisateur annonce son résultat par un **toast** (`notify.success` / `notify.error`, `apps/web/src/lib/notify.ts`),
+et tout échec d'envoi de formulaire passe par `handleSubmitError` (erreurs Zod de l'API sous les champs, autres erreurs en message
+général + toast). Détails et tests à écrire : `apps/web/CLAUDE.md`, « Toasts et erreurs ». Une nouvelle action sans toast de
+succès ni gestion d'erreur testée est incomplète.
+
 ## Texte riche (éditeur)
 `RichTextEditor` (`apps/web/src/components/rich-text`, Tiptap) sert pour le contenu des chants/psaumes/lectures
 (`Content.body`), des annonces (`body`) et des activités (`description`) ; `allowImages` (activités) ajoute les images

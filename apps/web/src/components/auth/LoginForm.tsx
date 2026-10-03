@@ -16,6 +16,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/ui/password-input';
 import { Button } from '@/components/ui/button';
+import { handleSubmitError } from '@/lib/forms/submit-error';
 
 interface Props {
   /** Destination après connexion (déjà validée par safeNextPath). */
@@ -38,9 +39,7 @@ export function LoginForm({ next = '/dashboard' }: Props) {
       router.push(next);
       router.refresh();
     } catch (err: unknown) {
-      form.setError('root', {
-        message: err instanceof Error ? err.message : 'Identifiants invalides',
-      });
+      handleSubmitError(form, err, 'Identifiants invalides');
     }
   }
 

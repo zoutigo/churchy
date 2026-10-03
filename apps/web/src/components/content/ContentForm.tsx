@@ -1,7 +1,12 @@
 'use client';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { createContentSchema, type CreateContentDto, ContentType } from '@churchy/shared';
+import {
+  createContentSchema,
+  type Content,
+  type CreateContentDto,
+  ContentType,
+} from '@churchy/shared';
 import { contentsApi } from '@/lib/api/contents.api';
 import {
   Form,
@@ -22,34 +27,45 @@ import { Input } from '@/components/ui/input';
 import { RichTextEditor } from '@/components/rich-text/RichTextEditor';
 import { Button } from '@/components/ui/button';
 import { CONTENT_TYPE_LABELS } from './content-labels';
+import { handleSubmitError } from '@/lib/forms/submit-error';
+import { notify } from '@/lib/notify';
 
 interface Props {
   parishId: string;
-  onSuccess?: () => void;
+  /** Contenu à modifier : sans lui, le formulaire crée un nouveau contenu. */
+  content?: Content;
+  onSuccess?: (saved: Content) => void;
 }
 
-export function CreateContentForm({ parishId, onSuccess }: Props) {
+export function ContentForm({ parishId, content, onSuccess }: Props) {
+  const editing = !!content;
   const form = useForm<CreateContentDto>({
     resolver: zodResolver(createContentSchema),
     defaultValues: {
-      title: '',
-      type: ContentType.FREE_TEXT,
-      body: '',
-      language: 'fr',
-      tags: [],
+      title: content?.title ?? '',
+      type: content?.type ?? ContentType.FREE_TEXT,
+      body: content?.body ?? '',
+      language: content?.language ?? 'fr',
+      tags: content?.tags ?? [],
     },
     mode: 'onChange',
   });
 
   async function onSubmit(data: CreateContentDto) {
     try {
-      await contentsApi.create(parishId, data);
-      form.reset();
-      onSuccess?.();
+      const saved = content
+        ? await contentsApi.update(content.id, data)
+        : await contentsApi.create(parishId, data);
+      notify.success(
+        editing ? 'Contenu modifié' : 'Contenu ajouté',
+        editing
+          ? `« ${data.title} » a été mis à jour.`
+          : `« ${data.title} » est dans la bibliothèque.`,
+      );
+      if (!editing) form.reset();
+      onSuccess?.(saved);
     } catch (err: unknown) {
-      form.setError('root', {
-        message: err instanceof Error ? err.message : 'Erreur lors de la création',
-      });
+      handleSubmitError(form, err, editing ? 'Modification impossible' : 'Création impossible');
     }
   }
 
@@ -118,7 +134,11 @@ export function CreateContentForm({ parishId, onSuccess }: Props) {
           <p className="text-sm text-destructive">{form.formState.errors.root.message}</p>
         )}
         <Button type="submit" className="w-full sm:w-auto" disabled={form.formState.isSubmitting}>
-          {form.formState.isSubmitting ? 'Enregistrement...' : 'Ajouter le contenu'}
+          {form.formState.isSubmitting
+            ? 'Enregistrement...'
+            : editing
+              ? 'Enregistrer les modifications'
+              : 'Ajouter le contenu'}
         </Button>
       </form>
     </Form>

@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/form';
 import { PasswordInput } from '@/components/ui/password-input';
 import { Button } from '@/components/ui/button';
+import { handleSubmitError } from '@/lib/forms/submit-error';
 
 export const resetFormSchema = z
   .object({
@@ -43,9 +44,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
       await authApi.resetPassword({ token, password: data.password });
       router.push('/login?reset=1');
     } catch (err: unknown) {
-      form.setError('root', {
-        message: err instanceof Error ? err.message : 'Impossible de modifier le mot de passe',
-      });
+      handleSubmitError(form, err, 'Impossible de modifier le mot de passe');
     }
   }
 

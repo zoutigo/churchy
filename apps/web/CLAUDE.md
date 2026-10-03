@@ -56,6 +56,7 @@ const form = useForm<MyDto>({
 - `<FormMessage />` → affiche l'erreur Zod sous le champ en couleur destructive
 - Toujours utiliser les composants shadcn existants (jamais recréer)
 - Erreurs globales → `form.setError('root', { message })` + afficher avec `form.formState.errors.root`
+- **Retour d'information (obligatoire, voir « Toasts et erreurs » ci-dessous)** : toast de succès après chaque action réussie, `handleSubmitError` dans chaque `catch`.
 
 ## Architecture
 
@@ -73,10 +74,12 @@ src/
 │   ├── news/         # Formulaires annonces/activités du tableau de bord, DeleteButton (suppression en 2 temps)
 │   ├── parish/       # ParishCard, CreateParishForm, ParishInfoForm
 │   ├── rich-text/    # RichTextEditor (Tiptap, champ de formulaire), RichContent (rendu public)
-│   ├── content/      # CreateContentForm, ContentCard
+│   ├── content/      # ContentForm (création + modification), filter (recherche/type), content-labels
 │   ├── celebration/  # CelebrationCard, CreateCelebrationForm
 │   └── layout/       # Sidebar (≥ md), MobileNav (< md), Header (menu utilisateur), PageHeader, FormView
 ├── lib/api/          # Clients API typés ; client.ts gère cookies + refresh silencieux
+├── lib/notify.ts     # notify.success / notify.error : les toasts de toute l'application
+├── lib/forms/        # submit-error.ts : handleSubmitError (erreurs API → champs / message général + toast)
 ├── lib/auth/         # session.ts : indicateur de session (cookie lisible) + safeNextPath
 └── hooks/            # useAuth (contexte AuthProvider), useParish
 ```
@@ -107,6 +110,31 @@ Aucun jeton n'est manipulé par le JavaScript : ils sont dans des cookies httpOn
   l'éditeur de texte riche prend toute la largeur (hauteur mini 14/22/26 rem). `PageHeader` porte titre + action.
 - Les couleurs de `tailwind.config.ts` doivent couvrir tous les jetons utilisés (`bg-popover` manquant rendait les
   listes déroulantes transparentes) ; test : `components/ui/popover-theme.spec.tsx`, e2e `dashboard-forms.spec.ts`.
+
+## Toasts et erreurs (obligatoire, partout)
+- **Toute action de l'utilisateur** (création, modification, suppression, publication, envoi) annonce son résultat
+  par un toast via `notify` (`lib/notify.ts`) : `notify.success('Titre court', 'détail facultatif')` après un succès,
+  `notify.error(…)` après un échec. Ne jamais appeler `toast()` directement, ni laisser une action réussir en silence.
+  Succès : vert, 4 s ; erreur : rouge, 7 s. Le `Toaster` est monté une fois dans `app/layout.tsx`.
+- **Tout `catch` d'un envoi de formulaire appelle `handleSubmitError(form, err, 'Texte de repli')`** (`lib/forms/submit-error.ts`) :
+  les erreurs de validation Zod renvoyées par l'API (`ApiError.fieldErrors`) s'affichent sous les champs concernés,
+  toute autre erreur (403, 404, 500, réseau) devient le message général du formulaire (`root`), et un toast d'erreur
+  est émis. Pour une action hors formulaire (ex. suppression) : `notify.error(titre, errorMessage(err, 'repli'))`.
+  Ne pas remplacer toute la page par une `ErrorNotice` sur un échec d'action : elle est réservée aux erreurs de chargement.
+- `lib/api/client.ts` : `ApiError` porte `status` et `fieldErrors` ; un serveur injoignable donne `ApiError` (status 0,
+  « Impossible de joindre le serveur ») ; une réponse sans corps (suppression) n'est pas une erreur.
+- Un écran qui confirme déjà par lui-même (ex. page « Message envoyé » du contact) garde sa confirmation, avec un toast
+  de titre différent pour ne pas dupliquer le texte.
+- Tests : unitaire du formulaire (succès → `notify.success`, erreur API → message + `notify.error`, validation Zod),
+  et e2e avec `page.route` pour simuler 400 (`fieldErrors`), 500 et panne réseau (voir `e2e/contents-library.spec.ts` ;
+  localiser un toast avec `ol > li[data-state="open"]` : le `<li>` Radix n'a pas de rôle et son relais pour lecteurs d'écran a `role="status"`).
+
+## Bibliothèque de contenus
+`/dashboard/parishes/[id]/contents` : liste avec recherche (titre + texte, sans casse ni accents) et filtre par type
+(`components/content/filter.ts`), pagination « Afficher plus » par 24 ; chaque carte mène à `/contents/[contentId]`
+(lecture, **Modifier** → `ContentForm` prérempli, **Supprimer** en deux temps). L'API réserve modification et
+suppression à l'**auteur** du contenu : les boutons ne sont affichés qu'à lui. Données de démonstration :
+`npm run seed:contents -w @churchy/api -- "<fragment du nom de paroisse>"` (20 contenus par type, idempotent, base de dev).
 
 ## Ajouter un composant shadcn
 

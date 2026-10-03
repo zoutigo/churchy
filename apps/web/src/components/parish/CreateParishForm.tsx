@@ -21,6 +21,8 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { LocationFields } from './LocationFields';
 import { PhoneField } from './PhoneField';
+import { handleSubmitError } from '@/lib/forms/submit-error';
+import { notify } from '@/lib/notify';
 
 interface Props {
   onSuccess?: () => void;
@@ -46,12 +48,11 @@ export function CreateParishForm({ onSuccess }: Props) {
   async function onSubmit(data: CreateParishDto) {
     try {
       await parishesApi.create(data);
+      notify.success('Paroisse créée', `« ${data.name} » est prête.`);
       form.reset();
       onSuccess?.();
     } catch (err: unknown) {
-      form.setError('root', {
-        message: err instanceof Error ? err.message : 'Erreur lors de la création',
-      });
+      handleSubmitError(form, err, 'Erreur lors de la création');
     }
   }
 

@@ -21,6 +21,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { LocationFields } from './LocationFields';
 import { PhoneField } from './PhoneField';
+import { handleSubmitError } from '@/lib/forms/submit-error';
+import { notify } from '@/lib/notify';
 
 type Field = keyof UpdateParishDto;
 
@@ -73,11 +75,10 @@ export function ParishInfoForm({
     try {
       const saved = await parishesApi.update(parish.id, data);
       form.clearErrors('root');
+      notify.success('Paroisse mise à jour');
       onSaved?.(saved);
     } catch (err: unknown) {
-      form.setError('root', {
-        message: err instanceof Error ? err.message : 'Erreur lors de l’enregistrement',
-      });
+      handleSubmitError(form, err, 'Erreur lors de l’enregistrement');
     }
   }
 

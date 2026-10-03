@@ -14,6 +14,8 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { RichTextEditor } from '@/components/rich-text/RichTextEditor';
+import { handleSubmitError } from '@/lib/forms/submit-error';
+import { notify } from '@/lib/notify';
 
 const optionalHint = <span className="text-muted-foreground text-xs">(optionnel)</span>;
 
@@ -33,12 +35,11 @@ export function CreateAnnouncementForm({
   async function onSubmit(data: CreateAnnouncementDto) {
     try {
       await announcementsApi.create(parishId, data);
+      notify.success('Annonce publiée');
       form.reset();
       onSuccess?.();
     } catch (err: unknown) {
-      form.setError('root', {
-        message: err instanceof Error ? err.message : 'Erreur lors de la publication',
-      });
+      handleSubmitError(form, err, 'Erreur lors de la publication');
     }
   }
 

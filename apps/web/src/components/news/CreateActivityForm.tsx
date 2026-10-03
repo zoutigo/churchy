@@ -16,6 +16,8 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { RichTextEditor } from '@/components/rich-text/RichTextEditor';
+import { handleSubmitError } from '@/lib/forms/submit-error';
+import { notify } from '@/lib/notify';
 
 /** Le champ date du navigateur donne une heure locale sans fuseau : convertie en ISO à l'envoi. */
 const formSchema = createActivitySchema.extend({
@@ -46,12 +48,11 @@ export function CreateActivityForm({
     }
     try {
       await activitiesApi.create(parishId, { ...data, startsAt });
+      notify.success('Activité publiée');
       form.reset();
       onSuccess?.();
     } catch (err: unknown) {
-      form.setError('root', {
-        message: err instanceof Error ? err.message : 'Erreur lors de la publication',
-      });
+      handleSubmitError(form, err, 'Erreur lors de la publication');
     }
   }
 

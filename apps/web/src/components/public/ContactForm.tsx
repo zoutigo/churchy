@@ -29,6 +29,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { handleSubmitError } from '@/lib/forms/submit-error';
+import { notify } from '@/lib/notify';
 
 export function ContactForm({ defaultTopic = 'QUESTION' }: { defaultTopic?: ContactTopic }) {
   const [sent, setSent] = useState(false);
@@ -41,13 +43,11 @@ export function ContactForm({ defaultTopic = 'QUESTION' }: { defaultTopic?: Cont
   async function onSubmit(data: ContactMessageDto) {
     try {
       await publicApi.sendContact(data);
+      notify.success('Message transmis');
       form.reset();
       setSent(true);
     } catch (err: unknown) {
-      form.setError('root', {
-        message:
-          err instanceof Error ? err.message : 'Le message n’a pas pu être envoyé. Réessayez.',
-      });
+      handleSubmitError(form, err, 'Le message n’a pas pu être envoyé. Réessayez.');
     }
   }
 
