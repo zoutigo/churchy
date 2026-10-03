@@ -74,10 +74,15 @@ insensible à la casse mais **pas aux accents**), `/public/parishes/:id` (+ `/ce
 `/activities`), `/public/celebrations/:id` et `POST /api/contact` (limité comme l'auth, piège à robots `website`).
 Ces routes n'ont volontairement **pas** de `@ParishAccess` : elles ne renvoient que des vues publiques
 (`PublicService`, liste blanche de champs, types `Public*` de `@churchy/shared`), jamais les entités Prisma.
-- Une célébration est visible si elle est **publiée** (« feuille disponible ») ou **brouillon annoncé**
-  (`announced`, « feuille en préparation », sans déroulement). Brouillons non annoncés et archivées : 404.
-- « À venir » = depuis 3 h avant l'heure de début. Les dates sont formatées dans le fuseau du serveur web
-  (le fuseau d'une paroisse n'est pas modélisé).
+- Une **date** (occurrence) est visible si sa série est **annoncée** et non archivée : « feuille disponible » si la feuille
+  de cette date est publiée, sinon « feuille en préparation » (sans déroulement). Une date **annulée** reste affichée comme
+  telle (motif public, pas de déroulement). Séries non annoncées et archivées : 404. L'URL publique `/messes/[id]` porte l'id
+  de la **date**.
+- « À venir » = depuis 3 h avant l'heure de début. Les heures sont affichées dans le **fuseau de la paroisse** (`Parish.timezone`).
+- **Calendrier public** : `GET /api/public/parishes/:id/calendar?month=AAAA-MM` (mois courant par défaut ; dates passées et
+  annulées comprises) et page `/paroisses/[id]/calendrier?mois=` : grille dès `md`, liste des jours à célébration sur mobile.
+- `description` (série) et `occurrenceDescription` (date) sont **publiques** (HTML nettoyé). Les **notes internes** ne sortent
+  jamais : `PublicService` ne les sélectionne même pas (test de non-fuite dans les tests unitaires et e2e).
 - Les paroisses sont toutes publiques pour l'instant (pas de drapeau de visibilité).
 - Contact (facultatif) : `phone` et `email` de la paroisse. Le téléphone suit le format du pays (`PHONE_FORMATS` dans
   `@churchy/shared` : indicatif, regroupement, exemple) ; le champ web (`PhoneField`) affiche l'indicatif, un placeholder
@@ -89,6 +94,35 @@ Ces routes n'ont volontairement **pas** de `@ParishAccess` : elles ne renvoient 
 - Les pages sont rendues par le serveur web : toutes les requêtes publiques partent de **la même IP**. En production,
   transmettre l'IP du visiteur (`X-Forwarded-For` + `trust proxy`) pour que la limite `THROTTLE_LIMIT` ne
   s'applique pas à l'ensemble des visiteurs.
+
+## Célébrations : séries, dates et feuilles de préparation
+Trois niveaux (`apps/api/src/modules/celebrations`, schémas dans `@churchy/shared`) :
+- **Série** (`Celebration`) : titre, type, lieu, `description` publique (texte riche), `internalNote` (**interne**), `announced`
+  (visible du public : **toutes** ses dates), `defaultTemplateId` (modèle proposé), `archivedAt`.
+- **Date** (`CelebrationOccurrence`, `startsAt` en UTC) : `description` (précision publique, ex. « l'évêque sera là »),
+  `internalNote`, `status` `SCHEDULED`/`CANCELLED` + motif. Une date est créée par la série : dates ponctuelles ou
+  **récurrence hebdomadaire** (début, fin, jours, heure) **dépliée en vraies dates** à la création.
+- **Feuille** (`PreparationSheet`, 1 par date, **créée à la demande**) : depuis un modèle (par défaut celui de la série, ou un
+  autre) ou **à la volée** (vide, étapes libres). Étapes (`CelebrationStep`) rapprochées par `key`.
+Règles (toutes testées, unitaire + e2e) :
+- **Le passé est immuable** : une date dont `startsAt <= maintenant` ne peut plus être modifiée, annulée, rétablie ni préparée
+  (409) ; une série dont toutes les dates sont passées n'est plus modifiable. Création/prolongation : dates **à venir** et dans
+  l'**horizon d'un an** (`scheduleHorizon`), sinon 400 avec l'erreur sous le champ `schedule`.
+- **Heures locales** : le planning est saisi en date + heure locales et converti avec `Parish.timezone` (défaut selon le pays,
+  `timezoneForCountry`) ; « chaque dimanche à 10 h » reste à 10 h au changement d'heure (`@churchy/shared` `schedule.ts`,
+  partagé API + web pour l'aperçu).
+- **Notes internes** : `canSeeInternalNotes` (ADMIN, PREPARER, SUPER_ADMIN) ; `ParishRolesGuard` pose `request.parishRole`
+  (décorateur `@CurrentParishRole()`), les lecteurs/spectateurs ne reçoivent **pas la clé** `internalNote`.
+- **Changer de modèle** (`PATCH /sheets/:id/template`, `dryRun` pour l'aperçu) : étapes rapprochées par `key` (contenu conservé),
+  étapes manquantes ajoutées vides, étapes **vides** sans équivalent retirées, étapes **remplies** sans équivalent gardées comme
+  étapes libres : rien n'est perdu en silence. `null` = détacher (à la volée).
+- **Rappel de fin de série** : `endingSoon` (dernière date dans les 30 jours, `SERIES_END_REMINDER_DAYS`) → message box
+  (`EndingSoonDialog`, une fois par session) et alerte sur la série ; `POST /celebrations/:id/occurrences` prolonge.
+- Routes : `/parishes/:id/celebrations` (POST, GET), `/celebrations/:id` (GET, PATCH, `archive`, `unarchive`, `occurrences`),
+  `/occurrences/:id` (GET, PATCH, `cancel`, `reinstate`, `sheet`), `/sheets/:id` (GET, `template`, `steps`, `steps/order`,
+  `steps/:stepId`, `publish`, `unpublish`). Gardes : `@ParishAccess(…, 'celebration' | 'occurrence' | 'sheet')`.
+- Web : `/dashboard/parishes/[id]/celebrations` (liste + rappel), `/new`, `/[celebrationId]` (série et ses dates),
+  `/[celebrationId]/dates/[occurrenceId]` (préparation : feuille + infos de la date), `/templates` (création de modèles).
 
 ## Retour d'information : toasts et erreurs (obligatoire)
 Toute action de l'utilisateur annonce son résultat par un **toast** (`notify.success` / `notify.error`, `apps/web/src/lib/notify.ts`),
@@ -112,7 +146,7 @@ de fichiers pour l'instant). Le texte est stocké en **HTML** dans les mêmes co
 
 ## Files de jobs (BullMQ)
 Les noms de files et payloads sont dans `@churchy/contracts`. L'API est le **producteur** :
-`NotificationsService` enfile `celebration.published` (publication d'une célébration),
+`NotificationsService` enfile `celebration.published` (publication de la **feuille d'une date** ; `jobId` par date),
 `auth.email-verification-requested` et `auth.password-reset-requested` (liens à usage unique : jobs sans
 rétention une fois traités) et `contact.message-received` (page Contact : le worker l'envoie à `CONTACT_EMAIL`,
 avec `Reply-To` = visiteur ; données personnelles, supprimées une fois traitées).

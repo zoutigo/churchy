@@ -23,7 +23,8 @@ export function ParishResultCard({ parish }: { parish: PublicParishSummary }) {
         {next && (
           <p className="flex flex-wrap items-center gap-2 text-sm text-churchy-900">
             <span>
-              Prochaine messe : {formatDateShort(next.date)} à {formatTime(next.date)}
+              Prochaine messe : {formatDateShort(next.date, { timeZone: next.timezone })} à{' '}
+              {formatTime(next.date, { timeZone: next.timezone })}
             </span>
             <SheetStatusBadge status={next.sheetStatus} />
           </p>

@@ -66,6 +66,8 @@ export const VIEWPORTS = {
 
 const API_URL = 'http://localhost:3211/api';
 const inDays = (days: number) => new Date(Date.now() + days * 24 * 3600 * 1000).toISOString();
+/** Jour « AAAA-MM-JJ » dans `days` jours (UTC). */
+export const dayFromNow = (days: number) => inDays(days).slice(0, 10);
 
 export interface SeededParish {
   id: string;
@@ -104,21 +106,29 @@ export async function seedParish(page: Page): Promise<SeededParish> {
     name: 'Messe dominicale',
     type: 'SUNDAY_MASS',
   });
+  await post(`/templates/${template.id}/steps`, {
+    title: 'Première lecture',
+    key: 'reading-1',
+    order: 1,
+  });
+  /** Série d'une date ; renvoie l'identifiant de la date (c'est lui que le public utilise dans l'URL). */
   const celebrate = async (title: string, days: number, extra: object = {}) =>
     (
       await post(`/parishes/${parish.id}/celebrations`, {
         templateId: template.id,
         title,
-        date: inDays(days),
+        type: 'SUNDAY_MASS',
         location: 'Église Saint-Pierre',
+        schedule: { kind: 'dates', dates: [{ date: dayFromNow(days), time: '10:00' }] },
         ...extra,
       })
-    ).id as string;
+    ).occurrences[0].id as string;
 
   await celebrate('Messe brouillon cachée', 2);
   const announcedId = await celebrate('Messe annoncée', 3, { announced: true });
-  const publishedId = await celebrate('Messe publiée', 4);
-  await post(`/celebrations/${publishedId}/publish`, {});
+  const publishedId = await celebrate('Messe publiée', 4, { announced: true });
+  const sheet = await post(`/occurrences/${publishedId}/sheet`, {});
+  await post(`/sheets/${sheet.id}/publish`, {});
 
   await post(`/parishes/${parish.id}/announcements`, {
     title: 'Changement d’horaire',

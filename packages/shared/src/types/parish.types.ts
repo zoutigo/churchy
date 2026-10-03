@@ -17,6 +17,8 @@ export interface Parish {
   email?: string | null;
   website?: string | null;
   imageUrl?: string | null;
+  /** Fuseau horaire IANA : les heures des célébrations sont celles de ce fuseau. */
+  timezone: string;
   createdAt: Date;
   updatedAt: Date;
 }

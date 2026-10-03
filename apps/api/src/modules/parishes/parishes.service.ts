@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import slugify from 'slugify';
 import { randomBytes } from 'node:crypto';
 import { PrismaService } from '../../prisma/prisma.service';
-import type { CreateParishDto, UpdateParishDto } from '@churchy/shared';
+import { timezoneForCountry, type CreateParishDto, type UpdateParishDto } from '@churchy/shared';
 
 @Injectable()
 export class ParishesService {
@@ -18,7 +18,8 @@ export class ParishesService {
   async create(dto: CreateParishDto, userId: string) {
     const slug = await this.uniqueSlug(dto.name);
     const parish = await this.prisma.parish.create({
-      data: { ...dto, slug },
+      // Le fuseau par défaut suit le pays ; la paroisse peut le corriger ensuite.
+      data: { ...dto, slug, timezone: dto.timezone ?? timezoneForCountry(dto.country) },
     });
     await this.prisma.parishMember.create({
       data: { userId, parishId: parish.id, role: 'PARISH_ADMIN' },

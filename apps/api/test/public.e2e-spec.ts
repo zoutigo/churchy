@@ -1,6 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { Agent, createTestApp, registerAgent } from './helpers';
+import { PrismaService } from '../src/prisma/prisma.service';
+import { Agent, createTestApp, onDays, registerAgent } from './helpers';
 
 const inDays = (days: number) => new Date(Date.now() + days * 24 * 3600 * 1000).toISOString();
 
@@ -13,18 +14,26 @@ describe('API publique', () => {
   let admin: Agent;
   let parishId: string;
   let templateId: string;
-  let draftId: string;
-  let announcedId: string;
-  let publishedId: string;
+  /** Une série non annoncée (brouillon), une annoncée à deux dates, une dont la feuille est publiée. */
+  let draft: { id: string; occurrenceId: string };
+  let announced: { id: string; occurrenceId: string; secondOccurrenceId: string };
+  let published: { id: string; occurrenceId: string; sheetId: string };
   const http = () => request(app.getHttpServer());
 
-  const celebrate = async (title: string, date: string, extra: object = {}) =>
-    (
-      await admin
-        .post(`/api/parishes/${parishId}/celebrations`)
-        .send({ templateId, title, date, ...extra })
-        .expect(201)
-    ).body.id as string;
+  const createSeries = async (
+    title: string,
+    days: number[],
+    extra: Record<string, unknown> = {},
+  ) => {
+    const res = await admin
+      .post(`/api/parishes/${parishId}/celebrations`)
+      .send({ title, type: 'SUNDAY_MASS', templateId, schedule: onDays(...days), ...extra })
+      .expect(201);
+    return {
+      id: res.body.id as string,
+      occurrences: res.body.occurrences.map((o: { id: string }) => o.id) as string[],
+    };
+  };
 
   beforeAll(async () => {
     app = await createTestApp();
@@ -56,13 +65,48 @@ describe('API publique', () => {
         .expect(201)
     ).body.id;
 
-    draftId = await celebrate('Messe brouillon secrète', inDays(2));
-    announcedId = await celebrate('Messe annoncée', inDays(3), { announced: true });
-    publishedId = await celebrate('Messe publiée', inDays(4));
-    await admin.post(`/api/celebrations/${publishedId}/publish`).expect(201);
-    // Passée : ne doit pas apparaître dans les « à venir ».
-    const pastId = await celebrate('Messe passée', inDays(-5));
-    await admin.post(`/api/celebrations/${pastId}/publish`).expect(201);
+    await admin
+      .post(`/api/templates/${templateId}/steps`)
+      .send({ title: 'Première lecture', key: 'reading-1', order: 1 })
+      .expect(201);
+
+    const d = await createSeries('Messe brouillon secrète', [2]);
+    draft = { id: d.id, occurrenceId: d.occurrences[0] };
+
+    const n = await createSeries('Messe annoncée', [3, 17], {
+      announced: true,
+      description: '<p>Messe de rentrée <strong>pour tous</strong></p>',
+      internalNote: 'SECRET-NOTE : peintre en retard',
+    });
+    await admin
+      .patch(`/api/occurrences/${n.occurrences[0]}`)
+      .send({
+        description: '<p>L’évêque sera des nôtres</p>',
+        internalNote: 'SECRET-NOTE-DATE : prévoir la mitre',
+      })
+      .expect(200);
+    announced = { id: n.id, occurrenceId: n.occurrences[0], secondOccurrenceId: n.occurrences[1] };
+
+    const p = await createSeries('Messe publiée', [4], { announced: true });
+    const sheet = await admin
+      .post(`/api/occurrences/${p.occurrences[0]}/sheet`)
+      .send({})
+      .expect(201);
+    await admin
+      .patch(`/api/sheets/${sheet.body.id}/steps/${sheet.body.steps[0].id}`)
+      .send({ customText: 'Isaïe 55' })
+      .expect(200);
+    await admin.post(`/api/sheets/${sheet.body.id}/publish`).expect(201);
+    published = { id: p.id, occurrenceId: p.occurrences[0], sheetId: sheet.body.id };
+
+    // Une date passée (impossible à créer par l'API : le passé est immuable) : ne doit jamais
+    // apparaître dans les « à venir ».
+    const prisma = app.get(PrismaService);
+    const past = await createSeries('Messe passée', [1], { announced: true });
+    await prisma.celebrationOccurrence.update({
+      where: { id: past.occurrences[0] },
+      data: { startsAt: new Date(Date.now() - 5 * 86_400_000) },
+    });
   });
 
   afterAll(async () => {
@@ -96,10 +140,13 @@ describe('API publique', () => {
       const res = await http().get('/api/public/parishes').query({ q: 'Notre-Dame des Pubs' });
       const item = res.body.items.find((p: { id: string }) => p.id === parishId);
       expect(item.nextCelebration).toMatchObject({
-        id: announcedId,
+        id: announced.occurrenceId,
+        celebrationId: announced.id,
         title: 'Messe annoncée',
         type: 'SUNDAY_MASS',
         sheetStatus: 'IN_PREPARATION',
+        cancelled: false,
+        timezone: 'Europe/Paris',
       });
     });
 
@@ -160,51 +207,181 @@ describe('API publique', () => {
   });
 
   describe('messes', () => {
-    it('liste les messes à venir visibles, par date croissante', async () => {
+    const ids = (body: { id: string }[]) => body.map((c) => c.id);
+
+    it('liste les dates à venir visibles, par ordre croissant, passé et brouillon exclus', async () => {
       const res = await http().get(`/api/public/parishes/${parishId}/celebrations`).expect(200);
-      expect(res.body.map((c: { id: string }) => c.id)).toEqual([announcedId, publishedId]);
+      expect(ids(res.body)).toEqual([
+        announced.occurrenceId,
+        published.occurrenceId,
+        announced.secondOccurrenceId,
+      ]);
       expect(res.body.map((c: { sheetStatus: string }) => c.sheetStatus)).toEqual([
         'IN_PREPARATION',
         'AVAILABLE',
+        'IN_PREPARATION',
       ]);
+      // Une série annoncée montre TOUTES ses dates, même sans feuille : un fidèle voit qu'il y aura une messe.
+      expect(res.body[0].celebrationId).toBe(res.body[2].celebrationId);
     });
 
-    it('un brouillon non annoncé est introuvable', async () => {
-      await http().get(`/api/public/celebrations/${draftId}`).expect(404);
+    it('les dates d’une série non annoncée sont introuvables', async () => {
+      await http().get(`/api/public/celebrations/${draft.occurrenceId}`).expect(404);
     });
 
-    it('une messe annoncée est visible mais sans déroulement', async () => {
-      const res = await http().get(`/api/public/celebrations/${announcedId}`).expect(200);
+    it('une date annoncée est visible avec ses descriptions, sans déroulement', async () => {
+      const res = await http()
+        .get(`/api/public/celebrations/${announced.occurrenceId}`)
+        .expect(200);
       expect(res.body).toMatchObject({
+        id: announced.occurrenceId,
         title: 'Messe annoncée',
         sheetStatus: 'IN_PREPARATION',
         steps: [],
+        description: '<p>Messe de rentrée <strong>pour tous</strong></p>',
+        occurrenceDescription: '<p>L’évêque sera des nôtres</p>',
         parish: { id: parishId, name: 'Notre-Dame des Pubs', city: 'Bordeaux' },
       });
     });
 
-    it('une messe publiée expose sa feuille', async () => {
-      const res = await http().get(`/api/public/celebrations/${publishedId}`).expect(200);
-      expect(res.body.sheetStatus).toBe('AVAILABLE');
-      expect(Array.isArray(res.body.steps)).toBe(true);
+    it('la deuxième date de la série n’a pas la précision de la première', async () => {
+      const res = await http()
+        .get(`/api/public/celebrations/${announced.secondOccurrenceId}`)
+        .expect(200);
+      expect(res.body.occurrenceDescription).toBeNull();
+      expect(res.body.description).toContain('Messe de rentrée');
     });
 
-    it('annoncer / retirer l’annonce change la visibilité, l’archivage la supprime', async () => {
-      await admin
-        .patch(`/api/celebrations/${draftId}/announced`)
-        .send({ announced: true })
+    it('une date dont la feuille est publiée expose son déroulement', async () => {
+      const res = await http()
+        .get(`/api/public/celebrations/${published.occurrenceId}`)
         .expect(200);
-      await http().get(`/api/public/celebrations/${draftId}`).expect(200);
-      await admin
-        .patch(`/api/celebrations/${draftId}/announced`)
-        .send({ announced: false })
-        .expect(200);
-      await http().get(`/api/public/celebrations/${draftId}`).expect(404);
+      expect(res.body.sheetStatus).toBe('AVAILABLE');
+      expect(res.body.steps).toEqual([
+        expect.objectContaining({ title: 'Première lecture', customText: 'Isaïe 55' }),
+      ]);
+    });
 
-      await admin.post(`/api/celebrations/${announcedId}/archive`).expect(201);
-      await http().get(`/api/public/celebrations/${announcedId}`).expect(404);
+    it('ne divulgue JAMAIS une note interne, sur aucune route publique', async () => {
+      const bodies = [
+        (await http().get(`/api/public/parishes/${parishId}/celebrations`)).body,
+        (await http().get(`/api/public/celebrations/${announced.occurrenceId}`)).body,
+        (await http().get(`/api/public/celebrations/${announced.secondOccurrenceId}`)).body,
+        (await http().get('/api/public/parishes').query({ q: 'Notre-Dame des Pubs' })).body,
+      ];
+      for (const body of bodies) {
+        expect(JSON.stringify(body)).not.toContain('SECRET-NOTE');
+        expect(JSON.stringify(body)).not.toContain('internalNote');
+      }
+    });
+
+    it('annoncer / retirer l’annonce de la série change la visibilité de toutes ses dates', async () => {
+      await admin.patch(`/api/celebrations/${draft.id}`).send({ announced: true }).expect(200);
+      await http().get(`/api/public/celebrations/${draft.occurrenceId}`).expect(200);
+      await admin.patch(`/api/celebrations/${draft.id}`).send({ announced: false }).expect(200);
+      await http().get(`/api/public/celebrations/${draft.occurrenceId}`).expect(404);
+    });
+
+    it('une date annulée reste affichée comme annulée, sans déroulement, et n’est plus « la prochaine »', async () => {
+      await admin
+        .post(`/api/occurrences/${announced.occurrenceId}/cancel`)
+        .send({ reason: 'Pèlerinage diocésain' })
+        .expect(201);
+
       const list = await http().get(`/api/public/parishes/${parishId}/celebrations`).expect(200);
-      expect(list.body.map((c: { id: string }) => c.id)).toEqual([publishedId]);
+      const cancelled = list.body.find((c: { id: string }) => c.id === announced.occurrenceId);
+      expect(cancelled).toMatchObject({ cancelled: true, cancelReason: 'Pèlerinage diocésain' });
+      const page = await http()
+        .get(`/api/public/celebrations/${announced.occurrenceId}`)
+        .expect(200);
+      expect(page.body).toMatchObject({ cancelled: true, steps: [] });
+
+      const search = await http().get('/api/public/parishes').query({ q: 'Notre-Dame des Pubs' });
+      expect(search.body.items[0].nextCelebration.id).toBe(published.occurrenceId);
+
+      await admin.post(`/api/occurrences/${announced.occurrenceId}/reinstate`).expect(201);
+      const back = await http()
+        .get(`/api/public/celebrations/${announced.occurrenceId}`)
+        .expect(200);
+      expect(back.body).toMatchObject({ cancelled: false, cancelReason: null });
+    });
+
+    it('dépublier la feuille la remet « en préparation »', async () => {
+      await admin.post(`/api/sheets/${published.sheetId}/unpublish`).expect(201);
+      const res = await http()
+        .get(`/api/public/celebrations/${published.occurrenceId}`)
+        .expect(200);
+      expect(res.body).toMatchObject({ sheetStatus: 'IN_PREPARATION', steps: [] });
+      await admin.post(`/api/sheets/${published.sheetId}/publish`).expect(201);
+    });
+
+    it('l’archivage de la série retire toutes ses dates', async () => {
+      await admin.post(`/api/celebrations/${announced.id}/archive`).expect(201);
+      await http().get(`/api/public/celebrations/${announced.occurrenceId}`).expect(404);
+      await http().get(`/api/public/celebrations/${announced.secondOccurrenceId}`).expect(404);
+      const list = await http().get(`/api/public/parishes/${parishId}/celebrations`).expect(200);
+      expect(ids(list.body)).toEqual([published.occurrenceId]);
+    });
+  });
+
+  describe('calendrier', () => {
+    const monthOf = (days: number) => inDays(days).slice(0, 7);
+
+    it('liste les dates visibles d’un mois, passées et annulées comprises, jamais celles d’une série non annoncée', async () => {
+      const month = monthOf(4);
+      const res = await http()
+        .get(`/api/public/parishes/${parishId}/calendar`)
+        .query({ month })
+        .expect(200);
+      expect(res.body).toMatchObject({ month, timezone: 'Europe/Paris' });
+      const titles = res.body.items.map((c: { title: string }) => c.title);
+      expect(titles).toContain('Messe publiée');
+      expect(titles).not.toContain('Messe brouillon secrète');
+      expect(JSON.stringify(res.body)).not.toContain('SECRET-NOTE');
+      const dates = res.body.items.map((c: { date: string }) => c.date);
+      expect([...dates].sort()).toEqual(dates);
+    });
+
+    it('inclut les dates passées (historique) du mois', async () => {
+      const res = await http()
+        .get(`/api/public/parishes/${parishId}/calendar`)
+        .query({ month: monthOf(-5) })
+        .expect(200);
+      expect(res.body.items.map((c: { title: string }) => c.title)).toContain('Messe passée');
+    });
+
+    it('un mois sans célébration renvoie une liste vide', async () => {
+      const res = await http()
+        .get(`/api/public/parishes/${parishId}/calendar`)
+        .query({ month: '2031-01' })
+        .expect(200);
+      expect(res.body.items).toEqual([]);
+    });
+
+    it('sans mois : le mois courant', async () => {
+      const res = await http().get(`/api/public/parishes/${parishId}/calendar`).expect(200);
+      expect(res.body.month).toBe(new Date().toISOString().slice(0, 7));
+    });
+
+    it('valide le mois (400) et la paroisse (404)', async () => {
+      for (const month of ['2026-13', 'octobre', '1999-01']) {
+        await http().get(`/api/public/parishes/${parishId}/calendar`).query({ month }).expect(400);
+      }
+      await http().get('/api/public/parishes/inconnue/calendar').expect(404);
+    });
+
+    it('les dates d’une série archivée disparaissent du calendrier', async () => {
+      const series = await createSeries('Série du calendrier', [5], { announced: true });
+      const month = monthOf(5);
+      const before = await http().get(`/api/public/parishes/${parishId}/calendar`).query({ month });
+      expect(before.body.items.map((c: { title: string }) => c.title)).toContain(
+        'Série du calendrier',
+      );
+      await admin.post(`/api/celebrations/${series.id}/archive`).expect(201);
+      const after = await http().get(`/api/public/parishes/${parishId}/calendar`).query({ month });
+      expect(after.body.items.map((c: { title: string }) => c.title)).not.toContain(
+        'Série du calendrier',
+      );
     });
   });
 

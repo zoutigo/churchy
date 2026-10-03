@@ -3,6 +3,7 @@ import type {
   ContactMessageDto,
   PublicActivity,
   PublicAnnouncement,
+  PublicCalendar,
   PublicCelebration,
   PublicCelebrationSummary,
   PublicParish,
@@ -21,6 +22,10 @@ export const publicApi = {
     api.get<PublicCelebrationSummary[]>(`/public/parishes/${encodeURIComponent(id)}/celebrations`),
   getCelebration: (id: string) =>
     api.get<PublicCelebration>(`/public/celebrations/${encodeURIComponent(id)}`),
+  getCalendar: (id: string, month?: string) =>
+    api.get<PublicCalendar>(
+      `/public/parishes/${encodeURIComponent(id)}/calendar${month ? `?month=${month}` : ''}`,
+    ),
   getAnnouncements: (id: string) =>
     api.get<PublicAnnouncement[]>(`/public/parishes/${encodeURIComponent(id)}/announcements`),
   getActivities: (id: string) =>

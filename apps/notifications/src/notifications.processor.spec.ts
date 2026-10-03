@@ -9,6 +9,7 @@ const job = (name: string, data: unknown) => ({ name, data }) as unknown as Job;
 describe('NotificationsProcessor', () => {
   const published = {
     celebrationId: 'c1',
+    occurrenceId: 'o1',
     parishId: 'p1',
     title: 'Messe',
     date: '2026-10-04T09:00:00.000Z',

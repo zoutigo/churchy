@@ -7,6 +7,8 @@ const inDays = (days: number) => {
   const pad = (n: number) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T18:00`;
 };
+/** Format du champ date : « AAAA-MM-JJ ». */
+const dayInDays = (days: number) => inDays(days).slice(0, 10);
 
 test.describe('gestion du contenu public d’une paroisse (tableau de bord → site public)', () => {
   test('complète l’identité, publie et supprime une annonce et une activité', async ({ page }) => {
@@ -95,21 +97,17 @@ test.describe('gestion du contenu public d’une paroisse (tableau de bord → s
         data: { name: `Paroisse ${token}`, city: 'Brest', country: 'France' },
       })
     ).json();
-    const template = await (
-      await page.request.post(`http://localhost:3211/api/parishes/${parish.id}/templates`, {
-        data: { name: 'Messe', type: 'SUNDAY_MASS' },
-      })
-    ).json();
 
     await page.goto(`/dashboard/parishes/${parish.id}/celebrations/new`);
-    await page.getByLabel('ID du modèle').fill(template.id);
     await page.getByLabel('Titre').fill('Messe annoncée par le formulaire');
-    // Non-régression : une saisie datetime-local (sans fuseau) était rejetée par la validation.
-    await page.getByLabel('Date et heure').fill(inDays(5));
-    await page.getByLabel('Annoncer au public').check();
+    await page.getByLabel('Date', { exact: true }).fill(dayInDays(5));
+    await page.getByLabel('Heure', { exact: true }).fill('18:00');
+    await page.getByLabel('Publier la série au public').check();
     await page.getByRole('button', { name: 'Créer la célébration' }).click();
-    await expect(page).toHaveURL(new RegExp(`/dashboard/parishes/${parish.id}/celebrations$`));
-    await expect(page.getByText('Annoncée au public')).toBeVisible();
+    await expect(page).toHaveURL(
+      new RegExp(`/dashboard/parishes/${parish.id}/celebrations/[^/]+$`),
+    );
+    await expect(page.getByTestId('series-status')).toContainText('Publiée au public');
 
     await page.goto(`/paroisses/${parish.id}/messes`);
     await expect(page.getByText('Messe annoncée par le formulaire')).toBeVisible();

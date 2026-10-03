@@ -1,7 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { PrismaService } from '../src/prisma/prisma.service';
-import { Agent, createTestApp, registerAgent } from './helpers';
+import { Agent, createTestApp, onDays, registerAgent } from './helpers';
 
 /**
  * Matrice d'autorisations : qui (visiteur, non-membre, VIEWER, PREPARER, PARISH_ADMIN) peut faire quoi,
@@ -24,6 +24,8 @@ describe('Autorisations par paroisse', () => {
     stepId: '',
     contentId: '',
     celebrationId: '',
+    occurrenceId: '',
+    sheetId: '',
     celebStepId: '',
     announcementId: '',
     activityId: '',
@@ -34,6 +36,8 @@ describe('Autorisations par paroisse', () => {
     stepId: '',
     contentId: '',
     celebrationId: '',
+    occurrenceId: '',
+    sheetId: '',
     celebStepId: '',
     announcementId: '',
     activityId: '',
@@ -63,8 +67,17 @@ describe('Autorisations par paroisse', () => {
       .expect(201);
     const celebration = await owner
       .post(`/api/parishes/${parishId}/celebrations`)
-      .send({ templateId: tpl.body.id, title: `Messe ${suffix}`, date: '2026-10-04T09:00:00.000Z' })
+      .send({
+        templateId: tpl.body.id,
+        title: `Messe ${suffix}`,
+        type: 'SUNDAY_MASS',
+        internalNote: `Note interne ${suffix}`,
+        schedule: onDays(3, 10),
+      })
       .expect(201);
+    const occurrenceId = celebration.body.occurrences[0].id as string;
+    // La feuille naît à la demande, avec les étapes du modèle par défaut.
+    const sheet = await owner.post(`/api/occurrences/${occurrenceId}/sheet`).send({}).expect(201);
     const announcement = await owner
       .post(`/api/parishes/${parishId}/announcements`)
       .send({ title: `Annonce ${suffix}`, body: 'Texte' })
@@ -84,7 +97,9 @@ describe('Autorisations par paroisse', () => {
       stepId: step.body.id as string,
       contentId: content.body.id as string,
       celebrationId: celebration.body.id as string,
-      celebStepId: celebration.body.steps[0].id as string,
+      occurrenceId,
+      sheetId: sheet.body.id as string,
+      celebStepId: sheet.body.steps[0].id as string,
     };
   };
 
@@ -153,13 +168,43 @@ describe('Autorisations par paroisse', () => {
       call: (x) =>
         x
           .post(`/api/parishes/${a.parishId}/celebrations`)
-          .send({ templateId: a.templateId, title: 'Autre', date: '2026-11-01T09:00:00.000Z' }),
+          .send({ title: 'Autre', type: 'SUNDAY_MASS', schedule: onDays(20) }),
     },
-    'PATCH celebration step': {
+    'PATCH celebration': {
+      read: false,
+      call: (x) => x.patch(`/api/celebrations/${a.celebrationId}`).send({ title: 'Renommée' }),
+    },
+    'POST celebration occurrences (prolonger)': {
+      read: false,
+      call: (x) =>
+        x.post(`/api/celebrations/${a.celebrationId}/occurrences`).send({ schedule: onDays(30) }),
+    },
+    'GET  occurrence': { read: true, call: (x) => x.get(`/api/occurrences/${a.occurrenceId}`) },
+    'PATCH occurrence': {
+      read: false,
+      call: (x) => x.patch(`/api/occurrences/${a.occurrenceId}`).send({ internalNote: 'N' }),
+    },
+    'POST occurrence sheet': {
+      read: false,
+      call: (x) => x.post(`/api/occurrences/${a.occurrenceId}/sheet`).send({}),
+    },
+    'GET  sheet': { read: true, call: (x) => x.get(`/api/sheets/${a.sheetId}`) },
+    'PATCH sheet template': {
       read: false,
       call: (x) =>
         x
-          .patch(`/api/celebrations/${a.celebrationId}/steps/${a.celebStepId}`)
+          .patch(`/api/sheets/${a.sheetId}/template`)
+          .send({ templateId: a.templateId, dryRun: true }),
+    },
+    'POST sheet step': {
+      read: false,
+      call: (x) => x.post(`/api/sheets/${a.sheetId}/steps`).send({ title: 'Chant libre' }),
+    },
+    'PATCH sheet step': {
+      read: false,
+      call: (x) =>
+        x
+          .patch(`/api/sheets/${a.sheetId}/steps/${a.celebStepId}`)
           .send({ customText: 'Texte libre' }),
     },
     'GET  announcements': {
@@ -184,11 +229,6 @@ describe('Autorisations par paroisse', () => {
           startsAt: '2027-02-01T18:00:00.000Z',
         }),
     },
-    'PATCH celebration announced': {
-      read: false,
-      call: (x) =>
-        x.patch(`/api/celebrations/${a.celebrationId}/announced`).send({ announced: true }),
-    },
     'PATCH parish (infos publiques)': {
       read: false,
       call: (x) => x.patch(`/api/parishes/${a.parishId}`).send({ address: '1 rue du Test' }),
@@ -198,7 +238,10 @@ describe('Autorisations par paroisse', () => {
 
   // Routes destructrices ou à effet de bord : jouées en dernier, sur leur propre ressource.
   const mutating = (): Record<string, Call> => ({
-    'POST publish': (x) => x.post(`/api/celebrations/${a.celebrationId}/publish`),
+    'POST publish sheet': (x) => x.post(`/api/sheets/${a.sheetId}/publish`),
+    'POST unpublish sheet': (x) => x.post(`/api/sheets/${a.sheetId}/unpublish`),
+    'POST cancel occurrence': (x) => x.post(`/api/occurrences/${a.occurrenceId}/cancel`).send({}),
+    'POST reinstate occurrence': (x) => x.post(`/api/occurrences/${a.occurrenceId}/reinstate`),
     'POST archive': (x) => x.post(`/api/celebrations/${a.celebrationId}/archive`),
     'PATCH content': (x) => x.patch(`/api/contents/${a.contentId}`).send({ title: 'Modifié' }),
     'DELETE announcement': (x) =>
@@ -264,16 +307,36 @@ describe('Autorisations par paroisse', () => {
       .expect(201);
     await preparer
       .post(`/api/parishes/${a.parishId}/celebrations`)
-      .send({ templateId: a.templateId, title: 'Préparée', date: '2026-12-01T09:00:00.000Z' })
+      .send({
+        templateId: a.templateId,
+        title: 'Préparée',
+        type: 'SUNDAY_MASS',
+        schedule: onDays(40),
+      })
       .expect(201);
     await preparer
-      .patch(`/api/celebrations/${a.celebrationId}/steps/${a.celebStepId}`)
+      .patch(`/api/sheets/${a.sheetId}/steps/${a.celebStepId}`)
       .send({ customText: 'Texte du préparateur' })
       .expect(200);
   });
 
+  it('notes internes : visibles des préparateurs, jamais des lecteurs ni des spectateurs', async () => {
+    const asAdmin = await admin.get(`/api/celebrations/${a.celebrationId}`).expect(200);
+    expect(asAdmin.body.internalNote).toBe('Note interne A');
+    const asPreparer = await preparer.get(`/api/celebrations/${a.celebrationId}`).expect(200);
+    expect(asPreparer.body.internalNote).toBe('Note interne A');
+
+    const asViewer = await viewer.get(`/api/celebrations/${a.celebrationId}`).expect(200);
+    expect(asViewer.body).not.toHaveProperty('internalNote');
+    expect(JSON.stringify(asViewer.body)).not.toContain('Note interne');
+    const occurrence = await viewer.get(`/api/occurrences/${a.occurrenceId}`).expect(200);
+    expect(JSON.stringify(occurrence.body)).not.toContain('Note interne');
+  });
+
   it('une ressource inexistante répond 404 (et non une erreur serveur)', async () => {
-    await admin.post('/api/celebrations/inexistante/publish').expect(404);
+    await admin.post('/api/sheets/inexistante/publish').expect(404);
+    await admin.get('/api/occurrences/inexistante').expect(404);
+    await admin.get('/api/celebrations/inexistante').expect(404);
     await admin.get('/api/contents/inexistant').expect(404);
     await admin.get('/api/templates/inexistant').expect(404);
     await admin.delete('/api/templates/steps/inexistante').expect(404);
@@ -282,7 +345,15 @@ describe('Autorisations par paroisse', () => {
   describe('isolation entre paroisses (un admin n’a aucun pouvoir sur l’autre paroisse)', () => {
     it('ne peut ni lire ni modifier les ressources de la paroisse B', async () => {
       await admin.get(`/api/celebrations/${b.celebrationId}`).expect(403);
-      await admin.post(`/api/celebrations/${b.celebrationId}/publish`).expect(403);
+      await admin
+        .patch(`/api/celebrations/${b.celebrationId}`)
+        .send({ title: 'Piraté' })
+        .expect(403);
+      await admin.get(`/api/occurrences/${b.occurrenceId}`).expect(403);
+      await admin.post(`/api/occurrences/${b.occurrenceId}/cancel`).send({}).expect(403);
+      await admin.get(`/api/sheets/${b.sheetId}`).expect(403);
+      await admin.post(`/api/sheets/${b.sheetId}/publish`).expect(403);
+      await admin.post(`/api/sheets/${b.sheetId}/steps`).send({ title: 'Piraté' }).expect(403);
       await admin.get(`/api/contents/${b.contentId}`).expect(403);
       await admin.patch(`/api/contents/${b.contentId}`).send({ title: 'Piraté' }).expect(403);
       await admin.delete(`/api/contents/${b.contentId}`).expect(403);
@@ -306,7 +377,7 @@ describe('Autorisations par paroisse', () => {
         .expect(403);
       await admin.patch(`/api/parishes/${b.parishId}`).send({ address: 'Piraté' }).expect(403);
       await admin
-        .patch(`/api/celebrations/${b.celebrationId}/announced`)
+        .patch(`/api/celebrations/${b.celebrationId}`)
         .send({ announced: true })
         .expect(403);
     });
@@ -324,34 +395,47 @@ describe('Autorisations par paroisse', () => {
         .send({
           templateId: b.templateId,
           title: 'Vol de modèle',
-          date: '2026-11-01T09:00:00.000Z',
+          type: 'SUNDAY_MASS',
+          schedule: onDays(25),
         })
+        .expect(404);
+    });
+
+    it('ne peut pas régler le modèle d’une feuille ou d’une série sur un modèle de l’autre paroisse', async () => {
+      await admin
+        .patch(`/api/sheets/${a.sheetId}/template`)
+        .send({ templateId: b.templateId })
+        .expect(404);
+      await admin
+        .patch(`/api/celebrations/${a.celebrationId}`)
+        .send({ defaultTemplateId: b.templateId })
         .expect(404);
     });
 
     it('ne peut pas viser l’étape d’une autre célébration en passant par la sienne', async () => {
       await admin
-        .patch(`/api/celebrations/${a.celebrationId}/steps/${b.celebStepId}`)
+        .patch(`/api/sheets/${a.sheetId}/steps/${b.celebStepId}`)
         .send({ customText: 'Piraté' })
         .expect(404);
+      await admin.delete(`/api/sheets/${a.sheetId}/steps/${b.celebStepId}`).expect(404);
     });
 
     it('ne peut pas placer dans une étape un contenu de l’autre paroisse', async () => {
       await admin
-        .patch(`/api/celebrations/${a.celebrationId}/steps/${a.celebStepId}`)
+        .patch(`/api/sheets/${a.sheetId}/steps/${a.celebStepId}`)
         .send({ contentId: b.contentId })
         .expect(400);
       await admin
-        .patch(`/api/celebrations/${a.celebrationId}/steps/${a.celebStepId}`)
+        .patch(`/api/sheets/${a.sheetId}/steps/${a.celebStepId}`)
         .send({ contentId: a.contentId })
         .expect(200);
     });
   });
 
   describe('actions autorisées pour l’admin de la paroisse', () => {
-    it('modifie puis supprime un contenu, publie puis archive une célébration', async () => {
+    it('modifie puis supprime un contenu, publie une feuille puis archive la série', async () => {
       await admin.patch(`/api/contents/${a.contentId}`).send({ title: 'Modifié' }).expect(200);
-      await admin.post(`/api/celebrations/${a.celebrationId}/publish`).expect(201);
+      await admin.post(`/api/sheets/${a.sheetId}/publish`).expect(201);
       await admin.post(`/api/celebrations/${a.celebrationId}/archive`).expect(201);
       // Une étape de modèle déjà utilisée par une célébration ne peut pas être supprimée (409, pas 500).
       await admin.delete(`/api/templates/steps/${a.stepId}`).expect(409);
@@ -375,7 +459,7 @@ describe('Autorisations par paroisse', () => {
         .expect(400);
 
       const announced = await admin
-        .patch(`/api/celebrations/${a.celebrationId}/announced`)
+        .patch(`/api/celebrations/${a.celebrationId}`)
         .send({ announced: true })
         .expect(200);
       expect(announced.body.announced).toBe(true);

@@ -2,6 +2,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
+  TIMEZONE_CHOICES,
   updateParishSchema,
   withCompletePhone,
   type Parish,
@@ -18,6 +19,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { NativeSelect } from '@/components/ui/native-select';
 import { Textarea } from '@/components/ui/textarea';
 import { LocationFields } from './LocationFields';
 import { PhoneField } from './PhoneField';
@@ -67,6 +69,7 @@ export function ParishInfoForm({
       email: parish.email ?? '',
       website: parish.website ?? '',
       imageUrl: parish.imageUrl ?? '',
+      timezone: parish.timezone,
     },
     mode: 'onChange',
   });
@@ -127,6 +130,28 @@ export function ParishInfoForm({
               )}
             />
           ))}
+          <FormField
+            control={form.control}
+            name="timezone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Fuseau horaire</FormLabel>
+                <FormControl>
+                  <NativeSelect {...field} value={field.value ?? parish.timezone}>
+                    {[...new Set([...TIMEZONE_CHOICES, parish.timezone])].sort().map((tz) => (
+                      <option key={tz} value={tz}>
+                        {tz.replace('_', ' ')}
+                      </option>
+                    ))}
+                  </NativeSelect>
+                </FormControl>
+                <p className="text-xs text-muted-foreground">
+                  Les heures des célébrations sont celles de ce fuseau.
+                </p>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
         {form.formState.errors.root && (
           <p className="text-sm text-destructive">{form.formState.errors.root.message}</p>

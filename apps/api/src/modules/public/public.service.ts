@@ -1,9 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 import type {
+  CalendarQuery,
   CelebrationType,
   PublicActivity,
   PublicAnnouncement,
+  PublicCalendar,
   PublicCelebration,
   PublicCelebrationSummary,
   PublicParish,
@@ -11,6 +13,7 @@ import type {
   SearchParishesQuery,
   SheetStatus,
 } from '@churchy/shared';
+import { currentMonth, monthRange } from '@churchy/shared';
 import { PrismaService } from '../../prisma/prisma.service';
 
 /** Champs d'une paroisse visibles de tous. Liste blanche : on n'expose jamais l'entité entière. */
@@ -29,40 +32,54 @@ const PARISH_PUBLIC_SELECT = {
   email: true,
   website: true,
   imageUrl: true,
+  timezone: true,
 } satisfies Prisma.ParishSelect;
 
 /**
- * Célébrations visibles du public : publiées, ou annoncées par la paroisse avant la publication
- * de la feuille. Les brouillons non annoncés et les archivées ne sortent jamais.
+ * Dates visibles du public : celles des séries annoncées et non archivées. Une date dont la feuille n'est
+ * pas publiée s'affiche « en préparation » ; une date annulée reste affichée, marquée comme telle.
+ * Les séries non annoncées et archivées ne sortent jamais.
  */
-const VISIBLE_CELEBRATION = {
-  OR: [{ status: 'PUBLISHED' }, { status: 'DRAFT', announced: true }],
-} satisfies Prisma.CelebrationWhereInput;
+const VISIBLE_OCCURRENCE = {
+  celebration: { announced: true, archivedAt: null },
+} satisfies Prisma.CelebrationOccurrenceWhereInput;
 
-/** Une célébration reste « à venir » pendant 3 h après son début (durée d'une messe, avec marge). */
+/** Une date reste « à venir » pendant 3 h après son début (durée d'une messe, avec marge). */
 const ONGOING_WINDOW_MS = 3 * 60 * 60 * 1000;
 const LIST_LIMIT = 50;
+const CALENDAR_LIMIT = 400;
 
-type CelebrationRow = {
+type OccurrenceRow = {
   id: string;
-  title: string;
-  date: Date;
-  location: string | null;
+  celebrationId: string;
+  startsAt: Date;
   status: string;
-  template: { type: string };
+  cancelReason: string | null;
+  celebration: { title: string; type: string; location: string | null };
+  sheet: { status: string } | null;
 };
 
-export function toCelebrationSummary(c: CelebrationRow): PublicCelebrationSummary {
-  const sheetStatus: SheetStatus = c.status === 'PUBLISHED' ? 'AVAILABLE' : 'IN_PREPARATION';
+export function toCelebrationSummary(o: OccurrenceRow, timezone: string): PublicCelebrationSummary {
+  const sheetStatus: SheetStatus = o.sheet?.status === 'PUBLISHED' ? 'AVAILABLE' : 'IN_PREPARATION';
+  const cancelled = o.status === 'CANCELLED';
   return {
-    id: c.id,
-    title: c.title,
-    date: c.date.toISOString(),
-    location: c.location,
-    type: c.template.type as CelebrationType,
+    id: o.id,
+    celebrationId: o.celebrationId,
+    title: o.celebration.title,
+    date: o.startsAt.toISOString(),
+    location: o.celebration.location,
+    type: o.celebration.type as CelebrationType,
     sheetStatus,
+    cancelled,
+    cancelReason: cancelled ? o.cancelReason : null,
+    timezone,
   };
 }
+
+const OCCURRENCE_SUMMARY_INCLUDE = {
+  celebration: { select: { title: true, type: true, location: true } },
+  sheet: { select: { status: true } },
+} satisfies Prisma.CelebrationOccurrenceInclude;
 
 /** Un mot de la recherche doit se retrouver dans au moins un des champs d'identification. */
 export function buildSearchWhere(q?: string): Prisma.ParishWhereInput {
@@ -99,6 +116,7 @@ export class PublicService {
           country: true,
           district: true,
           mainChurch: true,
+          timezone: true,
         },
         orderBy: [{ name: 'asc' }, { id: 'asc' }],
         skip: (query.page - 1) * query.limit,
@@ -108,21 +126,28 @@ export class PublicService {
 
     // Prochaine messe de chaque paroisse de la page, en une seule requête (pas de N+1).
     const upcoming = parishes.length
-      ? await this.prisma.celebration.findMany({
+      ? await this.prisma.celebrationOccurrence.findMany({
           where: {
             parishId: { in: parishes.map((p) => p.id) },
-            date: { gte: this.upcomingFrom() },
-            ...VISIBLE_CELEBRATION,
+            startsAt: { gte: this.upcomingFrom() },
+            status: 'SCHEDULED',
+            ...VISIBLE_OCCURRENCE,
           },
-          orderBy: [{ parishId: 'asc' }, { date: 'asc' }],
+          orderBy: [{ parishId: 'asc' }, { startsAt: 'asc' }],
           distinct: ['parishId'],
-          include: { template: { select: { type: true } } },
+          include: OCCURRENCE_SUMMARY_INCLUDE,
         })
       : [];
-    const nextByParish = new Map(upcoming.map((c) => [c.parishId, toCelebrationSummary(c)]));
+    const timezones = new Map(parishes.map((p) => [p.id, p.timezone]));
+    const nextByParish = new Map(
+      upcoming.map((o) => [o.parishId, toCelebrationSummary(o, timezones.get(o.parishId)!)]),
+    );
 
     return {
-      items: parishes.map((p) => ({ ...p, nextCelebration: nextByParish.get(p.id) ?? null })),
+      items: parishes.map(({ timezone: _tz, ...p }) => ({
+        ...p,
+        nextCelebration: nextByParish.get(p.id) ?? null,
+      })),
       total,
       page: query.page,
       limit: query.limit,
@@ -138,38 +163,68 @@ export class PublicService {
     return parish;
   }
 
-  private async assertParishExists(id: string) {
-    const parish = await this.prisma.parish.findUnique({ where: { id }, select: { id: true } });
+  private async parishTimezone(id: string): Promise<string> {
+    const parish = await this.prisma.parish.findUnique({
+      where: { id },
+      select: { timezone: true },
+    });
     if (!parish) throw new NotFoundException('Paroisse introuvable');
+    return parish.timezone;
+  }
+
+  private async assertParishExists(id: string) {
+    await this.parishTimezone(id);
   }
 
   async listCelebrations(parishId: string): Promise<PublicCelebrationSummary[]> {
-    await this.assertParishExists(parishId);
-    const rows = await this.prisma.celebration.findMany({
-      where: { parishId, date: { gte: this.upcomingFrom() }, ...VISIBLE_CELEBRATION },
-      include: { template: { select: { type: true } } },
-      orderBy: { date: 'asc' },
+    const timezone = await this.parishTimezone(parishId);
+    const rows = await this.prisma.celebrationOccurrence.findMany({
+      where: { parishId, startsAt: { gte: this.upcomingFrom() }, ...VISIBLE_OCCURRENCE },
+      include: OCCURRENCE_SUMMARY_INCLUDE,
+      orderBy: { startsAt: 'asc' },
       take: LIST_LIMIT,
     });
-    return rows.map(toCelebrationSummary);
+    return rows.map((o) => toCelebrationSummary(o, timezone));
   }
 
+  /**
+   * Calendrier : toutes les dates visibles d'un mois (dans le fuseau de la paroisse), passées comprises,
+   * annulées comprises. Mois courant par défaut.
+   */
+  async getCalendar(parishId: string, query: CalendarQuery): Promise<PublicCalendar> {
+    const timezone = await this.parishTimezone(parishId);
+    const month = query.month ?? currentMonth(timezone);
+    const { start, end } = monthRange(month, timezone);
+    const rows = await this.prisma.celebrationOccurrence.findMany({
+      where: { parishId, startsAt: { gte: start, lt: end }, ...VISIBLE_OCCURRENCE },
+      include: OCCURRENCE_SUMMARY_INCLUDE,
+      orderBy: { startsAt: 'asc' },
+      take: CALENDAR_LIMIT,
+    });
+    return { month, timezone, items: rows.map((o) => toCelebrationSummary(o, timezone)) };
+  }
+
+  /** `id` est celui d'une date (occurrence) : la page d'une messe précise. */
   async getCelebration(id: string): Promise<PublicCelebration> {
-    const row = await this.prisma.celebration.findFirst({
-      where: { id, ...VISIBLE_CELEBRATION },
+    const row = await this.prisma.celebrationOccurrence.findFirst({
+      where: { id, ...VISIBLE_OCCURRENCE },
       include: {
-        template: { select: { type: true } },
-        parish: { select: { id: true, name: true, city: true } },
-        steps: { include: { content: true }, orderBy: { order: 'asc' } },
+        celebration: {
+          select: { title: true, type: true, location: true, description: true },
+        },
+        parish: { select: { id: true, name: true, city: true, timezone: true } },
+        sheet: {
+          include: { steps: { include: { content: true }, orderBy: { order: 'asc' } } },
+        },
       },
     });
     if (!row) throw new NotFoundException('Célébration introuvable');
 
-    const summary = toCelebrationSummary(row);
-    // Le déroulement n'est public qu'une fois la feuille publiée.
+    const summary = toCelebrationSummary(row, row.parish.timezone);
+    // Le déroulement n'est public qu'une fois la feuille publiée, et jamais pour une date annulée.
     const steps =
-      summary.sheetStatus === 'AVAILABLE'
-        ? row.steps.map((s) => ({
+      summary.sheetStatus === 'AVAILABLE' && !summary.cancelled && row.sheet
+        ? row.sheet.steps.map((s) => ({
             id: s.id,
             title: s.title,
             order: s.order,
@@ -177,7 +232,13 @@ export class PublicService {
             content: s.content ? { title: s.content.title, body: s.content.body } : null,
           }))
         : [];
-    return { ...summary, parish: row.parish, steps };
+    return {
+      ...summary,
+      description: row.celebration.description,
+      occurrenceDescription: row.description,
+      parish: { id: row.parish.id, name: row.parish.name, city: row.parish.city },
+      steps,
+    };
   }
 
   async listAnnouncements(parishId: string): Promise<PublicAnnouncement[]> {

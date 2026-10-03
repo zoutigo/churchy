@@ -38,6 +38,20 @@ describe('ParishesService', () => {
       expect(parish.slug).toMatch(/^saint-pierre-[0-9a-f]{6}$/);
     });
 
+    it('le fuseau horaire par défaut suit le pays', async () => {
+      prisma.parish.findUnique.mockResolvedValue(null);
+      expect((await service.create(dto, 'u1')).timezone).toBe('Europe/Paris');
+      expect((await service.create({ ...dto, country: 'Cameroun' }, 'u1')).timezone).toBe(
+        'Africa/Douala',
+      );
+    });
+
+    it('un fuseau choisi explicitement l’emporte sur celui du pays', async () => {
+      prisma.parish.findUnique.mockResolvedValue(null);
+      const parish = await service.create({ ...dto, timezone: 'Indian/Reunion' }, 'u1');
+      expect(parish.timezone).toBe('Indian/Reunion');
+    });
+
     it('retombe sur un slug par défaut si le nom ne contient aucun caractère exploitable', async () => {
       prisma.parish.findUnique.mockResolvedValue(null);
       const parish = await service.create({ ...dto, name: '✦✦' }, 'u1');

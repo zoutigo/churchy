@@ -1,13 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
   createParishSchema,
+  calendarQuerySchema,
   searchParishesSchema,
   updateParishSchema,
   withCompletePhone,
 } from './parish.schema';
 import { createActivitySchema, createAnnouncementSchema } from './announcement.schema';
 import { contactMessageSchema } from './contact.schema';
-import { createCelebrationSchema, setCelebrationAnnouncedSchema } from './celebration.schema';
+import { createCelebrationSchema, updateCelebrationSchema } from './celebration.schema';
 
 describe('createParishSchema — informations publiques', () => {
   const base = { name: 'Saint Pierre', city: 'Lyon', country: 'France' };
@@ -152,11 +153,15 @@ describe('contactMessageSchema', () => {
 
 describe('célébrations — annonce publique', () => {
   it('accepte `announced` à la création et exige un booléen pour le modifier', () => {
-    const base = { templateId: 't1', title: 'Messe', date: '2026-10-04T09:00:00.000Z' };
+    const base = {
+      title: 'Messe',
+      type: 'SUNDAY_MASS',
+      schedule: { kind: 'dates', dates: [{ date: '2026-10-04', time: '10:00' }] },
+    } as const;
     expect(createCelebrationSchema.parse({ ...base, announced: true }).announced).toBe(true);
     expect(createCelebrationSchema.parse(base).announced).toBeUndefined();
-    expect(setCelebrationAnnouncedSchema.safeParse({ announced: 'oui' }).success).toBe(false);
-    expect(setCelebrationAnnouncedSchema.safeParse({ announced: false }).success).toBe(true);
+    expect(updateCelebrationSchema.safeParse({ announced: 'oui' }).success).toBe(false);
+    expect(updateCelebrationSchema.safeParse({ announced: false }).success).toBe(true);
   });
 });
 
@@ -210,5 +215,18 @@ describe('téléphone d’une paroisse', () => {
     expect(schema.safeParse({ ...base, phone: '+237 6 77' }).success).toBe(false);
     expect(schema.safeParse({ ...base, phone: '+237 6 77 12 34 56' }).success).toBe(true);
     expect(schema.safeParse(base).success).toBe(true);
+  });
+});
+
+describe('calendarQuerySchema', () => {
+  it('le mois est facultatif', () => {
+    expect(calendarQuerySchema.parse({})).toEqual({});
+    expect(calendarQuerySchema.parse({ month: '2026-10' })).toEqual({ month: '2026-10' });
+  });
+
+  it('refuse un mois mal formé ou hors limites', () => {
+    for (const month of ['2026-13', '2026-1', 'octobre', '1999-12', '2101-01']) {
+      expect(calendarQuerySchema.safeParse({ month }).success).toBe(false);
+    }
   });
 });

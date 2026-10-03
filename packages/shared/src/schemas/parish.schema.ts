@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { ParishRole } from '../enums/parish-role.enum';
 import { isCompletePhone } from '../constants/phone.constants';
+import { isValidMonth, isValidTimezone } from '../schedule';
 
 /** Texte facultatif : une chaîne vide (champ de formulaire non rempli) équivaut à « non renseigné ». */
 const optional = (schema: z.ZodType<string>) =>
@@ -28,6 +29,7 @@ const httpUrl = z
   .url('Adresse web invalide')
   .refine((v) => /^https?:\/\//i.test(v), 'Adresse web invalide (http ou https)');
 
+const timezone = z.string().trim().refine(isValidTimezone, 'Fuseau horaire invalide');
 const email = z.string().trim().max(200).email('Email invalide');
 const text = (max: number) => z.string().trim().max(max, `${max} caractères maximum`);
 
@@ -57,6 +59,8 @@ export const createParishSchema = z.object({
   email: optional(publicFields.email),
   website: optional(publicFields.website),
   imageUrl: optional(publicFields.imageUrl),
+  /** Fuseau horaire (IANA) ; par défaut celui du pays. */
+  timezone: timezone.optional(),
 });
 
 /** Modification : tout est facultatif ; les champs d'information vidés repassent à `null`. */
@@ -74,6 +78,7 @@ export const updateParishSchema = z.object({
   email: clearable(publicFields.email),
   website: clearable(publicFields.website),
   imageUrl: clearable(publicFields.imageUrl),
+  timezone: timezone.optional(),
 });
 
 /**
@@ -100,6 +105,16 @@ export const searchParishesSchema = z.object({
   limit: z.coerce.number().int().min(1).max(50).default(12),
 });
 
+/** Calendrier public : un mois (« AAAA-MM »), le mois courant par défaut. */
+export const calendarQuerySchema = z.object({
+  month: z
+    .string()
+    .refine(isValidMonth, 'Mois invalide (format AAAA-MM)')
+    .refine((m) => m >= '2020-01' && m <= '2100-12', 'Mois hors limites')
+    .optional(),
+});
+
+export type CalendarQuery = z.infer<typeof calendarQuerySchema>;
 export type CreateParishDto = z.infer<typeof createParishSchema>;
 export type UpdateParishDto = z.infer<typeof updateParishSchema>;
 export type InviteMemberDto = z.infer<typeof inviteMemberSchema>;

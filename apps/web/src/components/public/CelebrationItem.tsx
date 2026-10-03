@@ -11,11 +11,12 @@ interface Props {
 
 /** Une messe dans une liste : bloc-date, intitulé, heure, lieu, état de la feuille. */
 export function CelebrationItem({ celebration: c, parishId }: Props) {
-  const d = formatDateParts(c.date);
+  const tz = { timeZone: c.timezone };
+  const d = formatDateParts(c.date, tz);
   return (
     <Link
       href={`/paroisses/${parishId}/messes/${c.id}`}
-      className="group flex gap-4 rounded-xl border border-churchy-100 bg-white p-4 transition-shadow hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-churchy-500"
+      className={`group flex gap-4 rounded-xl border border-churchy-100 bg-white p-4 transition-shadow hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-churchy-500 ${c.cancelled ? 'opacity-75' : ''}`}
     >
       <div
         className="flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-lg bg-churchy-700 text-white"
@@ -26,11 +27,15 @@ export function CelebrationItem({ celebration: c, parishId }: Props) {
         <span className="text-xs">{d.month}</span>
       </div>
       <div className="min-w-0 flex-1 space-y-1">
-        <h3 className="font-playfair text-lg font-semibold text-churchy-700 group-hover:text-churchy-500">
+        <h3
+          className={`font-playfair text-lg font-semibold text-churchy-700 group-hover:text-churchy-500 ${
+            c.cancelled ? 'line-through' : ''
+          }`}
+        >
           {c.title}
         </h3>
         <p className="text-sm text-churchy-900/80">
-          <time dateTime={c.date}>{formatTime(c.date)}</time>
+          <time dateTime={c.date}>{formatTime(c.date, tz)}</time>
           {' — '}
           {CELEBRATION_TYPE_LABELS[c.type]}
         </p>
@@ -40,7 +45,13 @@ export function CelebrationItem({ celebration: c, parishId }: Props) {
           </p>
         )}
         <div className="pt-1">
-          <SheetStatusBadge status={c.sheetStatus} />
+          {c.cancelled ? (
+            <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-1 text-xs font-medium text-red-700">
+              Annulée{c.cancelReason ? ` — ${c.cancelReason}` : ''}
+            </span>
+          ) : (
+            <SheetStatusBadge status={c.sheetStatus} />
+          )}
         </div>
       </div>
     </Link>

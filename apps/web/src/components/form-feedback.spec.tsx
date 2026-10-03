@@ -51,6 +51,7 @@ const parish = {
   country: 'France',
   address: '1 rue Neuve',
   phone: null,
+  timezone: 'Europe/Paris',
 } as Parish;
 
 const flows = {

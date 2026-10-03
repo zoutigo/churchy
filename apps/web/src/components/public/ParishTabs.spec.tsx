@@ -10,12 +10,13 @@ describe('ParishTabs', () => {
     pathname = '/paroisses/p1';
   });
 
-  it('propose accueil, messes, annonces et activités de CETTE paroisse', () => {
+  it('propose accueil, messes, calendrier, annonces et activités de CETTE paroisse', () => {
     render(<ParishTabs parishId="p1" />);
     const hrefs = screen.getAllByRole('link').map((a) => a.getAttribute('href'));
     expect(hrefs).toEqual([
       '/paroisses/p1',
       '/paroisses/p1/messes',
+      '/paroisses/p1/calendrier',
       '/paroisses/p1/annonces',
       '/paroisses/p1/activites',
     ]);

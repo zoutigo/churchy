@@ -1,5 +1,12 @@
 'use client';
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from 'react';
 import { EditorContent, useEditor, type Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { CharacterCount, Placeholder } from '@tiptap/extensions';
@@ -69,6 +76,8 @@ export interface RichTextEditorProps {
   placeholder?: string;
   /** Autorise les images inline (bouton, collage, glisser-déposer). */
   allowImages?: boolean;
+  /** Hauteur minimale de la zone de saisie (champ court, ex. « 8rem ») ; par défaut 14/22/26 rem. */
+  minHeight?: string;
   invalid?: boolean;
   disabled?: boolean;
   'aria-label'?: string;
@@ -121,6 +130,7 @@ export function RichTextEditor({
   id,
   placeholder = 'Saisissez le texte ici…',
   allowImages = false,
+  minHeight,
   invalid,
   disabled,
   'aria-label': ariaLabel,
@@ -385,6 +395,7 @@ export function RichTextEditor({
     <div
       data-testid="rich-text-editor"
       aria-invalid={invalid || undefined}
+      style={minHeight ? ({ '--editor-min-height': minHeight } as CSSProperties) : undefined}
       className={cn(
         'rounded-md border border-input bg-background ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2',
         invalid && 'border-destructive focus-within:ring-destructive',

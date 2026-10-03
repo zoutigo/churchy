@@ -18,6 +18,7 @@ describe('noms de files et de jobs', () => {
 describe('celebrationPublishedPayloadSchema', () => {
   const valid = {
     celebrationId: 'c1',
+    occurrenceId: 'o1',
     parishId: 'p1',
     title: 'Messe',
     date: '2026-10-04T09:00:00.000Z',
@@ -30,6 +31,11 @@ describe('celebrationPublishedPayloadSchema', () => {
 
   it('rejette un payload sans celebrationId', () => {
     const { celebrationId: _omit, ...rest } = valid;
+    expect(celebrationPublishedPayloadSchema.safeParse(rest).success).toBe(false);
+  });
+
+  it('rejette un payload sans occurrenceId (la publication concerne une date, pas la série)', () => {
+    const { occurrenceId: _omit, ...rest } = valid;
     expect(celebrationPublishedPayloadSchema.safeParse(rest).success).toBe(false);
   });
 

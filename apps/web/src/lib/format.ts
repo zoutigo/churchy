@@ -47,3 +47,18 @@ export const placeLabel = (p: { city: string; district?: string | null }) =>
 
 /** Numéro de téléphone utilisable dans un lien `tel:`. */
 export const telHref = (phone: string) => `tel:${phone.replace(/[^\d+]/g, '')}`;
+
+/** « dimanche 4 octobre 2026 à 10:30 » dans le fuseau de la paroisse. */
+export const formatDateTimeLong = (iso: string, tz?: Tz) =>
+  `${formatDateLong(iso, tz)} à ${formatTime(iso, tz)}`;
+
+/** Jours de la semaine, du lundi au dimanche, avec le numéro attendu par l'API (0 = dimanche). */
+export const WEEKDAYS = [
+  { value: 1, short: 'Lun', long: 'lundi' },
+  { value: 2, short: 'Mar', long: 'mardi' },
+  { value: 3, short: 'Mer', long: 'mercredi' },
+  { value: 4, short: 'Jeu', long: 'jeudi' },
+  { value: 5, short: 'Ven', long: 'vendredi' },
+  { value: 6, short: 'Sam', long: 'samedi' },
+  { value: 0, short: 'Dim', long: 'dimanche' },
+] as const;

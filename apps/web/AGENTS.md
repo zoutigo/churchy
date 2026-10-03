@@ -75,7 +75,7 @@ src/
 │   ├── parish/       # ParishCard, CreateParishForm, ParishInfoForm
 │   ├── rich-text/    # RichTextEditor (Tiptap, champ de formulaire), RichContent (rendu public)
 │   ├── content/      # ContentForm (création + modification), filter (recherche/type), content-labels
-│   ├── celebration/  # CelebrationCard, CreateCelebrationForm
+│   ├── celebration/  # CelebrationCard/Form, ScheduleFields (dates / récurrence + aperçu), OccurrenceItem, SheetPanel, StepCard, TemplateChangeDialog, TemplateForm, EndingSoonDialog
 │   └── layout/       # Sidebar (≥ md), MobileNav (< md), Header (menu utilisateur), PageHeader, FormView
 ├── lib/api/          # Clients API typés ; client.ts gère cookies + refresh silencieux
 ├── lib/notify.ts     # notify.success / notify.error : les toasts de toute l'application
@@ -158,7 +158,8 @@ Après modification : `npm run build -w @churchy/shared`.
 - `/dashboard/parishes/[id]` — Détail paroisse
 - `/dashboard/parishes/[id]/contents` — Bibliothèque
 - `/dashboard/parishes/[id]/templates` — Modèles
-- `/dashboard/parishes/[id]/celebrations` — Célébrations
+- `/dashboard/parishes/[id]/celebrations` — Séries ; `/new`, `/[celebrationId]`, `/[celebrationId]/dates/[occurrenceId]` (préparation)
+- `/paroisses/[id]/calendrier?mois=AAAA-MM` — Calendrier public
 - `/p/[slug]` — Page publique paroisse
 - `/p/[slug]/celebrations/[id]` — Célébration publique
 

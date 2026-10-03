@@ -17,6 +17,7 @@ const parish = {
   country: 'France',
   address: '1 rue Neuve',
   phone: null,
+  timezone: 'Europe/Paris',
   createdAt: new Date(),
   updatedAt: new Date(),
 } as Parish;

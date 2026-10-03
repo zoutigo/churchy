@@ -5,7 +5,8 @@ export const PARISH_ROLES_KEY = 'parishRoles';
 export const PARISH_SCOPE_KEY = 'parishScope';
 
 /** Ressource dont le paramètre d'URL permet de retrouver la paroisse concernée. */
-export type ParishScopeKind = 'parish' | 'template' | 'templateStep' | 'content' | 'celebration';
+export type ParishScopeKind =
+  'parish' | 'template' | 'templateStep' | 'content' | 'celebration' | 'occurrence' | 'sheet';
 
 export interface ParishScopeOptions {
   kind: ParishScopeKind;

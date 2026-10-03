@@ -8,9 +8,16 @@ import {
 } from './auth.schema';
 import { createParishSchema } from './parish.schema';
 import {
+  addSheetStepSchema,
+  cancelOccurrenceSchema,
+  changeSheetTemplateSchema,
   createCelebrationSchema,
+  createSheetSchema,
   createTemplateStepSchema,
+  reorderSheetStepsSchema,
+  updateCelebrationSchema,
   updateCelebrationStepSchema,
+  updateOccurrenceSchema,
 } from './celebration.schema';
 import { ContentType } from '../enums/content-type.enum';
 
@@ -89,22 +96,108 @@ describe('createParishSchema', () => {
 });
 
 describe('createCelebrationSchema', () => {
+  const schedule = { kind: 'dates', dates: [{ date: '2026-10-04', time: '10:00' }] } as const;
+  const base = { title: 'Messe', type: 'SUNDAY_MASS', schedule };
+
   it('accepte un templateId de type cuid (non-régression : ne doit pas exiger un uuid)', () => {
-    const res = createCelebrationSchema.safeParse({
-      templateId: CUID,
-      title: 'Messe',
-      date: '2026-10-04T09:00:00.000Z',
-    });
-    expect(res.success).toBe(true);
+    expect(createCelebrationSchema.safeParse({ ...base, templateId: CUID }).success).toBe(true);
   });
 
-  it('rejette une date qui n’est pas au format ISO', () => {
-    const res = createCelebrationSchema.safeParse({
-      templateId: CUID,
-      title: 'Messe',
-      date: '04/10/2026',
+  it('le modèle est facultatif : une série peut être créée sans feuille', () => {
+    const res = createCelebrationSchema.parse(base);
+    expect(res.templateId).toBeUndefined();
+  });
+
+  it('exige un planning et rejette une date qui n’est pas au format AAAA-MM-JJ', () => {
+    expect(createCelebrationSchema.safeParse({ title: 'Messe', type: 'OTHER' }).success).toBe(
+      false,
+    );
+    expect(
+      createCelebrationSchema.safeParse({
+        ...base,
+        schedule: { kind: 'dates', dates: [{ date: '04/10/2026', time: '10:00' }] },
+      }).success,
+    ).toBe(false);
+  });
+
+  it('exige un titre et un type connu', () => {
+    expect(createCelebrationSchema.safeParse({ ...base, title: '  ' }).success).toBe(false);
+    expect(createCelebrationSchema.safeParse({ ...base, type: 'NOPE' }).success).toBe(false);
+  });
+
+  it('une description ou une note vide équivaut à « non renseigné »', () => {
+    const res = createCelebrationSchema.parse({
+      ...base,
+      description: '<p></p>',
+      internalNote: '   ',
     });
-    expect(res.success).toBe(false);
+    expect(res.description).toBeUndefined();
+    expect(res.internalNote).toBeUndefined();
+    const filled = createCelebrationSchema.parse({
+      ...base,
+      description: '<p>L’évêque sera des nôtres</p>',
+      internalNote: 'Micro à vérifier',
+    });
+    expect(filled.description).toBe('<p>L’évêque sera des nôtres</p>');
+    expect(filled.internalNote).toBe('Micro à vérifier');
+  });
+
+  it('limite la note interne', () => {
+    expect(
+      createCelebrationSchema.safeParse({ ...base, internalNote: 'x'.repeat(2001) }).success,
+    ).toBe(false);
+  });
+});
+
+describe('updateCelebrationSchema', () => {
+  it('une description ou une note vidée repasse à null', () => {
+    const res = updateCelebrationSchema.parse({ description: '<p></p>', internalNote: '' });
+    expect(res.description).toBeNull();
+    expect(res.internalNote).toBeNull();
+  });
+
+  it('permet de retirer le modèle par défaut (null) ou de le laisser inchangé', () => {
+    expect(updateCelebrationSchema.parse({ defaultTemplateId: null }).defaultTemplateId).toBeNull();
+    expect(updateCelebrationSchema.parse({}).defaultTemplateId).toBeUndefined();
+  });
+});
+
+describe('feuille de préparation', () => {
+  it('createSheetSchema distingue « modèle par défaut » (absent) et « feuille vide » (null)', () => {
+    expect(createSheetSchema.parse({}).templateId).toBeUndefined();
+    expect(createSheetSchema.parse({ templateId: null }).templateId).toBeNull();
+    expect(createSheetSchema.parse({ templateId: CUID }).templateId).toBe(CUID);
+  });
+
+  it('changeSheetTemplateSchema exige un choix explicite', () => {
+    expect(changeSheetTemplateSchema.safeParse({}).success).toBe(false);
+    expect(changeSheetTemplateSchema.safeParse({ templateId: null, dryRun: true }).success).toBe(
+      true,
+    );
+  });
+
+  it('une étape ajoutée à la volée exige un titre', () => {
+    expect(addSheetStepSchema.safeParse({ title: ' ' }).success).toBe(false);
+    expect(addSheetStepSchema.safeParse({ title: 'Chant à Marie' }).success).toBe(true);
+  });
+
+  it('l’ordre des étapes ne peut pas être vide', () => {
+    expect(reorderSheetStepsSchema.safeParse({ stepIds: [] }).success).toBe(false);
+  });
+
+  it('annuler une date : le motif est facultatif et limité', () => {
+    expect(cancelOccurrenceSchema.safeParse({}).success).toBe(true);
+    expect(cancelOccurrenceSchema.safeParse({ reason: 'x'.repeat(201) }).success).toBe(false);
+  });
+
+  it('modifier une date : l’heure de début est en heure locale', () => {
+    expect(
+      updateOccurrenceSchema.safeParse({ start: { date: '2026-11-01', time: '09:00' } }).success,
+    ).toBe(true);
+    expect(
+      updateOccurrenceSchema.safeParse({ start: { date: '2026-11-01T09:00:00Z', time: '09:00' } })
+        .success,
+    ).toBe(false);
   });
 });
 
@@ -134,5 +227,9 @@ describe('createTemplateStepSchema', () => {
 describe('updateCelebrationStepSchema', () => {
   it('accepte un contentId cuid', () => {
     expect(updateCelebrationStepSchema.safeParse({ contentId: CUID }).success).toBe(true);
+  });
+
+  it('permet de retirer le contenu lié (null)', () => {
+    expect(updateCelebrationStepSchema.parse({ contentId: null }).contentId).toBeNull();
   });
 });
