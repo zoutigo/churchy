@@ -133,8 +133,10 @@ Aucun jeton n'est manipulé par le JavaScript : ils sont dans des cookies httpOn
 `/dashboard/parishes/[id]/contents` : liste avec recherche (titre + texte, sans casse ni accents) et filtre par type
 (`components/content/filter.ts`), pagination « Afficher plus » par 24 ; chaque carte mène à `/contents/[contentId]`
 (lecture, **Modifier** → `ContentForm` prérempli, **Supprimer** en deux temps). L'API réserve modification et
-suppression à l'**auteur** du contenu : les boutons ne sont affichés qu'à lui. Données de démonstration :
-`npm run seed:contents -w @churchy/api -- "<fragment du nom de paroisse>"` (20 contenus par type, idempotent, base de dev).
+suppression à l'**auteur** du contenu : les boutons ne sont affichés qu'à lui. Données de démonstration (réalistes : chants et prières universelles complets, psaumes, évangiles et lectures
+résumés, 20 annonces publiques, 18 activités à venir) : `npm run seed:contents -w @churchy/api -- "<fragment du nom de paroisse>" [--reset]`
+(données dans `apps/api/scripts/seed/`, contenus marqués du tag `demo`, idempotent, base de dev ; ce que l'utilisateur a saisi n'est jamais
+modifié ; garde-fous : `apps/api/src/seed-data.spec.ts`). Les textes sont des originaux ou des résumés, pas des textes liturgiques officiels.
 
 ## Ajouter un composant shadcn
 
