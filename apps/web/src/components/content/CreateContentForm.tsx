@@ -21,17 +21,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { RichTextEditor } from '@/components/rich-text/RichTextEditor';
 import { Button } from '@/components/ui/button';
-
-const CONTENT_TYPE_LABELS: Record<ContentType, string> = {
-  [ContentType.SONG]: 'Chant',
-  [ContentType.PSALM]: 'Psaume',
-  [ContentType.GOSPEL]: 'Évangile',
-  [ContentType.READING]: 'Lecture',
-  [ContentType.PRAYER]: 'Prière',
-  [ContentType.UNIVERSAL_PRAYER]: 'Prière universelle',
-  [ContentType.ANNOUNCEMENT]: 'Annonce',
-  [ContentType.FREE_TEXT]: 'Texte libre',
-};
+import { CONTENT_TYPE_LABELS } from './content-labels';
 
 interface Props {
   parishId: string;
@@ -66,43 +56,45 @@ export function CreateContentForm({ parishId, onSuccess }: Props) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="title"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Titre</FormLabel>
-              <FormControl>
-                <Input placeholder="Titre du contenu" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="type"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Type</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+        <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_16rem]">
+          <FormField
+            control={form.control}
+            name="title"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Titre</FormLabel>
                 <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choisir un type" />
-                  </SelectTrigger>
+                  <Input placeholder="Titre du contenu" {...field} />
                 </FormControl>
-                <SelectContent>
-                  {Object.values(ContentType).map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {CONTENT_TYPE_LABELS[type]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="type"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Type</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choisir un type" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {Object.values(ContentType).map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {CONTENT_TYPE_LABELS[type]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
         <FormField
           control={form.control}
           name="body"
@@ -125,7 +117,7 @@ export function CreateContentForm({ parishId, onSuccess }: Props) {
         {form.formState.errors.root && (
           <p className="text-sm text-destructive">{form.formState.errors.root.message}</p>
         )}
-        <Button type="submit" disabled={form.formState.isSubmitting}>
+        <Button type="submit" className="w-full sm:w-auto" disabled={form.formState.isSubmitting}>
           {form.formState.isSubmitting ? 'Enregistrement...' : 'Ajouter le contenu'}
         </Button>
       </form>

@@ -3,6 +3,8 @@ import { useState } from 'react';
 import { useMyParishes } from '@/hooks/useParish';
 import { ParishCard } from '@/components/parish/ParishCard';
 import { CreateParishForm } from '@/components/parish/CreateParishForm';
+import { FormView } from '@/components/layout/FormView';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
 import { ErrorNotice } from '@/components/ui/error-notice';
 
@@ -10,29 +12,30 @@ export default function ParishesPage() {
   const { parishes, loading, error, refresh } = useMyParishes();
   const [showForm, setShowForm] = useState(false);
 
+  if (showForm) {
+    return (
+      <FormView
+        title="Créer une paroisse"
+        description="Ces informations alimentent la page publique de la paroisse"
+        onBack={() => setShowForm(false)}
+      >
+        <CreateParishForm
+          onSuccess={() => {
+            setShowForm(false);
+            refresh();
+          }}
+        />
+      </FormView>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Mes paroisses</h1>
-          <p className="text-muted-foreground">Gérez vos espaces paroissiaux</p>
-        </div>
-        <Button onClick={() => setShowForm(!showForm)}>
-          {showForm ? 'Annuler' : '+ Nouvelle paroisse'}
-        </Button>
-      </div>
-
-      {showForm && (
-        <div className="rounded-lg border bg-card p-6 max-w-lg">
-          <h2 className="font-semibold mb-4">Créer une paroisse</h2>
-          <CreateParishForm
-            onSuccess={() => {
-              setShowForm(false);
-              refresh();
-            }}
-          />
-        </div>
-      )}
+      <PageHeader
+        title="Mes paroisses"
+        description="Gérez vos espaces paroissiaux"
+        action={<Button onClick={() => setShowForm(true)}>+ Nouvelle paroisse</Button>}
+      />
 
       {error ? (
         <ErrorNotice message={error} />

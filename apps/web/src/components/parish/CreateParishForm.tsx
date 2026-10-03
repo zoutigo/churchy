@@ -92,43 +92,45 @@ export function CreateParishForm({ onSuccess }: Props) {
           )}
         />
         <LocationFields />
-        <FormField
-          control={form.control}
-          name="addressComplement"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>
-                Complément d’adresse{' '}
-                <span className="text-muted-foreground text-xs">(optionnel)</span>
-              </FormLabel>
-              <FormControl>
-                <Input placeholder="En face de la poste centrale" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <PhoneField optionalHint />
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>
-                Email de la paroisse{' '}
-                <span className="text-muted-foreground text-xs">(optionnel)</span>
-              </FormLabel>
-              <FormControl>
-                <Input type="email" placeholder="contact@paroisse.org" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <FormField
+            control={form.control}
+            name="addressComplement"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  Complément d’adresse{' '}
+                  <span className="text-muted-foreground text-xs">(optionnel)</span>
+                </FormLabel>
+                <FormControl>
+                  <Input placeholder="En face de la poste centrale" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <PhoneField optionalHint />
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  Email de la paroisse{' '}
+                  <span className="text-muted-foreground text-xs">(optionnel)</span>
+                </FormLabel>
+                <FormControl>
+                  <Input type="email" placeholder="contact@paroisse.org" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
         {form.formState.errors.root && (
           <p className="text-sm text-destructive">{form.formState.errors.root.message}</p>
         )}
-        <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+        <Button type="submit" className="w-full sm:w-auto" disabled={form.formState.isSubmitting}>
           {form.formState.isSubmitting ? 'Création...' : 'Créer la paroisse'}
         </Button>
       </form>

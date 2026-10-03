@@ -3,6 +3,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { activitiesApi, type Activity } from '@/lib/api/activities.api';
 import { CreateActivityForm } from '@/components/news/CreateActivityForm';
 import { DeleteButton } from '@/components/news/DeleteButton';
+import { FormView } from '@/components/layout/FormView';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
 import { ErrorNotice } from '@/components/ui/error-notice';
 import { formatDateLong, formatTime } from '@/lib/format';
@@ -33,30 +35,31 @@ export default function Page({ params }: Props) {
     void load();
   }, [load]);
 
+  if (showForm) {
+    return (
+      <FormView
+        title="Nouvelle activité"
+        description="Rencontre ou événement de la paroisse"
+        onBack={() => setShowForm(false)}
+      >
+        <CreateActivityForm
+          parishId={parishId}
+          onSuccess={() => {
+            setShowForm(false);
+            void load();
+          }}
+        />
+      </FormView>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Activités</h1>
-          <p className="text-muted-foreground">Rencontres et événements de la paroisse</p>
-        </div>
-        <Button onClick={() => setShowForm(!showForm)}>
-          {showForm ? 'Annuler' : '+ Nouvelle activité'}
-        </Button>
-      </div>
-
-      {showForm && (
-        <div className="rounded-lg border bg-card p-4 sm:p-6 max-w-2xl">
-          <h2 className="font-semibold mb-4">Nouvelle activité</h2>
-          <CreateActivityForm
-            parishId={parishId}
-            onSuccess={() => {
-              setShowForm(false);
-              void load();
-            }}
-          />
-        </div>
-      )}
+      <PageHeader
+        title="Activités"
+        description="Rencontres et événements de la paroisse"
+        action={<Button onClick={() => setShowForm(true)}>+ Nouvelle activité</Button>}
+      />
 
       {error ? (
         <ErrorNotice message={error} />
@@ -65,7 +68,7 @@ export default function Page({ params }: Props) {
       ) : items.length === 0 ? (
         <p className="text-center py-12 text-muted-foreground">Aucune activité pour l’instant.</p>
       ) : (
-        <ul className="space-y-3">
+        <ul className="grid gap-3 lg:grid-cols-2">
           {items.map((item) => (
             <li
               key={item.id}

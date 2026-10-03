@@ -179,7 +179,18 @@
   /* Éditeur */
   .rich-content.ProseMirror {
     outline: none;
-    min-height: var(--editor-min-height, 10rem);
+    min-height: var(--editor-min-height, 14rem);
+  }
+  /* Plus de place pour saisir (chants, textes longs) sur tablette puis desktop. */
+  @media (min-width: 768px) {
+    .rich-content.ProseMirror {
+      min-height: var(--editor-min-height, 22rem);
+    }
+  }
+  @media (min-width: 1024px) {
+    .rich-content.ProseMirror {
+      min-height: var(--editor-min-height, 26rem);
+    }
   }
   .rich-content.ProseMirror p.is-editor-empty:first-child::before {
     content: attr(data-placeholder);

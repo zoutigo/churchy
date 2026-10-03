@@ -2,6 +2,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { contentsApi } from '@/lib/api/contents.api';
 import { CreateContentForm } from '@/components/content/CreateContentForm';
+import { FormView } from '@/components/layout/FormView';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { CONTENT_TYPE_LABELS } from '@/components/content/content-labels';
 import { Button } from '@/components/ui/button';
 import { ErrorNotice } from '@/components/ui/error-notice';
 import type { Content } from '@churchy/shared';
@@ -31,30 +34,31 @@ export default function ContentsPage({ params }: Props) {
     load();
   }, [load]);
 
+  if (showForm) {
+    return (
+      <FormView
+        title="Nouveau contenu"
+        description="Chant, lecture, prière… réutilisable dans vos célébrations"
+        onBack={() => setShowForm(false)}
+      >
+        <CreateContentForm
+          parishId={parishId}
+          onSuccess={() => {
+            setShowForm(false);
+            load();
+          }}
+        />
+      </FormView>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Bibliothèque de contenus</h1>
-          <p className="text-muted-foreground">Chants, lectures, prières et plus</p>
-        </div>
-        <Button onClick={() => setShowForm(!showForm)}>
-          {showForm ? 'Annuler' : '+ Ajouter un contenu'}
-        </Button>
-      </div>
-
-      {showForm && (
-        <div className="rounded-lg border bg-card p-6 max-w-lg">
-          <h2 className="font-semibold mb-4">Nouveau contenu</h2>
-          <CreateContentForm
-            parishId={parishId}
-            onSuccess={() => {
-              setShowForm(false);
-              load();
-            }}
-          />
-        </div>
-      )}
+      <PageHeader
+        title="Bibliothèque de contenus"
+        description="Chants, lectures, prières et plus"
+        action={<Button onClick={() => setShowForm(true)}>+ Ajouter un contenu</Button>}
+      />
 
       {error ? (
         <ErrorNotice message={error} />
@@ -65,19 +69,19 @@ export default function ContentsPage({ params }: Props) {
           Aucun contenu pour l&apos;instant.
         </p>
       ) : (
-        <div className="space-y-2">
+        <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {contents.map((c) => (
-            <div
+            <li
               key={c.id}
-              className="rounded-lg border bg-card p-4 flex items-center justify-between"
+              className="flex items-center justify-between gap-3 rounded-lg border bg-card p-4"
             >
-              <div>
-                <p className="font-medium">{c.title}</p>
-                <p className="text-xs text-muted-foreground">{c.type}</p>
-              </div>
-            </div>
+              <p className="min-w-0 truncate font-medium">{c.title}</p>
+              <span className="shrink-0 rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground">
+                {CONTENT_TYPE_LABELS[c.type as keyof typeof CONTENT_TYPE_LABELS] ?? c.type}
+              </span>
+            </li>
           ))}
-        </div>
+        </ul>
       )}
     </div>
   );

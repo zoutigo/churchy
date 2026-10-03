@@ -26,7 +26,9 @@ test.describe('gestion du contenu public d’une paroisse (tableau de bord → s
     await expect(page.getByRole('heading', { name })).toBeVisible();
     const parishId = page.url().split('/').pop() as string;
 
-    // Identité publique.
+    // Identité publique : affichée en lecture seule, le formulaire s'ouvre avec « Modifier ».
+    await expect(page.getByLabel('Adresse', { exact: true })).toHaveCount(0);
+    await page.getByRole('button', { name: 'Modifier' }).click();
     await page.getByLabel('Adresse', { exact: true }).fill('3 rue de la Paix');
     await page.getByLabel('Quartier', { exact: false }).fill('Centre');
     await page.getByLabel(/Complément d’adresse/).fill('Face à la mairie');
@@ -35,6 +37,8 @@ test.describe('gestion du contenu public d’une paroisse (tableau de bord → s
     await page.getByLabel('Site web').fill('https://paroisse-nantes.example');
     await page.getByRole('button', { name: 'Enregistrer' }).click();
     await expect(page.getByText('Informations enregistrées.')).toBeVisible();
+    await expect(page.getByText(/3 rue de la Paix/)).toBeVisible();
+    await expect(page.getByLabel('Adresse', { exact: true })).toHaveCount(0);
 
     // Annonce.
     await page.goto(`/dashboard/parishes/${parishId}/announcements`);

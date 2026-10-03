@@ -29,12 +29,12 @@ export default function TemplatesPage({ params }: Props) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold">Modèles de célébration</h1>
           <p className="text-muted-foreground">Définissez le déroulement de vos célébrations</p>
         </div>
-        <Button>+ Nouveau modèle</Button>
+        <Button className="w-full sm:w-auto">+ Nouveau modèle</Button>
       </div>
 
       {error ? (
@@ -44,7 +44,7 @@ export default function TemplatesPage({ params }: Props) {
       ) : templates.length === 0 ? (
         <p className="text-center py-12 text-muted-foreground">Aucun modèle pour l&apos;instant.</p>
       ) : (
-        <div className="space-y-3">
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {templates.map((t) => (
             <div key={t.id} className="rounded-lg border bg-card p-4">
               <p className="font-medium">{t.name}</p>

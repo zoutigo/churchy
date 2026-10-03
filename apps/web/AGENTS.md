@@ -75,7 +75,7 @@ src/
 │   ├── rich-text/    # RichTextEditor (Tiptap, champ de formulaire), RichContent (rendu public)
 │   ├── content/      # CreateContentForm, ContentCard
 │   ├── celebration/  # CelebrationCard, CreateCelebrationForm
-│   └── layout/       # Sidebar (≥ md), MobileNav (< md), Header (menu utilisateur)
+│   └── layout/       # Sidebar (≥ md), MobileNav (< md), Header (menu utilisateur), PageHeader, FormView
 ├── lib/api/          # Clients API typés ; client.ts gère cookies + refresh silencieux
 ├── lib/auth/         # session.ts : indicateur de session (cookie lisible) + safeNextPath
 └── hooks/            # useAuth (contexte AuthProvider), useParish
@@ -99,6 +99,14 @@ Aucun jeton n'est manipulé par le JavaScript : ils sont dans des cookies httpOn
 - Tout écran qui charge des données doit gérer l'erreur (`ErrorNotice`) : pas de `.then()` sans `.catch()`.
 - Champs mot de passe : `PasswordInput` (bouton afficher/masquer). Les `Input` invalides prennent une
   bordure rouge via `aria-invalid` (posé par `FormControl`).
+
+## Tableau de bord : formulaires
+- Les formulaires ne sont **jamais ouverts par défaut** : la page affiche les données, et un bouton (« + Nouveau… »,
+  « Modifier ») ouvre le formulaire dans un `FormView` qui **remplace** la liste (mobile, tablette et desktop) avec un
+  bouton « Retour ». `FormView` est centré (`max-w-5xl`) ; les champs courts se rangent en colonnes dès `sm`/`md`,
+  l'éditeur de texte riche prend toute la largeur (hauteur mini 14/22/26 rem). `PageHeader` porte titre + action.
+- Les couleurs de `tailwind.config.ts` doivent couvrir tous les jetons utilisés (`bg-popover` manquant rendait les
+  listes déroulantes transparentes) ; test : `components/ui/popover-theme.spec.tsx`, e2e `dashboard-forms.spec.ts`.
 
 ## Ajouter un composant shadcn
 

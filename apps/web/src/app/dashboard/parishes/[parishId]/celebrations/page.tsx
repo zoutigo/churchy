@@ -29,12 +29,12 @@ export default function CelebrationsPage({ params }: Props) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold">Célébrations</h1>
           <p className="text-muted-foreground">Gérez et publiez vos célébrations</p>
         </div>
-        <Button asChild>
+        <Button asChild className="w-full sm:w-auto">
           <Link href={`/dashboard/parishes/${parishId}/celebrations/new`}>
             + Nouvelle célébration
           </Link>
@@ -50,7 +50,7 @@ export default function CelebrationsPage({ params }: Props) {
           Aucune célébration pour l&apos;instant.
         </p>
       ) : (
-        <div className="space-y-3">
+        <div className="grid gap-3 lg:grid-cols-2">
           {celebrations.map((c) => (
             <CelebrationCard key={c.id} celebration={c} parishId={parishId} />
           ))}
