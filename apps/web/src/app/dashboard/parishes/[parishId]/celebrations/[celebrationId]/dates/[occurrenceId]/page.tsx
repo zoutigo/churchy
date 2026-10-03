@@ -1,6 +1,7 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ArrowLeft, StickyNote } from 'lucide-react';
 import type { Content, OccurrenceDetail, SheetView } from '@churchy/shared';
 import { celebrationsApi, templatesApi, type TemplateWithSteps } from '@/lib/api/celebrations.api';
@@ -25,6 +26,7 @@ type Tab = 'sheet' | 'date';
 /** Préparation d'une date : feuille (créée à la demande, modèle ou à la volée) et informations de la date. */
 export default function OccurrencePage({ params }: Props) {
   const { parishId, celebrationId, occurrenceId } = params;
+  const router = useRouter();
   const [occurrence, setOccurrence] = useState<OccurrenceDetail | null>(null);
   const [sheet, setSheet] = useState<SheetView | null>(null);
   const [templates, setTemplates] = useState<TemplateWithSteps[]>([]);
@@ -191,6 +193,7 @@ export default function OccurrencePage({ params }: Props) {
               contents={contents}
               readOnly={readOnly}
               onChange={setSheet}
+              onPublished={() => router.push(back)}
             />
           ) : readOnly ? (
             <p className="rounded-lg border border-dashed p-6 text-center text-muted-foreground">

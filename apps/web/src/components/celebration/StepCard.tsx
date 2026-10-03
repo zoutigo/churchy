@@ -15,9 +15,9 @@ interface Props {
   total: number;
   contents: Content[];
   readOnly: boolean;
-  onChange: (patch: { contentId?: string | null; customText?: string | null }) => Promise<void>;
-  onMove: (direction: -1 | 1) => Promise<void>;
-  onRemove: () => Promise<void>;
+  onChange: (patch: { contentId?: string | null; customText?: string | null }) => Promise<unknown>;
+  onMove: (direction: -1 | 1) => Promise<unknown>;
+  onRemove: () => Promise<unknown>;
 }
 
 /** Une étape de la feuille : contenu de la bibliothèque et/ou texte libre, ordre, retrait. */
@@ -119,7 +119,10 @@ export function StepCard({
 
       {!readOnly && (
         <div className="flex justify-end">
-          <DeleteButton label={`l’étape ${step.title}`} onConfirm={onRemove} />
+          <DeleteButton
+            label={`l’étape ${step.title}`}
+            onConfirm={async () => void (await onRemove())}
+          />
         </div>
       )}
     </li>

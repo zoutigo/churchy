@@ -184,7 +184,7 @@ test.describe('site public', () => {
   test('une paroisse ou une messe inconnue répond 404 avec un message clair', async ({ page }) => {
     const res = await page.goto('/paroisses/paroisse-qui-nexiste-pas');
     expect(res!.status()).toBe(404);
-    await expect(page.getByText('Paroisse introuvable.')).toBeVisible();
+    await expect(page.getByText('Paroisse introuvable')).toBeVisible();
 
     const res2 = await page.goto(`/paroisses/${parish.id}/messes/inconnue`);
     expect(res2!.status()).toBe(404);

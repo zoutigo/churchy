@@ -121,6 +121,7 @@ Règles (toutes testées, unitaire + e2e) :
 - Routes : `/parishes/:id/celebrations` (POST, GET), `/celebrations/:id` (GET, PATCH, `archive`, `unarchive`, `occurrences`),
   `/occurrences/:id` (GET, PATCH, `cancel`, `reinstate`, `sheet`), `/sheets/:id` (GET, `template`, `steps`, `steps/order`,
   `steps/:stepId`, `publish`, `unpublish`). Gardes : `@ParishAccess(…, 'celebration' | 'occurrence' | 'sheet')`.
+- **Modèles** : `PATCH /templates/:id` (nom, type, description et liste **complète** des étapes dans l'ordre : une étape avec `id` garde sa clé, sans `id` elle est créée, absente elle est retirée ; les feuilles déjà créées gardent leurs étapes, qui deviennent libres) et `DELETE /templates/:id` (feuilles et séries détachées). Page web `/templates` : cartes repliées (titre + sous-titre), bouton pour déplier, Modifier, Supprimer en deux temps. **Publier une feuille ramène à la série.**
 - Web : `/dashboard/parishes/[id]/celebrations` (liste + rappel), `/new`, `/[celebrationId]` (série et ses dates),
   `/[celebrationId]/dates/[occurrenceId]` (préparation : feuille + infos de la date), `/templates` (création de modèles).
 

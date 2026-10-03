@@ -103,11 +103,16 @@ for (const [device, viewport] of Object.entries(VIEWPORTS)) {
       await expect(page.getByText('Étape enregistrée', { exact: true })).toBeVisible();
       expect(await hasHorizontalOverflow(page)).toBe(false);
 
+      const occurrenceId = page.url().split('/').pop() as string;
       await page.getByRole('button', { name: 'Publier la feuille' }).click();
-      await expect(page.getByTestId('sheet-status')).toHaveText('Publiée');
+      await expect(
+        page.locator('ol > li[data-state="open"]').getByText('Feuille publiée', { exact: true }),
+      ).toBeVisible();
+      // La publication ramène à la série (on ne reste pas devant le formulaire).
+      await expect(page).toHaveURL(seriesUrl);
+      await expect(page.getByTestId('sheet-panel')).toHaveCount(0);
 
       // Côté public : la date, sa feuille, la description de la série.
-      const occurrenceId = page.url().split('/').pop() as string;
       await page.goto(`/paroisses/${parishId}/messes/${occurrenceId}`);
       await expect(page.getByText('Chant à Marie')).toBeVisible();
       await expect(page.getByText('Ave Maria, 2 couplets')).toBeVisible();

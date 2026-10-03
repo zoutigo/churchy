@@ -103,6 +103,11 @@ Aucun jeton n'est manipulé par le JavaScript : ils sont dans des cookies httpOn
 - Champs mot de passe : `PasswordInput` (bouton afficher/masquer). Les `Input` invalides prennent une
   bordure rouge via `aria-invalid` (posé par `FormControl`).
 
+## Pages d'erreur et cadre commun
+- `components/errors` : `ErrorPage` (gabarit unique), `NotFoundPage` (404, liens de sortie paramétrables), `ServerErrorPage` (500, « Réessayer », erreur seulement en console, jamais affichée). Utilisés par `app/not-found.tsx`, `app/error.tsx`, `app/global-error.tsx`, `(public)/error.tsx`, les `not-found.tsx` de `paroisses`, `dashboard/not-found.tsx`, `dashboard/error.tsx`.
+- `dashboard/[...slug]/page.tsx` appelle `notFound()` : une adresse inconnue sous `/dashboard` affiche le 404 **dans** le tableau de bord. Un `not-found.tsx` de segment ne sert que si une page appelle `notFound()` ; une URL sans route tombe sur `app/not-found.tsx`.
+- `PublicShell` (en-tête avec logo cliquable → accueil, pied de page) enveloppe `(public)` **et** `(auth)` : connexion/inscription ont le même cadre que le site. `AuthCard` ne porte plus que titre + carte.
+
 ## Tableau de bord : formulaires
 - Les formulaires ne sont **jamais ouverts par défaut** : la page affiche les données, et un bouton (« + Nouveau… »,
   « Modifier ») ouvre le formulaire dans un `FormView` qui **remplace** la liste (mobile, tablette et desktop) avec un

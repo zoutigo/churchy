@@ -10,6 +10,27 @@ export const createCelebrationTemplateSchema = z.object({
   description: z.string().optional(),
 });
 
+/**
+ * Modification d'un modèle : nom, type, description et liste COMPLÈTE des étapes dans leur ordre.
+ * Une étape qui porte un `id` existant garde sa clé (le rapprochement avec les feuilles ne se perd pas) ;
+ * une étape sans `id` est créée ; une étape absente de la liste est retirée.
+ */
+export const updateCelebrationTemplateSchema = z.object({
+  name: z.string().trim().min(1, 'Nom requis').max(100).optional(),
+  type: z.nativeEnum(CelebrationType).optional(),
+  description: z.string().nullable().optional(),
+  steps: z
+    .array(
+      z.object({
+        id: z.string().min(1).optional(),
+        title: z.string().trim().min(1, 'Titre requis').max(100),
+      }),
+    )
+    .min(1, 'Ajoutez au moins une étape')
+    .max(100)
+    .optional(),
+});
+
 export const createTemplateStepSchema = z.object({
   title: z.string().min(1, 'Titre requis'),
   key: z.string().min(1, 'Clé requise'),
@@ -147,6 +168,7 @@ export const reorderSheetStepsSchema = z.object({
 });
 
 export type CreateCelebrationTemplateDto = z.infer<typeof createCelebrationTemplateSchema>;
+export type UpdateCelebrationTemplateDto = z.infer<typeof updateCelebrationTemplateSchema>;
 export type CreateTemplateStepDto = z.infer<typeof createTemplateStepSchema>;
 export type CreateCelebrationDto = z.infer<typeof createCelebrationSchema>;
 export type UpdateCelebrationDto = z.infer<typeof updateCelebrationSchema>;

@@ -17,6 +17,7 @@ import type {
   ReorderSheetStepsDto,
   SheetView,
   TemplateChangeReport,
+  UpdateCelebrationTemplateDto,
   UpdateCelebrationDto,
   UpdateCelebrationStepDto,
   UpdateOccurrenceDto,
@@ -73,4 +74,7 @@ export const templatesApi = {
     api.post<CelebrationTemplate>(`/parishes/${parishId}/templates`, dto),
   addStep: (templateId: string, dto: CreateTemplateStepDto) =>
     api.post<CelebrationTemplateStep>(`/templates/${templateId}/steps`, dto),
+  update: (templateId: string, dto: UpdateCelebrationTemplateDto) =>
+    api.patch<TemplateWithSteps>(`/templates/${templateId}`, dto),
+  remove: (templateId: string) => api.delete<void>(`/templates/${templateId}`),
 };

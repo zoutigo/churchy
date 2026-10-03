@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { CelebrationStatus, ContentType, type Content, type SheetView } from '@churchy/shared';
 import { ApiError } from '@/lib/api/client';
@@ -171,6 +171,30 @@ describe('SheetPanel', () => {
     expect(onChange).toHaveBeenCalledWith(
       expect.objectContaining({ status: CelebrationStatus.PUBLISHED }),
     );
+  });
+
+  it('après une publication réussie, quitte la feuille (onPublished)', async () => {
+    api.publishSheet.mockResolvedValue(sheet({ status: CelebrationStatus.PUBLISHED }));
+    const onPublished = vi.fn();
+    const { user } = setup({ onPublished });
+    await user.click(screen.getByRole('button', { name: 'Publier la feuille' }));
+    await waitFor(() => expect(onPublished).toHaveBeenCalledTimes(1));
+  });
+
+  it('une publication en échec ou une dépublication ne quittent pas la feuille', async () => {
+    const onPublished = vi.fn();
+    api.publishSheet.mockRejectedValue(new ApiError('Erreur', 500));
+    const first = setup({ onPublished });
+    await first.user.click(screen.getByRole('button', { name: 'Publier la feuille' }));
+    await waitFor(() => expect(error).toHaveBeenCalled());
+    expect(onPublished).not.toHaveBeenCalled();
+    cleanup();
+
+    api.unpublishSheet.mockResolvedValue(sheet());
+    const second = setup({ onPublished, sheet: sheet({ status: CelebrationStatus.PUBLISHED }) });
+    await second.user.click(screen.getByRole('button', { name: 'Dépublier' }));
+    await waitFor(() => expect(success).toHaveBeenCalledWith('Feuille dépubliée'));
+    expect(onPublished).not.toHaveBeenCalled();
   });
 
   it('feuille publiée : propose « Dépublier »', async () => {

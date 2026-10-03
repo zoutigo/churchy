@@ -17,10 +17,12 @@ interface Props {
   /** Date passée ou annulée : la feuille se consulte, elle ne se modifie plus. */
   readOnly: boolean;
   onChange: (sheet: SheetView) => void;
+  /** Après une publication réussie : la page quitte la feuille (retour à la série). */
+  onPublished?: () => void;
 }
 
 /** Feuille de préparation d'une date : étapes, ordre, ajout à la volée, changement de modèle, publication. */
-export function SheetPanel({ sheet, templates, contents, readOnly, onChange }: Props) {
+export function SheetPanel({ sheet, templates, contents, readOnly, onChange, onPublished }: Props) {
   const [busy, setBusy] = useState(false);
   const [changing, setChanging] = useState(false);
   const [newTitle, setNewTitle] = useState('');
@@ -32,14 +34,16 @@ export function SheetPanel({ sheet, templates, contents, readOnly, onChange }: P
     try {
       onChange(await call());
       notify.success(success);
+      return true;
     } catch (err) {
       notify.error(failure, errorMessage(err, failure));
+      return false;
     }
   }
 
   async function togglePublish() {
     setBusy(true);
-    await run(
+    const ok = await run(
       () =>
         published
           ? celebrationsApi.unpublishSheet(sheet.id)
@@ -48,6 +52,8 @@ export function SheetPanel({ sheet, templates, contents, readOnly, onChange }: P
       published ? 'Erreur lors de la dépublication' : 'Erreur lors de la publication',
     );
     setBusy(false);
+    // Publier est l'aboutissement du travail : on ne reste pas devant le formulaire.
+    if (ok && !published) onPublished?.();
   }
 
   async function move(index: number, direction: -1 | 1) {
