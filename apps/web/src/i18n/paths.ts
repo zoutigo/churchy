@@ -58,11 +58,62 @@ export function splitLocale(pathname: string): { locale: Locale | null; rest: st
  */
 const UNPREFIXED = ['/dashboard'];
 
+/**
+ * Paramètres de requête traduits. Le nom **interne** (celui qu'on écrit dans le code) est la clé ;
+ * le nom visible dépend de la langue : `?mois=2026-10` en français, `?month=2026-10` en anglais.
+ */
+const QUERY_PARAMS: Record<string, Record<Locale, string>> = {
+  mois: { fr: 'mois', en: 'month' },
+};
+
+/** Nom interne d'un paramètre lu dans une URL (`month` → `mois`), ou `null` s'il n'est pas traduit. */
+export function internalQueryName(name: string): string | null {
+  for (const [internal, names] of Object.entries(QUERY_PARAMS)) {
+    if (Object.values(names).includes(name)) return internal;
+  }
+  return null;
+}
+
+/** Valeur d'un paramètre traduit, quelle que soit la langue du nom (`mois` ou `month`). */
+export function readQueryParam(
+  params: Record<string, string | string[] | undefined>,
+  internal: string,
+): string | undefined {
+  for (const name of Object.values(QUERY_PARAMS[internal] ?? { fr: internal })) {
+    const value = params[name];
+    if (typeof value === 'string' && value) return value;
+  }
+  return undefined;
+}
+
+/**
+ * Chaîne de requête (`?mois=2026-10&q=a`) dont les paramètres traduits portent le nom de la langue
+ * demandée ; les autres paramètres sont intacts. Sert aussi au changement de langue (`?month=…` → `?mois=…`).
+ */
+export function localizeSearch(locale: Locale, search: string): string {
+  if (!search.startsWith('?')) return search;
+  return (
+    '?' +
+    search
+      .slice(1)
+      .split('&')
+      .map((pair) => {
+        const eq = pair.indexOf('=');
+        const name = eq === -1 ? pair : pair.slice(0, eq);
+        const internal = internalQueryName(name);
+        if (!internal) return pair;
+        return QUERY_PARAMS[internal][locale] + (eq === -1 ? '' : pair.slice(eq));
+      })
+      .join('&')
+  );
+}
+
 export function localizeHref(locale: Locale, href: string): string {
   if (!href.startsWith('/') || href.startsWith('//')) return href;
   const [, path = '', rest = ''] = /^([^?#]*)(.*)$/.exec(href) ?? [];
   if (UNPREFIXED.some((p) => path === p || path.startsWith(`${p}/`))) return href;
-  return toLocalizedPath(locale, path) + rest;
+  const [, search = '', hash = ''] = /^([^#]*)(.*)$/.exec(rest) ?? [];
+  return toLocalizedPath(locale, path) + localizeSearch(locale, search) + hash;
 }
 
 export { DEFAULT_LOCALE };

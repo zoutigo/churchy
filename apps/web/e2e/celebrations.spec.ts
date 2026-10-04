@@ -407,6 +407,14 @@ for (const [device, viewport] of Object.entries(VIEWPORTS)) {
       const res = await page.goto(`/fr/paroisses/${parishId}/calendrier?mois=n-importe-quoi`);
       expect(res?.status()).toBe(200);
       await expect(page.getByRole('heading', { level: 2 }).first()).toBeVisible();
+
+      // En anglais le paramètre s'appelle `month` ; l'ancien `mois` reste lu.
+      await page.goto(`/en/parishes/${parishId}/calendar`);
+      await page.getByRole('link', { name: 'Next month' }).click();
+      await expect(page).toHaveURL(/month=\d{4}-\d{2}/);
+      const old = await page.goto(`/en/parishes/${parishId}/calendar?mois=2026-10`);
+      expect(old?.status()).toBe(200);
+      await expect(page.getByRole('heading', { name: 'October 2026' })).toBeVisible();
     });
 
     test('paroisse inconnue : page introuvable', async ({ page }) => {

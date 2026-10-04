@@ -110,7 +110,8 @@ Le Cameroun est bilingue. Langues : `fr` (défaut) et `en` (`LOCALES`, `DEFAULT_
 - **Pages légales** (`LegalDocument`, `components/public`) : conditions, confidentialité et mentions légales sont des tableaux `sections` ({ title, paragraphs?, items?, after? }) dans `messages/*.json`, avec sommaire et ancres `#section-N`. Les faits propres à l'éditeur restent entre crochets `[À compléter : …]` (identité de l'éditeur, directeur de la publication, droit applicable) : bandeau « provisoire » à retirer une fois validés par un juriste.
 - **Pays et régions** : la valeur enregistrée reste le nom **français** (identité stable) ; l'affichage passe par `countryLabel(nom, locale)` / `regionLabel(nom, locale)` (`@churchy/shared`, `geo.constants`). Un nom absent de la table (saisie libre) est rendu tel quel. Les villes et quartiers sont des noms propres, non traduits.
 - **Domaine** : pour l'instant `churchy.tigilabs.com` ; le domaine définitif sera communiqué par le propriétaire (il suffira de changer `NEXT_PUBLIC_SITE_URL`).
-- **Reste à faire** : paramètres de requête traduits (`mois` → `month`).
+- **Paramètres de requête** : le nom **interne** s'écrit dans le code (`?mois=`), `localizeHref` le rend visible dans la langue (`?month=` en anglais) ; table `QUERY_PARAMS` de `i18n/paths.ts`. Lecture côté serveur par `readQueryParam(searchParams, 'mois')` (accepte les deux noms : les anciens liens restent valides) ; `LanguageSwitcher` renomme le paramètre en changeant de langue (`localizeSearch`). Nouveau paramètre traduit = nouvelle entrée de la table.
+- **Reste à faire** : rien de planifié côté i18n.
 
 ## Site public (sans authentification)
 Pages servies par le web (rendu serveur, `force-dynamic`, URL **par id** de paroisse, pas par slug ; chemins ci-dessous = chemins **internes** en français, voir « Langues » pour les URL visibles `/fr/…` et `/en/…`) :
@@ -295,9 +296,14 @@ exécute dans cet ordre, et bloque le commit au moindre échec :
 2. **lint + formatage** des fichiers indexés : ESLint `--fix` puis Prettier `--write` (lint-staged) ;
 3. **typecheck** de tous les workspaces (`npm run typecheck`) ;
 4. **tests unitaires** de tous les workspaces (`npm test`) ;
-5. **tests fonctionnels** : API (supertest, base `churchy_test`) puis web (Playwright)
-   (`npm run test:e2e`). Postgres + Redis sont démarrés automatiquement (`npm run infra:up`, qui attend
-   qu'ils soient prêts) ; Docker doit donc être lancé.
+5. **tests fonctionnels de l'API** (supertest, base `churchy_test` : `npm run test:e2e -w @churchy/api`).
+   Postgres + Redis sont démarrés automatiquement (`npm run infra:up`, qui attend qu'ils soient prêts) ;
+   Docker doit donc être lancé.
+
+**Les tests Playwright (web) ne sont PAS dans le précommit** (trop longs : ~15 min) : ils tournent dans le CI de
+`dev`, découpés en shards. On les écrit et on les maintient quand même (règle 1) ; pour les lancer en local :
+`npm run test:e2e -w @churchy/web` (un fichier : `… -- e2e/public-site.spec.ts`). Un échec Playwright se
+découvre donc dans le CI : le lire (`gh run view --log-failed`) et corriger (règle 2 bis).
 
 - Même contrôle à la main : `npm run precommit`. Outils seuls : `npm run lint`, `npm run format`, `npm run format:check`.
 - **Si le précommit révèle un problème, il faut le corriger soi-même, dans le code, avant de commiter** :
@@ -309,7 +315,7 @@ exécute dans cet ordre, et bloque le commit au moindre échec :
 
 ### 2 bis. Fin de travail : précommit complet, commit, push, suivi du CI
 À la fin de **chaque** travail, sans qu'on ait à le demander :
-1. lancer le **précommit complet** (`npm run precommit`) et corriger tout problème (règle 2) ;
+1. lancer le **précommit** (`npm run precommit`, sans Playwright) et corriger tout problème (règle 2) ;
 2. **commiter** dans `dev` (le hook rejoue le précommit) puis **pousser** (`git push origin dev`) ;
 3. **suivre le CI de la branche `dev`** (GitHub Actions, `gh run list --branch dev` / `gh run watch`) jusqu'à
    sa fin (workflow `ci.yml`, voir « CI » ci-dessous) ;

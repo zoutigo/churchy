@@ -148,7 +148,7 @@ describe('site public en anglais', () => {
     expect(screen.getByRole('heading', { name: 'October 2026' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Previous month' })).toHaveAttribute(
       'href',
-      '/en/parishes/p1/calendar?mois=2026-09',
+      '/en/parishes/p1/calendar?month=2026-09',
     );
     expect(screen.getByText('Green')).toBeInTheDocument();
     expect(screen.getByText('red')).toHaveClass('text-red-700');

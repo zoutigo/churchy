@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { AUTH_LINK_PATHS, authLinkPath } from '@churchy/shared';
 import { routing } from './routing';
-import { localizeHref, splitLocale, toInternalPath, toLocalizedPath } from './paths';
+import {
+  localizeHref,
+  localizeSearch,
+  readQueryParam,
+  splitLocale,
+  toInternalPath,
+  toLocalizedPath,
+} from './paths';
 
 describe('toLocalizedPath', () => {
   it('préfixe la langue et traduit les segments', () => {
@@ -64,6 +71,13 @@ describe('localizeHref', () => {
     );
   });
 
+  it('traduit les paramètres de requête selon la langue', () => {
+    expect(localizeHref('en', '/paroisses/p1/calendrier?mois=2026-10#j3')).toBe(
+      '/en/parishes/p1/calendar?month=2026-10#j3',
+    );
+    expect(localizeHref('en', '/paroisses?q=a&page=2')).toBe('/en/parishes?q=a&page=2');
+  });
+
   it('laisse intacts le tableau de bord, les URL externes et les ancres', () => {
     expect(localizeHref('en', '/dashboard/parishes/p1')).toBe('/dashboard/parishes/p1');
     expect(localizeHref('en', '/dashboard')).toBe('/dashboard');
@@ -96,5 +110,22 @@ describe('liens des emails (@churchy/shared)', () => {
 
   it('langue inconnue : français', () => {
     expect(authLinkPath('verify-email', 'zz')).toBe('/fr/verification-email');
+  });
+});
+
+describe('paramètres de requête traduits', () => {
+  it('localizeSearch renomme dans les deux sens et garde le reste', () => {
+    expect(localizeSearch('en', '?mois=2026-10&q=a')).toBe('?month=2026-10&q=a');
+    expect(localizeSearch('fr', '?month=2026-10&q=a')).toBe('?mois=2026-10&q=a');
+    expect(localizeSearch('en', '?month=2026-10')).toBe('?month=2026-10');
+    expect(localizeSearch('en', '')).toBe('');
+    expect(localizeSearch('en', '?q=douala')).toBe('?q=douala');
+  });
+
+  it('readQueryParam lit le nom français comme l’anglais', () => {
+    expect(readQueryParam({ mois: '2026-10' }, 'mois')).toBe('2026-10');
+    expect(readQueryParam({ month: '2026-11' }, 'mois')).toBe('2026-11');
+    expect(readQueryParam({}, 'mois')).toBeUndefined();
+    expect(readQueryParam({ mois: ['a', 'b'] }, 'mois')).toBeUndefined();
   });
 });

@@ -54,6 +54,16 @@ describe('LanguageSwitcher', () => {
     expect(success).toHaveBeenCalledWith('Language: English');
   });
 
+  it('le paramètre traduit suit la langue (mois → month et inversement)', async () => {
+    pathname = '/fr/paroisses/p1/calendrier';
+    window.history.replaceState({}, '', '/fr/paroisses/p1/calendrier?mois=2026-10');
+    render(<LanguageSwitcher />);
+    await userEvent.click(screen.getByRole('link', { name: 'English' }));
+    await waitFor(() =>
+      expect(replace).toHaveBeenCalledWith('/en/parishes/p1/calendar?month=2026-10'),
+    );
+  });
+
   it('connecté : la langue est enregistrée sur le compte avant de naviguer', async () => {
     auth = { user: { id: 'u1' }, setLocale };
     render(<LanguageSwitcher />);

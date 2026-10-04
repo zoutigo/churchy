@@ -5,7 +5,7 @@ import { usePathname as useRealPathname, useRouter as useNextRouter } from 'next
 import { LOCALES, isLocale, type Locale } from '@churchy/shared';
 import { useAuth } from '@/hooks/useAuth';
 import { writeLocaleCookie } from '@/i18n/cookie';
-import { localizeHref } from '@/i18n/paths';
+import { localizeHref, localizeSearch } from '@/i18n/paths';
 import { usePathname } from '@/i18n/link';
 import { DEFAULT_LOCALE } from '@/i18n/routing';
 import { notify } from '@/lib/notify';
@@ -60,7 +60,7 @@ export function LanguageSwitcher({ className }: { className?: string }) {
     // La recherche et l'ancre sont conservées (ex. `?q=douala`).
     const target = onDashboard
       ? null
-      : `${hrefFor(locale)}${window.location.search}${window.location.hash}`;
+      : `${hrefFor(locale)}${localizeSearch(locale, window.location.search)}${window.location.hash}`;
     if (target) router.replace(target);
     else router.refresh();
     setBusy(false);

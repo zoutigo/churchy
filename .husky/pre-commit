@@ -1,8 +1,9 @@
 # Précommit : docs agents synchronisées, lint + formatage (fichiers indexés), typecheck,
-# tests unitaires, puis tests fonctionnels (Postgres + Redis sont démarrés au besoin).
+# tests unitaires, puis tests fonctionnels de l'API (Postgres + Redis sont démarrés au besoin).
+# Les tests Playwright (web) ne tournent que dans le CI de `dev` : trop longs pour un commit.
 node scripts/agent-docs.mjs check || exit 1
 npx lint-staged || exit 1
 npm run typecheck || exit 1
 npm test || exit 1
 npm run infra:up || exit 1
-npm run test:e2e || exit 1
+npm run test:e2e -w @churchy/api || exit 1
