@@ -29,6 +29,17 @@ describe('api client', () => {
       expect(init.headers.Authorization).toBeUndefined();
     });
 
+    it('transmet la langue de la page à l’API (Accept-Language), et rien si elle est inconnue', async () => {
+      fetchMock.mockImplementation(async () => jsonResponse({}));
+      document.documentElement.lang = 'en';
+      await api.get('/public/parishes');
+      expect(fetchMock.mock.calls[0][1].headers['Accept-Language']).toBe('en');
+
+      document.documentElement.lang = '';
+      await api.get('/public/parishes');
+      expect(fetchMock.mock.calls[1][1].headers['Accept-Language']).toBeUndefined();
+    });
+
     it('non-régression : côté serveur (pages publiques), jamais de cache Next sur les requêtes', async () => {
       fetchMock.mockResolvedValue(jsonResponse({}));
       const win = globalThis.window;

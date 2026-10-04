@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import type { PublicParish } from '@churchy/shared';
+import { toLocalizedPath } from '@/i18n/paths';
+import { DEFAULT_LOCALE, LOCALES, type Locale } from '@/i18n/routing';
 
 const MAX_DESCRIPTION = 200;
 const SHARE_IMAGE = '/opengraph-image';
@@ -22,20 +24,29 @@ export function plainDescription(html: string | null | undefined, max = MAX_DESC
  */
 export function parishMetadata(
   parish: Pick<PublicParish, 'id' | 'name' | 'city' | 'description'>,
+  locale: Locale = DEFAULT_LOCALE,
 ): Metadata {
   const title = `${parish.name} — Churchy`;
   const description =
     plainDescription(parish.description) ||
     `Messes, annonces et activités de ${parish.name} (${parish.city}).`;
-  const url = `/paroisses/${parish.id}`;
+  const internal = `/paroisses/${parish.id}`;
+  const url = toLocalizedPath(locale, internal);
   return {
     title,
     description,
-    alternates: { canonical: url },
+    // Chaque version de la page déclare l'autre (hreflang) ; `x-default` : le français.
+    alternates: {
+      canonical: url,
+      languages: {
+        ...Object.fromEntries(LOCALES.map((l) => [l, toLocalizedPath(l, internal)])),
+        'x-default': toLocalizedPath(DEFAULT_LOCALE, internal),
+      },
+    },
     // Un `openGraph` de segment remplace celui du parent, image fichier comprise : on la redonne.
     openGraph: {
       type: 'website',
-      locale: 'fr_FR',
+      locale: locale === 'en' ? 'en_US' : 'fr_FR',
       siteName: 'Churchy',
       url,
       title,

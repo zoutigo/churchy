@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { Link } from '@/i18n/link';
 import { ActivityItem } from '@/components/public/ActivityItem';
 import { AnnouncementItem } from '@/components/public/AnnouncementItem';
 import { CelebrationItem } from '@/components/public/CelebrationItem';

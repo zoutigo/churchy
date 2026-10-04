@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import Link from 'next/link';
+import { Link } from '@/i18n/link';
 import { Search } from 'lucide-react';
 import { contentsApi } from '@/lib/api/contents.api';
 import { ContentForm } from '@/components/content/ContentForm';

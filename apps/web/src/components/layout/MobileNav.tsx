@@ -1,6 +1,6 @@
 'use client';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { Link } from '@/i18n/link';
+import { usePathname } from '@/i18n/link';
 import { cn } from '@/lib/utils';
 import { dashboardNav } from './Sidebar';
 

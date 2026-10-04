@@ -1,7 +1,10 @@
 import type { Metadata } from 'next';
+import { NextIntlClientProvider } from 'next-intl';
+import { getLocale } from 'next-intl/server';
 import { Playfair_Display, Poppins } from 'next/font/google';
 import { AuthProvider } from '@/components/auth/AuthProvider';
 import { FavoritesProvider } from '@/components/favorites/FavoritesProvider';
+import { LocaleSync } from '@/components/i18n/LocaleSync';
 import { Toaster } from '@/components/ui/toaster';
 import './globals.css';
 
@@ -38,14 +41,18 @@ export const metadata: Metadata = {
   twitter: { card: 'summary_large_image', title: SITE_TITLE, description: SITE_DESCRIPTION },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const locale = await getLocale();
   return (
-    <html lang="fr">
+    <html lang={locale}>
       <body className={`${playfair.variable} ${poppins.variable} font-poppins`}>
-        <AuthProvider>
-          <FavoritesProvider>{children}</FavoritesProvider>
-        </AuthProvider>
-        <Toaster />
+        <NextIntlClientProvider>
+          <AuthProvider>
+            <LocaleSync />
+            <FavoritesProvider>{children}</FavoritesProvider>
+          </AuthProvider>
+          <Toaster />
+        </NextIntlClientProvider>
       </body>
     </html>
   );

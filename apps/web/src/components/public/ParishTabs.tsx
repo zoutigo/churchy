@@ -1,6 +1,6 @@
 'use client';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { Link } from '@/i18n/link';
+import { usePathname } from '@/i18n/link';
 import { cn } from '@/lib/utils';
 
 /** Sous-navigation d'une paroisse : défilement horizontal sur mobile, onglets complets sur desktop. */

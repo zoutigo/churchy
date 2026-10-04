@@ -4,6 +4,7 @@ import type {
   AuthUserDto,
   ForgotPasswordDto,
   LoginDto,
+  Locale,
   RegisterDto,
   ResetPasswordDto,
   VerifyEmailDto,
@@ -19,6 +20,7 @@ export const authApi = {
   login: (dto: LoginDto) => api.post<AuthResponse>('/auth/login', dto),
   logout: () => api.post<MessageResponse>('/auth/logout'),
   me: () => api.get<AuthUserDto>('/auth/me'),
+  updateLocale: (locale: Locale) => api.patch<AuthUserDto>('/auth/me/locale', { locale }),
   forgotPassword: (dto: ForgotPasswordDto) =>
     api.post<MessageResponse>('/auth/forgot-password', dto),
   resetPassword: (dto: ResetPasswordDto) => api.post<MessageResponse>('/auth/reset-password', dto),

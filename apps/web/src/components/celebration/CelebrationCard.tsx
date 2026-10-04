@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { Link } from '@/i18n/link';
 import { CalendarClock, Repeat } from 'lucide-react';
 import type { CelebrationListItem } from '@churchy/shared';
 import { CELEBRATION_TYPE_LABELS, formatDateLong, formatTime } from '@/lib/format';

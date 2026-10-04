@@ -79,7 +79,7 @@ describe('EmptyState', () => {
     expect(screen.getByText('Essayez une autre ville.')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Voir toutes les paroisses' })).toHaveAttribute(
       'href',
-      '/paroisses',
+      '/fr/paroisses',
     );
   });
 });

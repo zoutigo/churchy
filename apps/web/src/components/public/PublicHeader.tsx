@@ -1,7 +1,8 @@
 'use client';
 import { useState } from 'react';
-import Link from 'next/link';
+import { Link } from '@/i18n/link';
 import { Menu, Star, X } from 'lucide-react';
+import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 import { useFavorites } from '@/components/favorites/FavoritesProvider';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -75,8 +76,11 @@ export function PublicHeader({ hasSession }: { hasSession?: boolean }) {
 
         <nav aria-label="Navigation principale" className="hidden items-center gap-1 md:flex">
           {links}
+          <LanguageSwitcher className="ml-2" />
         </nav>
 
+        {/* Mobile : le choix de langue reste visible, sans ouvrir le menu. */}
+        <LanguageSwitcher className="ml-auto mr-2 md:hidden" />
         <button
           type="button"
           className="-mr-2 inline-flex h-11 w-11 items-center justify-center rounded-md text-churchy-700 hover:bg-churchy-100 md:hidden"

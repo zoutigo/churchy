@@ -50,7 +50,7 @@ describe('AuthGuard', () => {
       </AuthGuard>,
     );
     expect(screen.queryByText('contenu privé')).not.toBeInTheDocument();
-    expect(replace).toHaveBeenCalledWith('/login?next=%2Fdashboard%2Fparishes');
+    expect(replace).toHaveBeenCalledWith('/fr/connexion?next=%2Fdashboard%2Fparishes');
   });
 
   it('ajoute expired=1 quand la session a été perdue en cours de navigation', () => {
@@ -60,7 +60,7 @@ describe('AuthGuard', () => {
         <p>contenu privé</p>
       </AuthGuard>,
     );
-    expect(replace).toHaveBeenCalledWith('/login?expired=1&next=%2Fdashboard%2Fparishes');
+    expect(replace).toHaveBeenCalledWith('/fr/connexion?expired=1&next=%2Fdashboard%2Fparishes');
   });
 
   it('après une déconnexion volontaire, retourne à /login sans page de retour', () => {
@@ -70,7 +70,7 @@ describe('AuthGuard', () => {
         <p>contenu privé</p>
       </AuthGuard>,
     );
-    expect(replace).toHaveBeenCalledWith('/login');
+    expect(replace).toHaveBeenCalledWith('/fr/connexion');
     expect(replace).toHaveBeenCalledTimes(1);
   });
 });

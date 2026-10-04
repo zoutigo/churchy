@@ -21,7 +21,7 @@ async function openHeaderMenu(page: Page) {
 }
 
 async function searchAndFind(page: Page, parish: SeededParish) {
-  await page.goto(`/paroisses?q=${parish.token.toLowerCase()}`);
+  await page.goto(`/fr/paroisses?q=${parish.token.toLowerCase()}`);
   const card = page.getByRole('article').filter({ hasText: parish.name });
   await expect(card).toBeVisible();
   return card;
@@ -74,7 +74,7 @@ test.describe('paroisses favorites', () => {
           .getByTestId('favorites-shelf')
           .getByRole('link', { name: `Voir la paroisse ${parish.name}` })
           .click();
-        await expect(page).toHaveURL(`/paroisses/${parish.id}`);
+        await expect(page).toHaveURL(`/fr/paroisses/${parish.id}`);
       });
 
       test('visiteur : le lien « Mes favoris » du menu mène à la liste, qui permet de retirer', async ({
@@ -92,7 +92,7 @@ test.describe('paroisses favorites', () => {
         await expect(link).toContainText('2');
         await link.click();
 
-        await expect(page).toHaveURL('/favoris');
+        await expect(page).toHaveURL('/fr/favoris');
         await expect(page.getByRole('heading', { level: 1, name: 'Mes favoris' })).toBeVisible();
         await expect(page.getByRole('article')).toHaveCount(2);
         expect(await hasHorizontalOverflow(page)).toBe(false);
@@ -105,7 +105,7 @@ test.describe('paroisses favorites', () => {
       });
 
       test('visiteur : bouton sur la page de la paroisse, ajout puis retrait', async ({ page }) => {
-        await page.goto(`/paroisses/${parish.id}`);
+        await page.goto(`/fr/paroisses/${parish.id}`);
         const button = page.getByRole('button', { name: 'Ajouter aux favoris' });
         await expect(button).toBeEnabled();
         await button.click();
@@ -134,7 +134,7 @@ test.describe('paroisses favorites', () => {
           },
           [FAVORITES_KEY] as const,
         );
-        await page.goto(`/paroisses/${parish.id}`);
+        await page.goto(`/fr/paroisses/${parish.id}`);
         await page.getByRole('button', { name: 'Ajouter aux favoris' }).click();
         await expect(toast(page, 'Limite de favoris atteinte')).toBeVisible();
         await expect(page.getByRole('button', { name: 'Ajouter aux favoris' })).toBeVisible();
@@ -147,18 +147,18 @@ test.describe('paroisses favorites', () => {
         const email = uniqueEmail('fav-user');
 
         // 1. Visiteur : un favori sur l'appareil.
-        await page.goto(`/paroisses/${parish.id}`);
+        await page.goto(`/fr/paroisses/${parish.id}`);
         await page.getByRole('button', { name: 'Ajouter aux favoris' }).click();
         await expect(toast(page, 'Ajoutée à vos favoris')).toBeVisible();
 
         // 2. Inscription : le favori de l'appareil est versé dans le compte, l'appareil est vidé.
         await registerViaUi(page, email);
-        await page.goto('/favoris');
+        await page.goto('/fr/favoris');
         await expect(page.getByRole('article').filter({ hasText: parish.name })).toBeVisible();
         expect(await page.evaluate((k) => localStorage.getItem(k), FAVORITES_KEY)).toBeNull();
 
         // 3. Ajout connecté : persisté en base (aucune écriture locale).
-        await page.goto(`/paroisses/${other.id}`);
+        await page.goto(`/fr/paroisses/${other.id}`);
         await page.getByRole('button', { name: 'Ajouter aux favoris' }).click();
         await expect(toast(page, 'Ajoutée à vos favoris')).toBeVisible();
         expect(await page.evaluate((k) => localStorage.getItem(k), FAVORITES_KEY)).toBeNull();
@@ -175,7 +175,7 @@ test.describe('paroisses favorites', () => {
         await expect(shelf.getByRole('article').first()).toContainText(parish.name);
 
         // 5. Retrait connecté, puis déconnexion : l'appareil ne garde rien du compte.
-        await page2.goto('/favoris');
+        await page2.goto('/fr/favoris');
         await page2
           .getByRole('article')
           .filter({ hasText: parish.name })
@@ -199,15 +199,15 @@ test.describe('paroisses favorites', () => {
             ? page.locator('aside nav')
             : page.getByRole('navigation', { name: 'Navigation du tableau de bord' });
         await nav.getByRole('link', { name: 'Mes favoris' }).click();
-        await expect(page).toHaveURL('/favoris');
+        await expect(page).toHaveURL('/fr/favoris');
         await expect(page.getByText('Aucune paroisse en favori pour l’instant')).toBeVisible();
         await page.getByRole('main').getByRole('link', { name: 'Trouver une paroisse' }).click();
-        await expect(page).toHaveURL('/paroisses');
+        await expect(page).toHaveURL('/fr/paroisses');
       });
 
       test('échec de l’API : l’ajout est annulé et une erreur est annoncée', async ({ page }) => {
         await registerViaUi(page, uniqueEmail('fav-err'));
-        await page.goto(`/paroisses/${parish.id}`);
+        await page.goto(`/fr/paroisses/${parish.id}`);
         const button = page.getByRole('button', { name: 'Ajouter aux favoris' });
         await expect(button).toBeEnabled();
         await page.route('**/api/favorites/*', (route) =>
@@ -268,10 +268,10 @@ test.describe('aperçu des liens partagés (Open Graph)', () => {
   test('la page d’une paroisse porte son nom, sa description et l’image du site', async ({
     page,
   }) => {
-    await page.goto(`/paroisses/${parish.id}`);
+    await page.goto(`/fr/paroisses/${parish.id}`);
     expect(await meta(page, 'og:title')).toBe(`${parish.name} — Churchy`);
     expect(await meta(page, 'og:description')).toBe('Une paroisse accueillante.');
-    expect(await meta(page, 'og:url')).toContain(`/paroisses/${parish.id}`);
+    expect(await meta(page, 'og:url')).toContain(`/fr/paroisses/${parish.id}`);
     expect(await meta(page, 'og:image')).toContain('opengraph-image');
     expect(await meta(page, 'twitter:card')).toBe('summary_large_image');
   });

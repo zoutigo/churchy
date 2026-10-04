@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { AuthLink } from '@/components/auth/AuthCard';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import Link from 'next/link';
+import { Link } from '@/i18n/link';
 
 type Status = 'loading' | 'success' | 'error';
 

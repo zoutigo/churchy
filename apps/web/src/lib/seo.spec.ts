@@ -23,12 +23,23 @@ describe('plainDescription', () => {
 describe('parishMetadata', () => {
   const parish = { id: 'p1', name: 'Saint-Pierre', city: 'Lyon', description: null };
 
+  it('en anglais : URL traduite, hreflang vers les deux versions, og:locale', () => {
+    const m = parishMetadata(parish, 'en');
+    expect(m.alternates?.canonical).toBe('/en/parishes/p1');
+    expect(m.alternates?.languages).toEqual({
+      fr: '/fr/paroisses/p1',
+      en: '/en/parishes/p1',
+      'x-default': '/fr/paroisses/p1',
+    });
+    expect(m.openGraph).toMatchObject({ locale: 'en_US', url: '/en/parishes/p1' });
+  });
+
   it('titre, URL canonique et aperçu de partage par id', () => {
     const m = parishMetadata(parish);
     expect(m.title).toBe('Saint-Pierre — Churchy');
-    expect(m.alternates?.canonical).toBe('/paroisses/p1');
+    expect(m.alternates?.canonical).toBe('/fr/paroisses/p1');
     expect(m.openGraph).toMatchObject({
-      url: '/paroisses/p1',
+      url: '/fr/paroisses/p1',
       title: 'Saint-Pierre — Churchy',
       siteName: 'Churchy',
     });

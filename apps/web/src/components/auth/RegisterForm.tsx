@@ -1,8 +1,9 @@
 'use client';
 import { useForm } from 'react-hook-form';
+import { useLocale } from 'next-intl';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useRouter } from 'next/navigation';
-import { registerSchema, type RegisterDto } from '@churchy/shared';
+import { useRouter } from '@/i18n/link';
+import { isLocale, registerSchema, type RegisterDto } from '@churchy/shared';
 import { useAuth } from '@/hooks/useAuth';
 import {
   Form,
@@ -20,6 +21,7 @@ import { handleSubmitError } from '@/lib/forms/submit-error';
 export function RegisterForm() {
   const router = useRouter();
   const { register, loading } = useAuth();
+  const locale = useLocale();
 
   const form = useForm<RegisterDto>({
     resolver: zodResolver(registerSchema),
@@ -29,7 +31,8 @@ export function RegisterForm() {
 
   async function onSubmit(data: RegisterDto) {
     try {
-      await register(data);
+      // La langue de l'interface devient la langue du compte.
+      await register({ ...data, ...(isLocale(locale) ? { locale } : {}) });
       router.push('/dashboard');
       router.refresh();
     } catch (err: unknown) {

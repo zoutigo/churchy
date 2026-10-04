@@ -128,7 +128,7 @@ for (const [label, size] of Object.entries(VIEWPORTS)) {
       await expect(page.getByText(`Fête ${label}`)).toBeVisible();
 
       // Rendu public : mise en forme et image conservées, sans débordement.
-      await page.goto(`/paroisses/${parishId}/activites`);
+      await page.goto(`/fr/paroisses/${parishId}/activites`);
       const article = page.locator('article', { hasText: `Fête ${label}` });
       await expect(article.locator('strong')).toHaveText('Grande fête');
       await expect(article.locator('.rich-content img')).toHaveAttribute('data-width', '50');
@@ -154,7 +154,7 @@ for (const [label, size] of Object.entries(VIEWPORTS)) {
       await page.getByRole('button', { name: 'Publier l’annonce' }).click();
       await expect(page.getByText(`Annonce ${label}`)).toBeVisible();
 
-      await page.goto(`/paroisses/${parishId}/annonces`);
+      await page.goto(`/fr/paroisses/${parishId}/annonces`);
       const article = page.locator('article', { hasText: `Annonce ${label}` });
       await expect(article.locator('ul li')).toContainText('Bonjour un');
       await expect(article).toContainText('<script>alert(1)</script>'); // texte, jamais exécuté

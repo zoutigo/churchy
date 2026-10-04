@@ -4,6 +4,7 @@ import { FavoriteButton } from '@/components/favorites/FavoriteButton';
 import { ParishInfoPanel } from '@/components/public/ParishInfoPanel';
 import { ParishTabs } from '@/components/public/ParishTabs';
 import { orNotFound, publicApi } from '@/lib/api/public.api';
+import { isLocale } from '@/i18n/routing';
 import { parishMetadata } from '@/lib/seo';
 import { placeLabel } from '@/lib/format';
 
@@ -11,13 +12,13 @@ const WRAP = 'mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8';
 
 interface Props {
   children: React.ReactNode;
-  params: { parishId: string };
+  params: { locale: string; parishId: string };
 }
 
 export async function generateMetadata({ params }: Pick<Props, 'params'>): Promise<Metadata> {
   try {
     const parish = await publicApi.getParish(params.parishId);
-    return parishMetadata(parish);
+    return parishMetadata(parish, isLocale(params.locale) ? params.locale : undefined);
   } catch {
     return { title: 'Paroisse — Churchy' };
   }

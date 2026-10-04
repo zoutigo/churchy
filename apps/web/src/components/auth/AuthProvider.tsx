@@ -1,6 +1,6 @@
 'use client';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import type { AuthUserDto, LoginDto, RegisterDto } from '@churchy/shared';
+import type { AuthUserDto, Locale, LoginDto, RegisterDto } from '@churchy/shared';
 import { authApi } from '@/lib/api/auth.api';
 import { hasSessionFlag, SESSION_EXPIRED_EVENT } from '@/lib/auth/session';
 
@@ -18,6 +18,8 @@ export interface AuthContextValue {
   register: (dto: RegisterDto) => Promise<AuthUserDto>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  /** Enregistre la langue préférée du compte (base de données). */
+  setLocale: (locale: Locale) => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null);
@@ -104,6 +106,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [withLoading],
   );
 
+  const setLocale = useCallback(async (locale: Locale) => {
+    setUser(await authApi.updateLocale(locale));
+  }, []);
+
   const value = useMemo(
     () => ({
       user,
@@ -115,8 +121,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       register,
       logout,
       refreshUser,
+      setLocale,
     }),
-    [user, initializing, loading, sessionExpired, loggedOut, login, register, logout, refreshUser],
+    [
+      user,
+      initializing,
+      loading,
+      sessionExpired,
+      loggedOut,
+      login,
+      register,
+      logout,
+      refreshUser,
+      setLocale,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

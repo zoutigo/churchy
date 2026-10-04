@@ -11,6 +11,8 @@ export default defineConfig({
     setupFiles: ['./vitest.setup.ts'],
     include: ['src/**/*.spec.{ts,tsx}', 'scripts/**/*.spec.ts'],
     css: false,
+    // next-intl importe `next/server` sans extension : à faire transformer par Vite pour le test du middleware.
+    server: { deps: { inline: ['next-intl'] } },
     // Les tests de formulaires saisissent beaucoup de texte dans jsdom : marge pour les machines chargées
     // (précommit et CI lancent tous les workspaces en parallèle).
     testTimeout: 30_000,

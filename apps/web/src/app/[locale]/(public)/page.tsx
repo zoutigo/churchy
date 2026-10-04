@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { Link } from '@/i18n/link';
 import { CalendarDays, Check, Church, Megaphone, ScrollText } from 'lucide-react';
 import { FavoritesShelf } from '@/components/favorites/FavoriteParishes';
 import { ParishSearchForm } from '@/components/public/ParishSearchForm';

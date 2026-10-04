@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
+import { Link } from '@/i18n/link';
 import { DEFAULT_TIMEZONE, type CelebrationListItem } from '@churchy/shared';
 import { celebrationsApi } from '@/lib/api/celebrations.api';
 import { useParish } from '@/hooks/useParish';

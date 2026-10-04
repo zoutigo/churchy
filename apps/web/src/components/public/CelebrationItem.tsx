@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { Link } from '@/i18n/link';
 import { MapPin } from 'lucide-react';
 import type { PublicCelebrationSummary } from '@churchy/shared';
 import { CELEBRATION_TYPE_LABELS, formatDateParts, formatTime } from '@/lib/format';

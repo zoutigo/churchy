@@ -9,7 +9,15 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { randomUUID } from 'node:crypto';
 import type { User } from '@prisma/client';
-import type { AuthUserDto, LoginDto, RegisterDto, UserRole } from '@churchy/shared';
+import {
+  DEFAULT_LOCALE,
+  isLocale,
+  type AuthUserDto,
+  type Locale,
+  type LoginDto,
+  type RegisterDto,
+  type UserRole,
+} from '@churchy/shared';
 import type { AuthLinkEmailPayload } from '@churchy/contracts';
 import { env } from '../../config/env';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -39,6 +47,7 @@ export function toAuthUserDto(user: User): AuthUserDto {
     lastName: user.lastName,
     role: user.role as UserRole,
     emailVerified: user.emailVerifiedAt !== null,
+    locale: isLocale(user.locale) ? user.locale : DEFAULT_LOCALE,
   };
 }
 
@@ -62,6 +71,7 @@ export class AuthService {
         passwordHash: await bcrypt.hash(dto.password, BCRYPT_ROUNDS),
         firstName: dto.firstName,
         lastName: dto.lastName,
+        locale: dto.locale ?? DEFAULT_LOCALE,
       },
     });
 
@@ -75,6 +85,13 @@ export class AuthService {
     if (!user || !valid) throw new UnauthorizedException('Identifiants invalides');
 
     return { user: toAuthUserDto(user), session: await this.issueSession(user) };
+  }
+
+  /** Mémorise la langue préférée du compte. */
+  async updateLocale(userId: string, locale: Locale): Promise<AuthUserDto> {
+    return toAuthUserDto(
+      await this.prisma.user.update({ where: { id: userId }, data: { locale } }),
+    );
   }
 
   /** Échange un refresh token contre une nouvelle paire (rotation : l'ancien est révoqué). */

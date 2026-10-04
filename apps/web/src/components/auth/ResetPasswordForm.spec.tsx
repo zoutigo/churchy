@@ -47,7 +47,7 @@ describe('ResetPasswordForm', () => {
     await waitFor(() =>
       expect(resetPassword).toHaveBeenCalledWith({ token: 'le-jeton', password: 'nouveaumdp1' }),
     );
-    expect(push).toHaveBeenCalledWith('/login?reset=1');
+    expect(push).toHaveBeenCalledWith('/fr/connexion?reset=1');
   });
 
   it('affiche l’erreur d’un lien expiré avec un lien pour en redemander un', async () => {
@@ -58,7 +58,7 @@ describe('ResetPasswordForm', () => {
     expect(await screen.findByText('Lien invalide ou expiré')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Demander un nouveau lien' })).toHaveAttribute(
       'href',
-      '/forgot-password',
+      '/fr/mot-de-passe-oublie',
     );
     expect(push).not.toHaveBeenCalled();
   });

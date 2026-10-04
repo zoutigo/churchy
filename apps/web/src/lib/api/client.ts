@@ -66,6 +66,20 @@ const NO_REFRESH = new Set([
   '/auth/verify-email',
 ]);
 
+/**
+ * Langue de l'interface, transmise à l'API (`Accept-Language`) : navigateur → attribut `lang` de la page ;
+ * rendu serveur → langue de la requête. Absente (tests, hors requête) : pas d'en-tête.
+ */
+async function currentLanguage(): Promise<string | undefined> {
+  if (typeof window !== 'undefined') return document.documentElement.lang || undefined;
+  try {
+    const { getLocale } = await import('next-intl/server');
+    return await getLocale();
+  } catch {
+    return undefined;
+  }
+}
+
 let refreshInFlight: Promise<boolean> | null = null;
 
 /** Renouvelle la session via le cookie de refresh. Un seul appel à la fois, partagé entre requêtes. */
@@ -81,6 +95,7 @@ function refreshSession(): Promise<boolean> {
 
 async function request<T>(path: string, options?: RequestInit, canRetry = true): Promise<T> {
   let res: Response;
+  const language = await currentLanguage();
   try {
     res = await fetch(`${apiUrl()}${path}`, {
       // Rendu serveur (pages publiques) : Next met les `fetch` en cache par défaut ; une annonce supprimée
@@ -89,7 +104,11 @@ async function request<T>(path: string, options?: RequestInit, canRetry = true):
       ...options,
       // Les jetons sont dans des cookies httpOnly : le navigateur les joint, le JavaScript ne les voit pas.
       credentials: 'include',
-      headers: { 'Content-Type': 'application/json', ...options?.headers },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(language ? { 'Accept-Language': language } : {}),
+        ...options?.headers,
+      },
     });
   } catch {
     throw new ApiError('Impossible de joindre le serveur. Vérifiez votre connexion.', 0);

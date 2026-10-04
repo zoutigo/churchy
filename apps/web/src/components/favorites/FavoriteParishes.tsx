@@ -1,5 +1,5 @@
 'use client';
-import Link from 'next/link';
+import { Link } from '@/i18n/link';
 import { Star } from 'lucide-react';
 import { MAX_FAVORITE_PARISHES } from '@churchy/shared';
 import { ParishResultCard } from '@/components/public/ParishResultCard';

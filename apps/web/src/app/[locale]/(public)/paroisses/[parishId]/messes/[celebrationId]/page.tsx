@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import { Link } from '@/i18n/link';
 import { notFound } from 'next/navigation';
 import { Clock, MapPin } from 'lucide-react';
 import { RichContent } from '@/components/rich-text/RichContent';

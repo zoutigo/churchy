@@ -21,29 +21,29 @@ for (const [device, viewport] of Object.entries(VIEWPORTS)) {
       await expect(page.getByRole('link', { name: 'Churchy, accueil' })).toBeVisible();
       expect(await hasHorizontalOverflow(page)).toBe(false);
       await page.getByRole('link', { name: 'Retour à l’accueil' }).click();
-      await expect(page).toHaveURL(/\/$/);
+      await expect(page).toHaveURL(/\/fr$/);
     });
 
     test('paroisse inconnue et messe inconnue d’une paroisse : pages dédiées', async ({ page }) => {
-      await page.goto('/paroisses/inconnue-xyz');
+      await page.goto('/fr/paroisses/inconnue-xyz');
       await expect(page.getByRole('heading', { name: 'Paroisse introuvable' })).toBeVisible();
       await expect(page.getByRole('link', { name: 'Rechercher une paroisse' })).toBeVisible();
 
       await registerViaUi(page, uniqueEmail(`err-${device}`));
       const parish = await seedParish(page);
-      await page.goto(`/paroisses/${parish.id}/messes/inconnue`);
+      await page.goto(`/fr/paroisses/${parish.id}/messes/inconnue`);
       await expect(page.getByRole('heading', { name: 'Page introuvable' })).toBeVisible();
       // La paroisse garde son bandeau : on peut y retourner.
       await expect(page.getByRole('heading', { name: parish.name })).toBeVisible();
       await page.getByRole('link', { name: 'Retour à la paroisse' }).click();
-      await expect(page).toHaveURL(new RegExp(`/paroisses/${parish.id}$`));
+      await expect(page).toHaveURL(new RegExp(`/fr/paroisses/${parish.id}$`));
       expect(await hasHorizontalOverflow(page)).toBe(false);
     });
 
     test('un mois de calendrier public s’affiche (pas de 404)', async ({ page }) => {
       await registerViaUi(page, uniqueEmail(`cal-${device}`));
       const parish = await seedParish(page);
-      const res = await page.goto(`/paroisses/${parish.id}/calendrier`);
+      const res = await page.goto(`/fr/paroisses/${parish.id}/calendrier`);
       expect(res?.status()).toBe(200);
       await expect(page.getByRole('heading', { name: 'Page introuvable' })).toHaveCount(0);
     });
@@ -65,14 +65,14 @@ for (const [device, viewport] of Object.entries(VIEWPORTS)) {
     test('connexion et inscription : même cadre que le site, logo cliquable vers l’accueil', async ({
       page,
     }) => {
-      for (const path of ['/login', '/register', '/forgot-password']) {
+      for (const path of ['/fr/connexion', '/fr/inscription', '/fr/mot-de-passe-oublie']) {
         await page.goto(path);
         await expect(page.getByRole('contentinfo')).toBeVisible(); // pied de page commun
         const logo = page.getByRole('link', { name: 'Churchy, accueil' });
         await expect(logo).toBeVisible();
         expect(await hasHorizontalOverflow(page)).toBe(false);
         await logo.click();
-        await expect(page).toHaveURL(/\/$/);
+        await expect(page).toHaveURL(/\/fr$/);
       }
     });
   });

@@ -1,4 +1,7 @@
 import { Search } from 'lucide-react';
+import { useLocale } from 'next-intl';
+import { localizeHref } from '@/i18n/paths';
+import { isLocale, DEFAULT_LOCALE } from '@/i18n/routing';
 
 interface Props {
   /** Identifiant unique du champ (la landing affiche deux formulaires). */
@@ -14,8 +17,10 @@ interface Props {
  */
 export function ParishSearchForm({ id, defaultValue = '', size = 'hero' }: Props) {
   const big = size === 'hero';
+  const raw = useLocale();
+  const action = localizeHref(isLocale(raw) ? raw : DEFAULT_LOCALE, '/paroisses');
   return (
-    <form action="/paroisses" method="get" role="search" className="w-full">
+    <form action={action} method="get" role="search" className="w-full">
       <label htmlFor={id} className="sr-only">
         Rechercher une paroisse, une ville ou un quartier
       </label>

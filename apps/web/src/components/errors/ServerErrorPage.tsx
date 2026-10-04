@@ -1,5 +1,5 @@
 'use client';
-import Link from 'next/link';
+import { Link } from '@/i18n/link';
 import { useEffect } from 'react';
 import { ErrorPage, errorButtonClass, errorSecondaryButtonClass } from './ErrorPage';
 

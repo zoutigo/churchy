@@ -36,7 +36,7 @@ export async function latestEmailLink(email: string, jobName: AuthEmailJob): Pro
 }
 
 export async function registerViaUi(page: Page, email: string, firstName = 'Jean') {
-  await page.goto('/register');
+  await page.goto('/fr/inscription');
   await page.getByLabel('Prénom').fill(firstName);
   await page.getByLabel('Nom', { exact: true }).fill('Dupont');
   await page.getByLabel('Email').fill(email);
@@ -46,7 +46,7 @@ export async function registerViaUi(page: Page, email: string, firstName = 'Jean
 }
 
 export async function loginViaUi(page: Page, email: string, password = PASSWORD, next?: string) {
-  await page.goto(next ? `/login?next=${encodeURIComponent(next)}` : '/login');
+  await page.goto(next ? `/fr/connexion?next=${encodeURIComponent(next)}` : '/fr/connexion');
   await page.getByLabel('Email').fill(email);
   await page.getByLabel('Mot de passe', { exact: true }).fill(password);
   await page.getByRole('button', { name: 'Se connecter' }).click();
@@ -55,7 +55,7 @@ export async function loginViaUi(page: Page, email: string, password = PASSWORD,
 export async function logoutViaUi(page: Page) {
   await page.getByRole('button', { name: 'Menu utilisateur' }).click();
   await page.getByRole('menuitem', { name: /Se déconnecter/ }).click();
-  await expect(page).toHaveURL(/\/login$/);
+  await expect(page).toHaveURL(/\/fr\/connexion$/);
 }
 
 export const VIEWPORTS = {

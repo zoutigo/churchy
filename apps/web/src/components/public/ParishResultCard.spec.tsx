@@ -37,7 +37,7 @@ describe('ParishResultCard', () => {
     render(<ParishResultCard parish={parish} />);
     expect(screen.getByRole('link', { name: 'Voir la paroisse Saint-Pierre' })).toHaveAttribute(
       'href',
-      '/paroisses/p1',
+      '/fr/paroisses/p1',
     );
     expect(screen.getByText('Voir la paroisse')).toBeInTheDocument();
   });

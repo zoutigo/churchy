@@ -38,12 +38,12 @@ for (const [device, viewport] of Object.entries(VIEWPORTS)) {
       const parishId = page.url().split('/').pop();
 
       // Le quartier et le complément d'adresse apparaissent sur le site public.
-      await page.goto(`/paroisses/${parishId}`);
+      await page.goto(`/fr/paroisses/${parishId}`);
       await expect(page.getByText(`Nkol-${token}, Yaoundé`).first()).toBeAttached();
       await expect(page.getByText('En face de la poste centrale').first()).toBeAttached();
 
       // La recherche publique retrouve la paroisse par son quartier saisi à la main.
-      await page.goto(`/paroisses?q=${encodeURIComponent(`Nkol-${token}`)}`);
+      await page.goto(`/fr/paroisses?q=${encodeURIComponent(`Nkol-${token}`)}`);
       await expect(page.getByText(`Saint Joseph ${token}`)).toBeVisible();
     });
   });

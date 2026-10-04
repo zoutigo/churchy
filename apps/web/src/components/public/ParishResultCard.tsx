@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { Link } from '@/i18n/link';
 import { Church, MapPin } from 'lucide-react';
 import type { PublicParishSummary } from '@churchy/shared';
 import { formatDateShort, formatTime, placeLabel } from '@/lib/format';

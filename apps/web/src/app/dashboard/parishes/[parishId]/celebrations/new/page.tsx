@@ -1,5 +1,5 @@
 'use client';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/link';
 import { DEFAULT_TIMEZONE } from '@churchy/shared';
 import { useParish } from '@/hooks/useParish';
 import { FormView } from '@/components/layout/FormView';

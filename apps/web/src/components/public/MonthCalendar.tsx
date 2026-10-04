@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { Link } from '@/i18n/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { shiftMonth, utcToZoned, type PublicCalendar } from '@churchy/shared';
 import { buildMonthGrid, groupByDay } from '@/lib/calendar';

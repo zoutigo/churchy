@@ -94,6 +94,48 @@ describe('Authentification (cookies httpOnly, refresh, reset, vérification)', (
       expect(res.body.passwordHash).toBeUndefined();
     });
 
+    describe('langue du compte', () => {
+      it('est le français par défaut et suit la langue choisie à l’inscription', async () => {
+        const fr = await http()
+          .post('/api/auth/register')
+          .send({ email: 'lang-fr@test.fr', password: PASSWORD, firstName: 'A', lastName: 'B' })
+          .expect(201);
+        expect(fr.body.user.locale).toBe('fr');
+
+        const en = await http()
+          .post('/api/auth/register')
+          .send({
+            email: 'lang-en@test.fr',
+            password: PASSWORD,
+            firstName: 'A',
+            lastName: 'B',
+            locale: 'en',
+          })
+          .expect(201);
+        expect(en.body.user.locale).toBe('en');
+      });
+
+      it('est modifiable et persistée : /auth/me et une nouvelle connexion la renvoient', async () => {
+        const agent = await registerAgent(app, 'lang-change@test.fr');
+        const res = await agent.patch('/api/auth/me/locale').send({ locale: 'en' }).expect(200);
+        expect(res.body.locale).toBe('en');
+        expect((await agent.get('/api/auth/me')).body.locale).toBe('en');
+
+        const login = await http()
+          .post('/api/auth/login')
+          .send({ email: 'lang-change@test.fr', password: PASSWORD })
+          .expect(201);
+        expect(login.body.user.locale).toBe('en');
+      });
+
+      it('refuse une langue inconnue (400) et un appel sans session (401)', async () => {
+        const agent = await registerAgent(app, 'lang-bad@test.fr');
+        await agent.patch('/api/auth/me/locale').send({ locale: 'de' }).expect(400);
+        await http().patch('/api/auth/me/locale').send({ locale: 'en' }).expect(401);
+        expect((await agent.get('/api/auth/me')).body.locale).toBe('fr');
+      });
+    });
+
     it('accepte aussi un jeton Bearer pour les clients non navigateur', async () => {
       const res = await http()
         .post('/api/auth/register')

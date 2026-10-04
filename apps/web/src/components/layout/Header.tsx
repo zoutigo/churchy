@@ -1,7 +1,8 @@
 'use client';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { Link } from '@/i18n/link';
+import { useRouter } from '@/i18n/link';
 import { ChevronDown, Church, LogOut } from 'lucide-react';
+import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 import { useAuth } from '@/hooks/useAuth';
 import {
   DropdownMenu,
@@ -26,7 +27,8 @@ export function Header() {
   }
 
   return (
-    <header className="h-14 border-b border-churchy-200 bg-white flex items-center justify-end px-6 shrink-0 shadow-sm">
+    <header className="h-14 border-b border-churchy-200 bg-white flex items-center justify-end gap-3 px-4 sm:px-6 shrink-0 shadow-sm">
+      <LanguageSwitcher />
       {user && (
         <DropdownMenu>
           <DropdownMenuTrigger

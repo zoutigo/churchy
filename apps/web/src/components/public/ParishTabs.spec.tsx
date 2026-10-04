@@ -14,11 +14,11 @@ describe('ParishTabs', () => {
     render(<ParishTabs parishId="p1" />);
     const hrefs = screen.getAllByRole('link').map((a) => a.getAttribute('href'));
     expect(hrefs).toEqual([
-      '/paroisses/p1',
-      '/paroisses/p1/messes',
-      '/paroisses/p1/calendrier',
-      '/paroisses/p1/annonces',
-      '/paroisses/p1/activites',
+      '/fr/paroisses/p1',
+      '/fr/paroisses/p1/messes',
+      '/fr/paroisses/p1/calendrier',
+      '/fr/paroisses/p1/annonces',
+      '/fr/paroisses/p1/activites',
     ]);
   });
 

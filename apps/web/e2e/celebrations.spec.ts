@@ -113,7 +113,7 @@ for (const [device, viewport] of Object.entries(VIEWPORTS)) {
       await expect(page.getByTestId('sheet-panel')).toHaveCount(0);
 
       // Côté public : la date, sa feuille, la description de la série.
-      await page.goto(`/paroisses/${parishId}/messes/${occurrenceId}`);
+      await page.goto(`/fr/paroisses/${parishId}/messes/${occurrenceId}`);
       await expect(page.getByText('Chant à Marie')).toBeVisible();
       await expect(page.getByText('Ave Maria, 2 couplets')).toBeVisible();
       await expect(page.getByText('L’évêque sera des nôtres')).toBeVisible();
@@ -268,7 +268,7 @@ for (const [device, viewport] of Object.entries(VIEWPORTS)) {
       await page.getByRole('button', { name: 'Confirmer l’annulation' }).click();
       await expect(page.getByText('Annulée — Pèlerinage')).toBeVisible();
 
-      await page.goto(`/paroisses/${parishId}/messes`);
+      await page.goto(`/fr/paroisses/${parishId}/messes`);
       await expect(page.getByText('Messe annulable')).toBeVisible();
       await expect(page.getByText('Annulée', { exact: false }).first()).toBeVisible();
 
@@ -375,9 +375,9 @@ for (const [device, viewport] of Object.entries(VIEWPORTS)) {
       });
 
       // Depuis la page « messes », on atteint le calendrier.
-      await page.goto(`/paroisses/${parishId}/messes`);
+      await page.goto(`/fr/paroisses/${parishId}/messes`);
       await page.getByRole('link', { name: 'Voir le calendrier' }).click();
-      await expect(page).toHaveURL(new RegExp(`/paroisses/${parishId}/calendrier$`));
+      await expect(page).toHaveURL(new RegExp(`/fr/paroisses/${parishId}/calendrier$`));
       expect(await hasHorizontalOverflow(page)).toBe(false);
 
       // Mobile : liste des jours ; tablette/desktop : grille. Un seul des deux est visible.
@@ -404,13 +404,13 @@ for (const [device, viewport] of Object.entries(VIEWPORTS)) {
       await expect(page.getByRole('link', { name: /Messe visible/ }).first()).toBeVisible();
 
       // Un mois mal formé dans l'URL retombe sur le mois courant, sans erreur.
-      const res = await page.goto(`/paroisses/${parishId}/calendrier?mois=n-importe-quoi`);
+      const res = await page.goto(`/fr/paroisses/${parishId}/calendrier?mois=n-importe-quoi`);
       expect(res?.status()).toBe(200);
       await expect(page.getByRole('heading', { level: 2 }).first()).toBeVisible();
     });
 
     test('paroisse inconnue : page introuvable', async ({ page }) => {
-      const res = await page.goto('/paroisses/inconnue/calendrier');
+      const res = await page.goto('/fr/paroisses/inconnue/calendrier');
       expect(res?.status()).toBe(404);
     });
   });

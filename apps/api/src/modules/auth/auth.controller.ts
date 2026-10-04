@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Patch, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
@@ -7,6 +7,7 @@ import {
   loginSchema,
   registerSchema,
   resetPasswordSchema,
+  updateLocaleSchema,
   verifyEmailSchema,
   type AuthResponse,
   type AuthUserDto,
@@ -14,6 +15,7 @@ import {
   type LoginDto,
   type RegisterDto,
   type ResetPasswordDto,
+  type UpdateLocaleDto,
   type VerifyEmailDto,
 } from '@churchy/shared';
 import { env } from '../../config/env';
@@ -118,6 +120,17 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   me(@CurrentUser() user: AuthUser): AuthUserDto {
     return toAuthUserDto(user);
+  }
+
+  /** Change la langue préférée du compte (interface et emails). */
+  @Patch('me/locale')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  updateLocale(
+    @CurrentUser() user: AuthUser,
+    @Body(new ZodValidationPipe(updateLocaleSchema)) dto: UpdateLocaleDto,
+  ): Promise<AuthUserDto> {
+    return this.authService.updateLocale(user.id, dto.locale);
   }
 
   private respondWithSession(res: Response, { user, session }: AuthResult): AuthResponse {

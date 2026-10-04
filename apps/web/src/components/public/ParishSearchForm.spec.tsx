@@ -6,7 +6,7 @@ describe('ParishSearchForm', () => {
   it('est un formulaire GET vers /paroisses (fonctionne sans JavaScript)', () => {
     render(<ParishSearchForm id="s1" />);
     const form = screen.getByRole('search');
-    expect(form).toHaveAttribute('action', '/paroisses');
+    expect(form).toHaveAttribute('action', '/fr/paroisses');
     expect(form).toHaveAttribute('method', 'get');
     expect(screen.getByRole('searchbox')).toHaveAttribute('name', 'q');
   });

@@ -46,9 +46,12 @@ describe('FavoritesShelf (landing)', () => {
     expect(screen.getByRole('heading', { name: 'Ma paroisse' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Voir la paroisse Saint-Pierre' })).toHaveAttribute(
       'href',
-      '/paroisses/a',
+      '/fr/paroisses/a',
     );
-    expect(screen.getByRole('link', { name: 'Mes favoris' })).toHaveAttribute('href', '/favoris');
+    expect(screen.getByRole('link', { name: 'Mes favoris' })).toHaveAttribute(
+      'href',
+      '/fr/favoris',
+    );
   });
 
   it('plusieurs favoris : « Mes paroisses favorites », une carte chacun', () => {
@@ -79,7 +82,7 @@ describe('FavoritesPage', () => {
     expect(screen.getByText('Aucune paroisse en favori pour l’instant')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Trouver une paroisse' })).toHaveAttribute(
       'href',
-      '/paroisses',
+      '/fr/paroisses',
     );
   });
 

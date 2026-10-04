@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { Link } from '@/i18n/link';
 import { EmptyState } from '@/components/public/EmptyState';
 import { CelebrationItem } from '@/components/public/CelebrationItem';
 import { orNotFound, publicApi } from '@/lib/api/public.api';

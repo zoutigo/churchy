@@ -1,7 +1,7 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { Link } from '@/i18n/link';
+import { useRouter } from '@/i18n/link';
 import { ArrowLeft } from 'lucide-react';
 import { contentsApi } from '@/lib/api/contents.api';
 import { ContentForm } from '@/components/content/ContentForm';

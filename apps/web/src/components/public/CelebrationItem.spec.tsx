@@ -19,7 +19,7 @@ const celebration: PublicCelebrationSummary = {
 describe('CelebrationItem', () => {
   it('mène à la page publique de la messe (URL par id de paroisse)', () => {
     render(<CelebrationItem celebration={celebration} parishId="p1" />);
-    expect(screen.getByRole('link')).toHaveAttribute('href', '/paroisses/p1/messes/c1');
+    expect(screen.getByRole('link')).toHaveAttribute('href', '/fr/paroisses/p1/messes/c1');
   });
 
   it('affiche titre, type, lieu et l’état de la feuille', () => {

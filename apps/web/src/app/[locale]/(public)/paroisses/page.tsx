@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import { Link } from '@/i18n/link';
 import { EmptyState } from '@/components/public/EmptyState';
 import { ParishResultCard } from '@/components/public/ParishResultCard';
 import { ParishSearchForm } from '@/components/public/ParishSearchForm';

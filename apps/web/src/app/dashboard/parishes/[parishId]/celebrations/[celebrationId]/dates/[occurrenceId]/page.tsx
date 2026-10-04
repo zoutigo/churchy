@@ -1,7 +1,7 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { Link } from '@/i18n/link';
+import { useRouter } from '@/i18n/link';
 import { ArrowLeft, StickyNote } from 'lucide-react';
 import type { Content, OccurrenceDetail, SheetView } from '@churchy/shared';
 import { celebrationsApi, templatesApi, type TemplateWithSteps } from '@/lib/api/celebrations.api';

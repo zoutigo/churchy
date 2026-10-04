@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import Link from 'next/link';
+import { Link } from '@/i18n/link';
 import type { OccurrenceView } from '@churchy/shared';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

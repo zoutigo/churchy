@@ -36,11 +36,11 @@ describe('MonthCalendar', () => {
     expect(screen.getByRole('heading', { name: 'octobre 2026' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Mois précédent' })).toHaveAttribute(
       'href',
-      '/paroisses/p1/calendrier?mois=2026-09',
+      '/fr/paroisses/p1/calendrier?mois=2026-09',
     );
     expect(screen.getByRole('link', { name: 'Mois suivant' })).toHaveAttribute(
       'href',
-      '/paroisses/p1/calendrier?mois=2026-11',
+      '/fr/paroisses/p1/calendrier?mois=2026-11',
     );
   });
 
@@ -48,7 +48,7 @@ describe('MonthCalendar', () => {
     renderCal([], '2026-12');
     expect(screen.getByRole('link', { name: 'Mois suivant' })).toHaveAttribute(
       'href',
-      '/paroisses/p1/calendrier?mois=2027-01',
+      '/fr/paroisses/p1/calendrier?mois=2027-01',
     );
   });
 
@@ -65,7 +65,7 @@ describe('MonthCalendar', () => {
     renderCal([item({})]);
     for (const view of ['calendar-grid', 'calendar-list']) {
       const link = within(screen.getByTestId(view)).getByRole('link', { name: /Messe dominicale/ });
-      expect(link).toHaveAttribute('href', '/paroisses/p1/messes/o1');
+      expect(link).toHaveAttribute('href', '/fr/paroisses/p1/messes/o1');
       expect(link).toHaveTextContent('09:00'); // 08:00 UTC = 09:00 à Douala
     }
   });

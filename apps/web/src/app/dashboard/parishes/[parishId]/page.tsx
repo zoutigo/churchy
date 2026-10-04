@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import Link from 'next/link';
+import { Link } from '@/i18n/link';
 import { ExternalLink } from 'lucide-react';
 import { useParish } from '@/hooks/useParish';
 import { ParishInfoSummary } from '@/components/parish/ParishInfoSummary';

@@ -64,8 +64,33 @@ contenu d'une autre paroisse refusé). Toute nouvelle route qui touche une resso
 `churchy:session-expired` si c'est impossible. Pages : `/login`, `/register`, `/forgot-password`,
 `/reset-password?token=`, `/verify-email?token=`. Le `next` n'est jamais mémorisé après une déconnexion volontaire.
 
+## Langues : français / anglais (i18n)
+Le Cameroun est bilingue. Langues : `fr` (défaut) et `en` (`LOCALES`, `DEFAULT_LOCALE`, `isLocale` dans `@churchy/shared`).
+- **URL** : le site public et l'authentification sont **préfixés** (`/fr/paroisses/12/messes`, `/en/parishes/12/masses`), avec
+  des segments **traduits** (`apps/web/src/i18n/routing.ts`, `pathnames`). Les dossiers de `app/[locale]` gardent les chemins
+  **internes** (`/paroisses/[parishId]/messes`, `/login`) ; `i18n/paths.ts` convertit interne ⇄ visible (fonctions pures, utilisées
+  par le middleware). Le **tableau de bord (`/dashboard`) n'a pas de préfixe** : sa langue vient du compte (cookie). L'API est
+  inchangée (`/api/…`) ; nginx n'a rien à savoir des langues.
+- **Liens et navigation** : toujours `Link`, `useRouter`, `usePathname` de `@/i18n/link` (jamais `next/link` ni `next/navigation` pour
+  ça) et écrire des chemins **internes** ; la langue courante est ajoutée (`localizeHref`). `/dashboard`, URL externes et ancres sont intacts.
+  Hors composant client (action d'un `<form>`, métadonnées) : `localizeHref(locale, '/paroisses')` / `toLocalizedPath` de `i18n/paths.ts`.
+- **Choix de la langue** : `/` et les anciennes URL sans préfixe → langue du cookie `NEXT_LOCALE` (1 an), sinon **français** ;
+  `Accept-Language` n'est volontairement pas lu. Le middleware (`middleware.ts`) redirige (307 pour `/`, 308 pour les anciennes URL).
+  Le visiteur change de langue avec `LanguageSwitcher` (FR | EN, en-tête public et tableau de bord) : vrais liens `hreflang`, cookie.
+- **Compte** : `User.locale` (`fr` par défaut) fait foi. `POST /auth/register` accepte `locale` (langue de l'interface),
+  `PATCH /auth/me/locale` la change ; `AuthUserDto.locale`. `LocaleSync` aligne le cookie sur le compte dès qu'il est connu et recharge
+  le tableau de bord si besoin ; il ne redirige **jamais** le site public (une URL partagée reste explicite). Un changement de langue
+  d'un connecté est enregistré en base (toast d'erreur si impossible, la langue change quand même).
+- **Textes** : `next-intl`, `apps/web/messages/fr.json` et `en.json` (mêmes clés et mêmes variables : test `i18n/messages.spec.ts`).
+  `request.ts` : langue de l'URL, sinon cookie, sinon `fr`. Le client API envoie `Accept-Language` (page → `lang` ; rendu serveur → langue de la requête).
+- **Tests de composants** : `vitest.setup.ts` simule `useLocale`/`useTranslations` avec les vrais messages (français par défaut,
+  `setTestLocale('en')`) ; les `href` attendus sont ceux de la langue (`/fr/paroisses/p1`).
+- **Reste à faire** (étapes suivantes) : extraire les textes de l'UI dans `messages/*.json`, erreurs de l'API en **codes** traduits côté web
+  (schémas Zod en clés), métadonnées/sitemap/image Open Graph par langue, emails bilingues (`locale` dans les payloads de `@churchy/contracts`),
+  pages légales en deux langues, paramètres de requête traduits (`mois` → `month`).
+
 ## Site public (sans authentification)
-Pages servies par le web (rendu serveur, `force-dynamic`, URL **par id** de paroisse, pas par slug) :
+Pages servies par le web (rendu serveur, `force-dynamic`, URL **par id** de paroisse, pas par slug ; chemins ci-dessous = chemins **internes** en français, voir « Langues » pour les URL visibles `/fr/…` et `/en/…`) :
 `/` (landing : recherche en premier), `/paroisses?q=&page=` (résultats), `/paroisses/[id]` (mini-site : accueil,
 `/messes`, `/messes/[celebrationId]`, `/annonces`, `/activites`), `/pour-les-paroisses`, `/a-propos`, `/contact`,
 `/conditions-generales`, `/confidentialite`, `/mentions-legales` (textes légaux **provisoires** : à faire valider).

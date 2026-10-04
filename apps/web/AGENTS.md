@@ -63,10 +63,12 @@ const form = useForm<MyDto>({
 ```
 src/
 ├── app/              # Pages Next.js App Router
-│   ├── (auth)/       # login, register, forgot-password, reset-password, verify-email
-│   ├── dashboard/    # Dashboard admin/préparateur (protégé : middleware + AuthGuard)
-│   └── (public)/     # Site public : landing, /paroisses (+ [parishId]/messes|annonces|activites), contact, légal
-├── middleware.ts     # redirige les pages privées sans session, et /login & co. si session
+│   ├── [locale]/     # fr | en : tout le site public et l'authentification (voir « Langues » du CLAUDE.md racine)
+│   │   ├── (auth)/   # login, register, forgot-password, reset-password, verify-email
+│   │   └── (public)/ # Site public : landing, /paroisses (+ [parishId]/messes|annonces|activites), contact, légal
+│   └── dashboard/    # Dashboard admin/préparateur, sans préfixe de langue (protégé : middleware + AuthGuard)
+├── i18n/             # routing.ts (langues, pathnames), paths.ts (chemins interne ⇄ visible), link.tsx (Link/useRouter/usePathname), request.ts, cookie.ts
+├── middleware.ts     # langue (/ et anciennes URL → /fr|/en), pages privées sans session → connexion, connexion & co. si session
 ├── components/
 │   ├── ui/           # Composants shadcn + PasswordInput, ErrorNotice (alert : variantes success/warning)
 │   ├── auth/         # AuthProvider, AuthGuard, AuthCard, formulaires, EmailVerificationBanner, VerifyEmail

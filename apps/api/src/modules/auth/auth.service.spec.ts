@@ -27,6 +27,7 @@ const dbUser = (over: Record<string, unknown> = {}) => ({
   role: 'USER',
   passwordHash: 'hash',
   emailVerifiedAt: null,
+  locale: 'fr',
   ...over,
 });
 
@@ -94,6 +95,20 @@ describe('AuthService', () => {
       );
     });
 
+    it('enregistre la langue de l’inscription, le français par défaut', async () => {
+      prisma.user.findUnique.mockResolvedValue(null);
+      prisma.user.create.mockImplementation(async ({ data }: { data: Record<string, unknown> }) =>
+        dbUser(data),
+      );
+
+      const { user } = await service.register({ ...dto, locale: 'en' });
+      expect(prisma.user.create.mock.calls[0][0].data.locale).toBe('en');
+      expect(user.locale).toBe('en');
+
+      await service.register(dto);
+      expect(prisma.user.create.mock.calls[1][0].data.locale).toBe('fr');
+    });
+
     it('n’échoue pas si l’email ne peut pas être enfilé', async () => {
       prisma.user.findUnique.mockResolvedValue(null);
       prisma.user.create.mockResolvedValue(dbUser());
@@ -105,6 +120,25 @@ describe('AuthService', () => {
 
       expect(error).toHaveBeenCalled();
       error.mockRestore();
+    });
+  });
+
+  describe('updateLocale', () => {
+    it('mémorise la langue du compte et renvoie l’utilisateur à jour', async () => {
+      prisma.user.update.mockResolvedValue(dbUser({ locale: 'en' }));
+
+      const user = await service.updateLocale('u1', 'en');
+
+      expect(prisma.user.update).toHaveBeenCalledWith({
+        where: { id: 'u1' },
+        data: { locale: 'en' },
+      });
+      expect(user.locale).toBe('en');
+    });
+
+    it('une valeur inconnue en base retombe sur le français', async () => {
+      prisma.user.update.mockResolvedValue(dbUser({ locale: 'zz' }));
+      expect((await service.updateLocale('u1', 'en')).locale).toBe('fr');
     });
   });
 

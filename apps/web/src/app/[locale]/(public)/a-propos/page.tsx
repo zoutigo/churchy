@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import { Link } from '@/i18n/link';
 import { ProsePage } from '@/components/public/ProsePage';
 
 export const metadata: Metadata = { title: 'À propos — Churchy' };

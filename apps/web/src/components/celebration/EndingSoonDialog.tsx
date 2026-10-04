@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
+import { Link } from '@/i18n/link';
 import type { CelebrationListItem } from '@churchy/shared';
 import { Button } from '@/components/ui/button';
 import {

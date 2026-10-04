@@ -1,7 +1,7 @@
 'use client';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/link';
 import { loginSchema, type LoginDto } from '@churchy/shared';
 import { useAuth } from '@/hooks/useAuth';
 import { AuthLink } from '@/components/auth/AuthCard';
