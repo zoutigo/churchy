@@ -1,4 +1,6 @@
 'use client';
+import { useTranslations } from 'next-intl';
+import { useLabels } from '@/i18n/labels';
 import { useEffect, useState } from 'react';
 import { ArrowDown, ArrowUp } from 'lucide-react';
 import { ContentType, type Content, type SheetStepView } from '@churchy/shared';
@@ -7,7 +9,6 @@ import { Label } from '@/components/ui/label';
 import { NativeSelect } from '@/components/ui/native-select';
 import { Textarea } from '@/components/ui/textarea';
 import { DeleteButton } from '@/components/news/DeleteButton';
-import { CONTENT_TYPE_LABELS } from '@/components/content/content-labels';
 
 interface Props {
   step: SheetStepView;
@@ -31,6 +32,8 @@ export function StepCard({
   onMove,
   onRemove,
 }: Props) {
+  const t = useTranslations('stepCard');
+  const labels = useLabels();
   const [text, setText] = useState(step.customText ?? '');
   useEffect(() => setText(step.customText ?? ''), [step.customText]);
   const free = step.templateStepId === null;
@@ -47,7 +50,7 @@ export function StepCard({
             <span className="mr-2 text-muted-foreground">{index + 1}.</span>
             {step.title}
           </p>
-          {free && <p className="text-xs text-muted-foreground">Étape libre</p>}
+          {free && <p className="text-xs text-muted-foreground">{t('free')}</p>}
         </div>
         {!readOnly && (
           <div className="flex shrink-0 items-center gap-1">
@@ -57,7 +60,7 @@ export function StepCard({
               size="icon"
               className="h-10 w-10"
               disabled={index === 0}
-              aria-label={`Monter l’étape ${step.title}`}
+              aria-label={t('moveUp', { title: step.title })}
               onClick={() => onMove(-1)}
             >
               <ArrowUp size={16} aria-hidden />
@@ -68,7 +71,7 @@ export function StepCard({
               size="icon"
               className="h-10 w-10"
               disabled={index === total - 1}
-              aria-label={`Descendre l’étape ${step.title}`}
+              aria-label={t('moveDown', { title: step.title })}
               onClick={() => onMove(1)}
             >
               <ArrowDown size={16} aria-hidden />
@@ -79,16 +82,16 @@ export function StepCard({
 
       <div className="grid gap-3 md:grid-cols-2">
         <div className="space-y-1.5">
-          <Label htmlFor={`content-${step.id}`}>Contenu de la bibliothèque</Label>
+          <Label htmlFor={`content-${step.id}`}>{t('content')}</Label>
           <NativeSelect
             id={`content-${step.id}`}
             value={step.contentId ?? ''}
             disabled={readOnly}
             onChange={(e) => onChange({ contentId: e.target.value || null })}
           >
-            <option value="">— Aucun contenu —</option>
+            <option value="">{t('noContent')}</option>
             {byType.map((g) => (
-              <optgroup key={g.type} label={CONTENT_TYPE_LABELS[g.type]}>
+              <optgroup key={g.type} label={labels.contentType(g.type)}>
                 {g.items.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.title}
@@ -102,13 +105,13 @@ export function StepCard({
           </NativeSelect>
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor={`text-${step.id}`}>Texte libre ou précision</Label>
+          <Label htmlFor={`text-${step.id}`}>{t('customText')}</Label>
           <Textarea
             id={`text-${step.id}`}
             rows={2}
             value={text}
             disabled={readOnly}
-            placeholder="Ex. : 2 couplets seulement"
+            placeholder={t('customPlaceholder')}
             onChange={(e) => setText(e.target.value)}
             onBlur={() => {
               if (text !== (step.customText ?? '')) void onChange({ customText: text || null });
@@ -120,7 +123,7 @@ export function StepCard({
       {!readOnly && (
         <div className="flex justify-end">
           <DeleteButton
-            label={`l’étape ${step.title}`}
+            label={t('removeLabel', { title: step.title })}
             onConfirm={async () => void (await onRemove())}
           />
         </div>

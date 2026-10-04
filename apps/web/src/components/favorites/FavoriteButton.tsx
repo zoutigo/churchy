@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 import { Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useFavorites } from './FavoritesProvider';
@@ -13,15 +14,16 @@ interface Props {
 
 /** Ajoute / retire une paroisse des favoris. Fonctionne sans compte (appareil) comme connecté (base). */
 export function FavoriteButton({ parishId, parishName, variant = 'full', className }: Props) {
+  const t = useTranslations('favorites');
   const { isFavorite, toggle, ready } = useFavorites();
   const active = ready && isFavorite(parishId);
-  const label = active ? 'Retirer des favoris' : 'Ajouter aux favoris';
+  const label = active ? t('remove') : t('add');
 
   return (
     <button
       type="button"
       aria-pressed={active}
-      aria-label={variant === 'icon' ? `${label} : ${parishName}` : undefined}
+      aria-label={variant === 'icon' ? t('labelFor', { label, name: parishName }) : undefined}
       title={variant === 'icon' ? label : undefined}
       disabled={!ready}
       onClick={() => toggle({ id: parishId, name: parishName })}
@@ -39,7 +41,7 @@ export function FavoriteButton({ parishId, parishName, variant = 'full', classNa
         aria-hidden
         className={active ? 'fill-amber-500 text-amber-500' : 'text-churchy-700'}
       />
-      {variant === 'full' && <span>{active ? 'Dans mes favoris' : 'Ajouter aux favoris'}</span>}
+      {variant === 'full' && <span>{active ? t('inFavorites') : t('add')}</span>}
     </button>
   );
 }

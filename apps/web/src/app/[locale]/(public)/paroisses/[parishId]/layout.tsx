@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server';
 import type { Metadata } from 'next';
 import { MapPin } from 'lucide-react';
 import { FavoriteButton } from '@/components/favorites/FavoriteButton';
@@ -20,12 +21,13 @@ export async function generateMetadata({ params }: Pick<Props, 'params'>): Promi
     const parish = await publicApi.getParish(params.parishId);
     return parishMetadata(parish, isLocale(params.locale) ? params.locale : undefined);
   } catch {
-    return { title: 'Paroisse — Churchy' };
+    return { title: (await getTranslations('meta'))('parishFallback') };
   }
 }
 
 /** Mini-site d'une paroisse : bandeau d'identité, onglets, contenu, et fiche pratique à droite sur desktop. */
 export default async function ParishLayout({ children, params }: Props) {
+  const t = await getTranslations('parishLayout');
   const parish = await orNotFound(publicApi.getParish(params.parishId));
 
   return (
@@ -45,7 +47,7 @@ export default async function ParishLayout({ children, params }: Props) {
             {parish.imageUrl && (
               <img
                 src={parish.imageUrl}
-                alt={`Photo de ${parish.name}`}
+                alt={t('photo', { name: parish.name })}
                 className="h-28 w-full rounded-xl object-cover sm:h-32 sm:w-56"
               />
             )}

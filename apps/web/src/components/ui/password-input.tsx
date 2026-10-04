@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 import * as React from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -9,6 +10,7 @@ const PasswordInput = React.forwardRef<
   HTMLInputElement,
   Omit<React.ComponentProps<typeof Input>, 'type'>
 >(({ className, ...props }, ref) => {
+  const t = useTranslations('auth');
   const [visible, setVisible] = React.useState(false);
 
   return (
@@ -22,7 +24,7 @@ const PasswordInput = React.forwardRef<
       <button
         type="button"
         onClick={() => setVisible((v) => !v)}
-        aria-label={visible ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+        aria-label={visible ? t('hidePassword') : t('showPassword')}
         aria-pressed={visible}
         className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-muted-foreground hover:text-churchy-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-r-md"
       >

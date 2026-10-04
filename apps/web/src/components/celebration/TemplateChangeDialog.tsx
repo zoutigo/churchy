@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import type { SheetView, TemplateChangeReport } from '@churchy/shared';
 import { celebrationsApi, type TemplateWithSteps } from '@/lib/api/celebrations.api';
@@ -59,6 +60,9 @@ export function TemplateChangeDialog({
   templates,
   onChanged,
 }: Props) {
+  const t = useTranslations('templateChange');
+  const tc = useTranslations('common');
+  const tf = useTranslations('celebrationForm');
   const [choice, setChoice] = useState<string>(currentTemplateId ?? BLANK);
   const [report, setReport] = useState<TemplateChangeReport | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -77,11 +81,11 @@ export function TemplateChangeDialog({
     celebrationsApi
       .changeTemplate(sheetId, { templateId: choice === BLANK ? null : choice, dryRun: true })
       .then((res) => !cancelled && setReport(res.report))
-      .catch((err) => !cancelled && setError(errorMessage(err, 'Impossible de calculer l’aperçu')));
+      .catch((err) => !cancelled && setError(errorMessage(err, t('previewError'))));
     return () => {
       cancelled = true;
     };
-  }, [open, sheetId, choice]);
+  }, [open, sheetId, choice, t]);
 
   async function apply() {
     setBusy(true);
@@ -89,13 +93,13 @@ export function TemplateChangeDialog({
       const res = await celebrationsApi.changeTemplate(sheetId, {
         templateId: choice === BLANK ? null : choice,
       });
-      notify.success('Modèle changé', 'Le contenu déjà placé a été conservé');
+      notify.success(t('changed'), t('changedHint'));
       onChanged(res.sheet);
       onOpenChange(false);
     } catch (err) {
-      const message = errorMessage(err, 'Erreur lors du changement de modèle');
+      const message = errorMessage(err, t('error'));
       setError(message);
-      notify.error('Erreur lors du changement de modèle', message);
+      notify.error(t('error'), message);
     } finally {
       setBusy(false);
     }
@@ -107,25 +111,22 @@ export function TemplateChangeDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto" data-testid="template-change-dialog">
         <DialogHeader>
-          <DialogTitle>Changer de modèle</DialogTitle>
-          <DialogDescription>
-            Les étapes de même nom gardent leur contenu. Une étape remplie sans équivalent est
-            conservée comme étape libre.
-          </DialogDescription>
+          <DialogTitle>{t('title')}</DialogTitle>
+          <DialogDescription>{t('desc')}</DialogDescription>
         </DialogHeader>
         <div className="space-y-1.5">
-          <Label htmlFor="change-template">Nouveau modèle</Label>
+          <Label htmlFor="change-template">{t('newTemplate')}</Label>
           <NativeSelect
             id="change-template"
             value={choice}
             onChange={(e) => setChoice(e.target.value)}
           >
-            {templates.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name} ({t.steps?.length ?? 0} étapes)
+            {templates.map((tpl) => (
+              <option key={tpl.id} value={tpl.id}>
+                {tpl.name} ({tf('steps', { count: tpl.steps?.length ?? 0 })})
               </option>
             ))}
-            <option value={BLANK}>Aucun — à la volée</option>
+            <option value={BLANK}>{t('none')}</option>
           </NativeSelect>
         </div>
         <div
@@ -138,31 +139,27 @@ export function TemplateChangeDialog({
               {error}
             </p>
           ) : !report ? (
-            <p className="text-muted-foreground">Calcul de l’aperçu…</p>
+            <p className="text-muted-foreground">{t('computing')}</p>
           ) : unchanged ? (
-            <p className="text-muted-foreground">C’est le modèle actuel de la feuille.</p>
+            <p className="text-muted-foreground">{t('current')}</p>
           ) : (
             <>
-              <Group title="Conservées" items={report.kept} tone="text-churchy-700" />
-              <Group title="Ajoutées (vides)" items={report.added} />
-              <Group
-                title="Gardées comme étapes libres"
-                items={report.keptAsFree}
-                tone="text-amber-700"
-              />
-              <Group title="Retirées (vides)" items={report.removed} tone="text-destructive" />
+              <Group title={t('kept')} items={report.kept} tone="text-churchy-700" />
+              <Group title={t('added')} items={report.added} />
+              <Group title={t('keptAsFree')} items={report.keptAsFree} tone="text-amber-700" />
+              <Group title={t('removed')} items={report.removed} tone="text-destructive" />
               {Object.values(report).every((g: unknown[]) => g.length === 0) && (
-                <p className="text-muted-foreground">Aucune étape ne change.</p>
+                <p className="text-muted-foreground">{t('nothing')}</p>
               )}
             </>
           )}
         </div>
         <DialogFooter className="gap-2 sm:gap-0">
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            Annuler
+            {tc('cancel')}
           </Button>
           <Button type="button" disabled={busy || !report || unchanged} onClick={apply}>
-            {busy ? 'Application…' : 'Changer de modèle'}
+            {busy ? t('applying') : t('submit')}
           </Button>
         </DialogFooter>
       </DialogContent>

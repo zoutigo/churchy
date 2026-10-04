@@ -82,12 +82,24 @@ Le Cameroun est bilingue. Langues : `fr` (défaut) et `en` (`LOCALES`, `DEFAULT_
   le tableau de bord si besoin ; il ne redirige **jamais** le site public (une URL partagée reste explicite). Un changement de langue
   d'un connecté est enregistré en base (toast d'erreur si impossible, la langue change quand même).
 - **Textes** : `next-intl`, `apps/web/messages/fr.json` et `en.json` (mêmes clés et mêmes variables : test `i18n/messages.spec.ts`).
+  **Aucun texte en dur dans l'interface** : `useTranslations('espace')` (composants, y compris serveur non asynchrones) ou
+  `getTranslations` (serveur asynchrone). Pluriels en ICU (`{count, plural, one {…} other {…}}`), liens dans un texte avec
+  `t.rich` (`<link>…</link>`). Les valeurs de l'API (type de célébration, de contenu, état de feuille, sujet de contact) se
+  traduisent par `useLabels()` (`i18n/labels.ts`) ou `getLabels()` (`labels.server.ts`) : clés `enums.*`. Jours : `weekdays.*`.
   `request.ts` : langue de l'URL, sinon cookie, sinon `fr`. Le client API envoie `Accept-Language` (page → `lang` ; rendu serveur → langue de la requête).
+- **Dates** (`lib/format.ts`) : `formatDateLong(iso, { timeZone, locale })` ; `locale` vient de `useAppLocale()` (`i18n/locale.ts`,
+  toujours une langue gérée) ou de `getLocale()` côté serveur. Français `fr-FR`, anglais `en-GB` (jour avant le mois, heure sur 24 h).
+- **Métadonnées** : `pageMetadata` / `parishMetadata` (`lib/seo.ts`) donnent titre, description, `canonical`, `hreflang` (fr, en,
+  x-default), Open Graph (`og:locale`, `alternateLocale`) et Twitter Card ; `staticPageMetadata` (`lib/seo.server.ts`) pour les pages
+  statiques. L'image d'aperçu est **par langue** : `app/[locale]/opengraph-image.tsx` (`/fr/opengraph-image`, `/en/opengraph-image`).
+  `[locale]/layout.tsx` porte un `NextIntlClientProvider` (recréé quand la langue change) et `HtmlLang` (tient `<html lang>` à jour
+  en navigation). `app/global-error.tsx` est la seule page bilingue en dur (le layout racine a échoué).
 - **Tests de composants** : `vitest.setup.ts` simule `useLocale`/`useTranslations` avec les vrais messages (français par défaut,
-  `setTestLocale('en')`) ; les `href` attendus sont ceux de la langue (`/fr/paroisses/p1`).
-- **Reste à faire** (étapes suivantes) : extraire les textes de l'UI dans `messages/*.json`, erreurs de l'API en **codes** traduits côté web
-  (schémas Zod en clés), métadonnées/sitemap/image Open Graph par langue, emails bilingues (`locale` dans les payloads de `@churchy/contracts`),
-  pages légales en deux langues, paramètres de requête traduits (`mois` → `month`).
+  `setTestLocale('en')` ; le traducteur est mémoïsé, comme dans next-intl, sinon les effets qui l'ont en dépendance bouclent) ;
+  les `href` attendus sont ceux de la langue (`/fr/paroisses/p1`). `i18n/english.spec.tsx` vérifie l'interface en anglais.
+- **Reste à faire** : erreurs de l'API en **codes** traduits côté web (schémas Zod en clés : les messages de validation, ceux de
+  l'API et `handleSubmitError` sont encore en français), noms de pays/régions (stockés en français, `geo.constants`), emails bilingues
+  (`locale` dans les payloads de `@churchy/contracts`), paramètres de requête traduits (`mois` → `month`), sitemap multilingue.
 
 ## Site public (sans authentification)
 Pages servies par le web (rendu serveur, `force-dynamic`, URL **par id** de paroisse, pas par slug ; chemins ci-dessous = chemins **internes** en français, voir « Langues » pour les URL visibles `/fr/…` et `/en/…`) :

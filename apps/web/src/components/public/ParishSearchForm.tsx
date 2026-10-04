@@ -1,5 +1,5 @@
 import { Search } from 'lucide-react';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { localizeHref } from '@/i18n/paths';
 import { isLocale, DEFAULT_LOCALE } from '@/i18n/routing';
 
@@ -16,13 +16,14 @@ interface Props {
  * et la requête reste dans l'URL (partageable, bouton retour).
  */
 export function ParishSearchForm({ id, defaultValue = '', size = 'hero' }: Props) {
+  const t = useTranslations('search');
   const big = size === 'hero';
   const raw = useLocale();
   const action = localizeHref(isLocale(raw) ? raw : DEFAULT_LOCALE, '/paroisses');
   return (
     <form action={action} method="get" role="search" className="w-full">
       <label htmlFor={id} className="sr-only">
-        Rechercher une paroisse, une ville ou un quartier
+        {t('label')}
       </label>
       <div
         className={`flex flex-col gap-2 rounded-2xl bg-white p-2 shadow-lg shadow-churchy-900/10 sm:flex-row sm:items-center ${
@@ -38,7 +39,7 @@ export function ParishSearchForm({ id, defaultValue = '', size = 'hero' }: Props
             defaultValue={defaultValue}
             maxLength={100}
             autoComplete="off"
-            placeholder="Rechercher une paroisse, une ville ou un quartier"
+            placeholder={t('placeholder')}
             className={`w-full min-w-0 bg-transparent text-churchy-900 placeholder:text-churchy-900/45 focus:outline-none ${
               big ? 'h-14 text-base sm:text-lg' : 'h-11 text-base'
             }`}
@@ -50,7 +51,7 @@ export function ParishSearchForm({ id, defaultValue = '', size = 'hero' }: Props
             big ? 'h-14 px-8 text-base' : 'h-11 px-6 text-sm'
           }`}
         >
-          Rechercher
+          {t('submit')}
         </button>
       </div>
     </form>

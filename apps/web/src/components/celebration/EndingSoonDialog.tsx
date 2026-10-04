@@ -1,4 +1,6 @@
 'use client';
+import { useTranslations } from 'next-intl';
+import { useAppLocale } from '@/i18n/locale';
 import { useEffect, useState } from 'react';
 import { Link } from '@/i18n/link';
 import type { CelebrationListItem } from '@churchy/shared';
@@ -34,6 +36,8 @@ function signature(items: CelebrationListItem[]) {
  * Affichée une fois par session et par état de séries ; « Plus tard » la ferme sans rien modifier.
  */
 export function EndingSoonDialog({ parishId, timezone, celebrations }: Props) {
+  const t = useTranslations('endingSoon');
+  const locale = useAppLocale();
   const ending = celebrations.filter((c) => c.endingSoon);
   const [open, setOpen] = useState(false);
   const sig = signature(ending);
@@ -64,13 +68,10 @@ export function EndingSoonDialog({ parishId, timezone, celebrations }: Props) {
       <DialogContent className="max-h-[90vh] overflow-y-auto" data-testid="ending-soon-dialog">
         <DialogHeader>
           <DialogTitle>
-            {ending.length === 1
-              ? 'Une série se termine bientôt'
-              : `${ending.length} séries se terminent bientôt`}
+            {ending.length === 1 ? t('titleOne') : t('titleMany', { count: ending.length })}
           </DialogTitle>
           <DialogDescription>
-            Les fidèles ne verront plus de messe après la dernière date. Pensez à prolonger
-            {ending.length === 1 ? ' cette série' : ' ces séries'} (jusqu’à un an à l’avance).
+            {ending.length === 1 ? t('descOne') : t('descMany')}
           </DialogDescription>
         </DialogHeader>
         <ul className="space-y-2">
@@ -78,11 +79,13 @@ export function EndingSoonDialog({ parishId, timezone, celebrations }: Props) {
             <li key={c.id} className="rounded-md border p-3">
               <p className="font-medium">{c.title}</p>
               <p className="text-sm text-muted-foreground">
-                Dernière date : {formatDateLong(c.lastOccurrenceAt!, { timeZone: timezone })}
+                {t('lastDate', {
+                  date: formatDateLong(c.lastOccurrenceAt!, { timeZone: timezone, locale }),
+                })}
               </p>
               <Button asChild size="sm" className="mt-2" onClick={close}>
                 <Link href={`/dashboard/parishes/${parishId}/celebrations/${c.id}?prolonger=1`}>
-                  Prolonger la série
+                  {t('extend')}
                 </Link>
               </Button>
             </li>
@@ -90,7 +93,7 @@ export function EndingSoonDialog({ parishId, timezone, celebrations }: Props) {
         </ul>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={close}>
-            Plus tard
+            {t('later')}
           </Button>
         </DialogFooter>
       </DialogContent>

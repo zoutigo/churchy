@@ -9,6 +9,7 @@ import {
   useState,
 } from 'react';
 import { MAX_FAVORITE_PARISHES, type PublicParishSummary } from '@churchy/shared';
+import { useTranslations } from 'next-intl';
 import { useAuth } from '@/hooks/useAuth';
 import { favoritesApi } from '@/lib/api/favorites.api';
 import { errorMessage } from '@/lib/forms/submit-error';
@@ -42,6 +43,7 @@ const FavoritesContext = createContext<FavoritesContextValue | null>(null);
  * puis effacés de l'appareil (un appareil partagé ne garde rien d'un compte).
  */
 export function FavoritesProvider({ children }: { children: React.ReactNode }) {
+  const t = useTranslations('favorites');
   const { user, initializing } = useAuth();
   const userId = user?.id ?? null;
   const [ids, setIds] = useState<string[]>([]);
@@ -126,10 +128,7 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
       const current = idsRef.current;
       const removing = current.includes(id);
       if (!removing && current.length >= MAX_FAVORITE_PARISHES) {
-        notify.error(
-          'Limite de favoris atteinte',
-          `Vous pouvez garder ${MAX_FAVORITE_PARISHES} paroisses en favoris. Retirez-en une pour en ajouter une autre.`,
-        );
+        notify.error(t('limitTitle'), t('limitText', { max: MAX_FAVORITE_PARISHES }));
         return;
       }
       const next = removing ? current.filter((x) => x !== id) : [...current, id];
@@ -142,17 +141,14 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
           await (removing ? favoritesApi.remove(id) : favoritesApi.add(id));
         } catch (err) {
           setIds((now) => (removing ? [...now, id] : now.filter((x) => x !== id)));
-          notify.error(
-            removing ? 'Impossible de retirer ce favori' : 'Impossible d’ajouter ce favori',
-            errorMessage(err, 'Réessayez dans un instant.'),
-          );
+          notify.error(removing ? t('removeFail') : t('addFail'), errorMessage(err, t('retry')));
           return;
         }
       }
-      if (removing) notify.success('Favori retiré', `${name} ne figure plus dans vos favoris.`);
-      else notify.success('Ajoutée à vos favoris', `${name} est dans « Mes favoris ».`);
+      if (removing) notify.success(t('removed'), t('removedText', { name }));
+      else notify.success(t('added'), t('addedText', { name }));
     },
-    [userId],
+    [userId, t],
   );
 
   const requestItems = useCallback(() => setItemsWanted(true), []);

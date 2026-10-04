@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 
@@ -9,6 +10,8 @@ interface Props {
 
 /** Suppression en deux temps (sans boîte de dialogue du navigateur) : « Supprimer » puis « Confirmer ». */
 export function DeleteButton({ label, onConfirm }: Props) {
+  const t = useTranslations('deleteButton');
+  const tc = useTranslations('common');
   const [armed, setArmed] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -18,10 +21,10 @@ export function DeleteButton({ label, onConfirm }: Props) {
         type="button"
         variant="outline"
         size="sm"
-        aria-label={`Supprimer ${label}`}
+        aria-label={t('deleteLabel', { label })}
         onClick={() => setArmed(true)}
       >
-        Supprimer
+        {t('delete')}
       </Button>
     );
   }
@@ -32,7 +35,7 @@ export function DeleteButton({ label, onConfirm }: Props) {
         variant="destructive"
         size="sm"
         disabled={busy}
-        aria-label={`Confirmer la suppression de ${label}`}
+        aria-label={t('confirmLabel', { label })}
         onClick={async () => {
           setBusy(true);
           try {
@@ -43,10 +46,10 @@ export function DeleteButton({ label, onConfirm }: Props) {
           }
         }}
       >
-        Confirmer
+        {t('confirm')}
       </Button>
       <Button type="button" variant="ghost" size="sm" onClick={() => setArmed(false)}>
-        Annuler
+        {tc('cancel')}
       </Button>
     </span>
   );

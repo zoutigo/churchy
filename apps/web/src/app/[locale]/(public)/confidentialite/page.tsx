@@ -1,38 +1,30 @@
 import type { Metadata } from 'next';
+import { getTranslations } from 'next-intl/server';
+import { staticPageMetadata } from '@/lib/seo.server';
 import { ProsePage } from '@/components/public/ProsePage';
 
-export const metadata: Metadata = { title: 'Confidentialité — Churchy' };
+export const generateMetadata = (): Promise<Metadata> =>
+  staticPageMetadata('/confidentialite', 'privacy');
 
-export default function Page() {
+export default async function Page() {
+  const t = await getTranslations('privacy');
   return (
-    <ProsePage title="Politique de confidentialité" provisional>
+    <ProsePage title={t('title')} provisional>
       <section>
-        <h2>Données collectées</h2>
-        <p>
-          Pour un compte : nom, prénom, adresse email et mot de passe (stocké sous forme chiffrée).
-          Pour le formulaire de contact : nom, email et message.
-        </p>
+        <h2>{t('collectedTitle')}</h2>
+        <p>{t('collectedText')}</p>
       </section>
       <section>
-        <h2>Utilisation</h2>
-        <p>
-          Ces données servent uniquement à fournir le service (connexion, emails de vérification et
-          de réinitialisation, réponse à vos messages).
-        </p>
+        <h2>{t('useTitle')}</h2>
+        <p>{t('useText')}</p>
       </section>
       <section>
-        <h2>Cookies</h2>
-        <p>
-          Churchy utilise uniquement des cookies nécessaires à la session de connexion. Aucun cookie
-          publicitaire n’est utilisé.
-        </p>
+        <h2>{t('cookiesTitle')}</h2>
+        <p>{t('cookiesText')}</p>
       </section>
       <section>
-        <h2>Vos droits</h2>
-        <p>
-          Vous pouvez demander l’accès, la rectification ou la suppression de vos données via la
-          page Contact. [À compléter : responsable du traitement, durée de conservation.]
-        </p>
+        <h2>{t('rightsTitle')}</h2>
+        <p>{t('rightsText')}</p>
       </section>
     </ProsePage>
   );

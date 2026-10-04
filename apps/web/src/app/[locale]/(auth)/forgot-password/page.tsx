@@ -1,12 +1,14 @@
+import { useTranslations } from 'next-intl';
 import { AuthCard, AuthLink } from '@/components/auth/AuthCard';
 import { ForgotPasswordForm } from '@/components/auth/ForgotPasswordForm';
 
 export default function ForgotPasswordPage() {
+  const t = useTranslations('auth.forgot');
   return (
     <AuthCard
-      title="Mot de passe oublié"
-      subtitle="Nous vous envoyons un lien pour en choisir un nouveau"
-      footer={<AuthLink href="/login">Retour à la connexion</AuthLink>}
+      title={t('title')}
+      subtitle={t('subtitle')}
+      footer={<AuthLink href="/login">{t('back')}</AuthLink>}
     >
       <ForgotPasswordForm />
     </AuthCard>

@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { MailWarning } from 'lucide-react';
 import { authApi } from '@/lib/api/auth.api';
@@ -10,6 +11,7 @@ type Status = 'idle' | 'sending' | 'sent' | 'error';
 
 /** Rappelle de confirmer l'adresse email tant qu'elle ne l'est pas. */
 export function EmailVerificationBanner() {
+  const t = useTranslations('auth.banner');
   const { user } = useAuth();
   const [status, setStatus] = useState<Status>('idle');
 
@@ -28,14 +30,14 @@ export function EmailVerificationBanner() {
   return (
     <Alert variant="warning" className="mb-6">
       <MailWarning size={16} />
-      <AlertTitle>Confirmez votre adresse email</AlertTitle>
+      <AlertTitle>{t('title')}</AlertTitle>
       <AlertDescription className="flex flex-wrap items-center gap-3">
         <span>
-          Nous avons envoyé un lien à <strong>{user.email}</strong>.
+          {t.rich('sentTo', { email: user.email, strong: (chunks) => <strong>{chunks}</strong> })}
         </span>
         {status === 'sent' ? (
           <span role="status" className="font-medium">
-            Un nouveau lien vient d&apos;être envoyé.
+            {t('resent')}
           </span>
         ) : (
           <Button
@@ -45,12 +47,12 @@ export function EmailVerificationBanner() {
             onClick={resend}
             disabled={status === 'sending'}
           >
-            {status === 'sending' ? 'Envoi...' : 'Renvoyer le lien'}
+            {status === 'sending' ? t('sending') : t('resend')}
           </Button>
         )}
         {status === 'error' && (
           <span role="alert" className="text-destructive">
-            Envoi impossible, réessayez dans un instant.
+            {t('error')}
           </span>
         )}
       </AlertDescription>

@@ -1,14 +1,27 @@
 import { ImageResponse } from 'next/og';
 
 /** Image d'aperçu des liens partagés (WhatsApp, Facebook, X…) : 1200×630, logo Churchy sur fond crème. */
-export const alt = 'Churchy — Préparer. Célébrer. Unir.';
+export const alt = 'Churchy';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
 const GREEN = '#1F3B28';
 const GOLD = '#D4893A';
 
-export default function OpenGraphImage() {
+const TEXTS = {
+  fr: {
+    words: ['Préparer', 'Célébrer', 'Unir'],
+    tagline: 'Les messes et annonces de votre paroisse',
+  },
+  en: {
+    words: ['Prepare', 'Celebrate', 'Unite'],
+    tagline: 'The Masses and announcements of your parish',
+  },
+} as const;
+
+/** Une image par langue : `/fr/opengraph-image`, `/en/opengraph-image`. */
+export default function OpenGraphImage({ params }: { params?: { locale?: string } }) {
+  const texts = params?.locale === 'en' ? TEXTS.en : TEXTS.fr;
   return new ImageResponse(
     <div
       style={{
@@ -34,16 +47,14 @@ export default function OpenGraphImage() {
           Churchy
         </div>
         <div style={{ display: 'flex', fontSize: 40, marginTop: 24, fontWeight: 600 }}>
-          <span>Préparer</span>
-          <span style={{ color: GOLD }}>.</span>
-          <span style={{ marginLeft: 14 }}>Célébrer</span>
-          <span style={{ color: GOLD }}>.</span>
-          <span style={{ marginLeft: 14 }}>Unir</span>
-          <span style={{ color: GOLD }}>.</span>
+          {texts.words.map((word, i) => (
+            <div key={word} style={{ display: 'flex', marginLeft: i === 0 ? 0 : 14 }}>
+              <span>{word}</span>
+              <span style={{ color: GOLD }}>.</span>
+            </div>
+          ))}
         </div>
-        <div style={{ fontSize: 30, marginTop: 40, opacity: 0.75 }}>
-          Les messes et annonces de votre paroisse
-        </div>
+        <div style={{ fontSize: 30, marginTop: 40, opacity: 0.75 }}>{texts.tagline}</div>
       </div>
     </div>,
     size,

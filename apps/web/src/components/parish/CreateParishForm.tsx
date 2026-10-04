@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -29,6 +30,8 @@ interface Props {
 }
 
 export function CreateParishForm({ onSuccess }: Props) {
+  const t = useTranslations('parishForm');
+  const tc = useTranslations('common');
   const form = useForm<CreateParishDto>({
     resolver: zodResolver(withCompletePhone(createParishSchema)),
     defaultValues: {
@@ -48,11 +51,11 @@ export function CreateParishForm({ onSuccess }: Props) {
   async function onSubmit(data: CreateParishDto) {
     try {
       await parishesApi.create(data);
-      notify.success('Paroisse créée', `« ${data.name} » est prête.`);
+      notify.success(t('created'), t('createdText', { name: data.name }));
       form.reset();
       onSuccess?.();
     } catch (err: unknown) {
-      handleSubmitError(form, err, 'Erreur lors de la création');
+      handleSubmitError(form, err, t('createError'));
     }
   }
 
@@ -64,9 +67,9 @@ export function CreateParishForm({ onSuccess }: Props) {
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Nom de la paroisse</FormLabel>
+              <FormLabel>{t('name')}</FormLabel>
               <FormControl>
-                <Input placeholder="Paroisse Saint-Joseph de Mvog-Ada" {...field} />
+                <Input placeholder={t('namePlaceholder')} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -78,11 +81,12 @@ export function CreateParishForm({ onSuccess }: Props) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>
-                Description <span className="text-muted-foreground text-xs">(optionnel)</span>
+                {t('description')}{' '}
+                <span className="text-muted-foreground text-xs">{tc('optional')}</span>
               </FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Décrivez votre paroisse..."
+                  placeholder={t('descriptionPlaceholder')}
                   className="resize-none"
                   rows={3}
                   {...field}
@@ -100,11 +104,11 @@ export function CreateParishForm({ onSuccess }: Props) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>
-                  Complément d’adresse{' '}
-                  <span className="text-muted-foreground text-xs">(optionnel)</span>
+                  {t('fields.addressComplement.label')}{' '}
+                  <span className="text-muted-foreground text-xs">{tc('optional')}</span>
                 </FormLabel>
                 <FormControl>
-                  <Input placeholder="En face de la poste centrale" {...field} />
+                  <Input placeholder={t('fields.addressComplement.placeholder')} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -117,11 +121,11 @@ export function CreateParishForm({ onSuccess }: Props) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>
-                  Email de la paroisse{' '}
-                  <span className="text-muted-foreground text-xs">(optionnel)</span>
+                  {t('email')}{' '}
+                  <span className="text-muted-foreground text-xs">{tc('optional')}</span>
                 </FormLabel>
                 <FormControl>
-                  <Input type="email" placeholder="contact@paroisse.org" {...field} />
+                  <Input type="email" placeholder={t('fields.email.placeholder')} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -132,7 +136,7 @@ export function CreateParishForm({ onSuccess }: Props) {
           <p className="text-sm text-destructive">{form.formState.errors.root.message}</p>
         )}
         <Button type="submit" className="w-full sm:w-auto" disabled={form.formState.isSubmitting}>
-          {form.formState.isSubmitting ? 'Création...' : 'Créer la paroisse'}
+          {form.formState.isSubmitting ? t('creating') : t('create')}
         </Button>
       </form>
     </Form>

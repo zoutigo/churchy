@@ -1,7 +1,8 @@
 'use client';
+import { useTranslations } from 'next-intl';
+import { useLabels } from '@/i18n/labels';
 import { useId, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
-import { CELEBRATION_TYPE_LABELS } from '@/lib/format';
 import type { TemplateWithSteps } from '@/lib/api/celebrations.api';
 import { DeleteButton } from '@/components/news/DeleteButton';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,10 @@ interface Props {
 
 /** Modèle de feuille replié par défaut : titre + sous-titre, un bouton déplie les étapes, Modifier, Supprimer. */
 export function TemplateCard({ template, onEdit, onDelete }: Props) {
+  const t = useTranslations('templateCard');
+  const tf = useTranslations('celebrationForm');
+  const tc = useTranslations('common');
+  const labels = useLabels();
   const [open, setOpen] = useState(false);
   const panelId = useId();
   const steps = template.steps ?? [];
@@ -30,8 +35,7 @@ export function TemplateCard({ template, onEdit, onDelete }: Props) {
         <span className="min-w-0">
           <span className="block truncate font-medium">{template.name}</span>
           <span className="block text-xs text-muted-foreground">
-            {CELEBRATION_TYPE_LABELS[template.type]} — {steps.length} étape
-            {steps.length > 1 ? 's' : ''}
+            {labels.celebrationType(template.type)} — {tf('steps', { count: steps.length })}
           </span>
         </span>
         <ChevronDown
@@ -39,7 +43,7 @@ export function TemplateCard({ template, onEdit, onDelete }: Props) {
           aria-hidden
           className={`shrink-0 text-muted-foreground transition-transform ${open ? 'rotate-180' : ''}`}
         />
-        <span className="sr-only">{open ? 'Replier' : 'Déplier'}</span>
+        <span className="sr-only">{open ? t('collapse') : t('expand')}</span>
       </button>
 
       {open && (
@@ -54,17 +58,17 @@ export function TemplateCard({ template, onEdit, onDelete }: Props) {
               ))}
             </ol>
           ) : (
-            <p className="text-sm text-muted-foreground">Aucune étape.</p>
+            <p className="text-sm text-muted-foreground">{t('noSteps')}</p>
           )}
           <div className="flex flex-wrap items-center gap-2 pt-1">
             <Button
               type="button"
               variant="outline"
               size="sm"
-              aria-label={`Modifier ${template.name}`}
+              aria-label={t('editAria', { name: template.name })}
               onClick={onEdit}
             >
-              Modifier
+              {tc('edit')}
             </Button>
             <DeleteButton label={template.name} onConfirm={onDelete} />
           </div>

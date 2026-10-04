@@ -1,4 +1,6 @@
 'use client';
+import { useTranslations } from 'next-intl';
+import { useAppLocale } from '@/i18n/locale';
 import { useCallback, useEffect, useState } from 'react';
 import { announcementsApi, type Announcement } from '@/lib/api/announcements.api';
 import { CreateAnnouncementForm } from '@/components/news/CreateAnnouncementForm';
@@ -16,6 +18,11 @@ interface Props {
 }
 
 export default function Page({ params }: Props) {
+  const t = useTranslations('dashAnnouncements');
+  const td = useTranslations('dashboard');
+  const tc = useTranslations('common');
+  const tcn = useTranslations('dashContents');
+  const locale = useAppLocale();
   const { parishId } = params;
   const [items, setItems] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
@@ -27,11 +34,9 @@ export default function Page({ params }: Props) {
     return announcementsApi
       .findByParish(parishId)
       .then(setItems)
-      .catch((err: unknown) =>
-        setError(err instanceof Error ? err.message : 'Impossible de charger les données'),
-      )
+      .catch((err: unknown) => setError(err instanceof Error ? err.message : td('loadError')))
       .finally(() => setLoading(false));
-  }, [parishId]);
+  }, [parishId, td]);
 
   useEffect(() => {
     void load();
@@ -39,11 +44,7 @@ export default function Page({ params }: Props) {
 
   if (showForm) {
     return (
-      <FormView
-        title="Nouvelle annonce"
-        description="Visible sur la page publique de la paroisse"
-        onBack={() => setShowForm(false)}
-      >
+      <FormView title={t('newTitle')} description={t('newDesc')} onBack={() => setShowForm(false)}>
         <CreateAnnouncementForm
           parishId={parishId}
           onSuccess={() => {
@@ -58,17 +59,17 @@ export default function Page({ params }: Props) {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Annonces"
-        description="Informations publiées sur la page publique de la paroisse"
-        action={<Button onClick={() => setShowForm(true)}>+ Nouvelle annonce</Button>}
+        title={t('title')}
+        description={t('desc')}
+        action={<Button onClick={() => setShowForm(true)}>{t('add')}</Button>}
       />
 
       {error ? (
         <ErrorNotice message={error} />
       ) : loading ? (
-        <p className="text-muted-foreground">Chargement...</p>
+        <p className="text-muted-foreground">{tc('loading')}</p>
       ) : items.length === 0 ? (
-        <p className="text-center py-12 text-muted-foreground">Aucune annonce pour l’instant.</p>
+        <p className="text-center py-12 text-muted-foreground">{t('empty')}</p>
       ) : (
         <ul className="grid gap-3 lg:grid-cols-2">
           {items.map((item) => (
@@ -78,20 +79,19 @@ export default function Page({ params }: Props) {
             >
               <div className="min-w-0 space-y-1">
                 <p className="font-medium">{item.title}</p>
-                <p className="text-sm text-muted-foreground">{formatDateLong(item.publishedAt)}</p>
+                <p className="text-sm text-muted-foreground">
+                  {formatDateLong(item.publishedAt, { locale })}
+                </p>
               </div>
               <DeleteButton
                 label={item.title}
                 onConfirm={async () => {
                   try {
                     await announcementsApi.remove(parishId, item.id);
-                    notify.success('Annonce supprimée', `« ${item.title} »`);
+                    notify.success(t('deleted'), tcn('quoted', { title: item.title }));
                     await load();
                   } catch (err: unknown) {
-                    notify.error(
-                      'Suppression impossible',
-                      errorMessage(err, 'Réessayez plus tard.'),
-                    );
+                    notify.error(tcn('deleteFailed'), errorMessage(err, tcn('retryLater')));
                   }
                 }}
               />

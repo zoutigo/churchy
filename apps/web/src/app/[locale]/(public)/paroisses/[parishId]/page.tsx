@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/link';
 import { ActivityItem } from '@/components/public/ActivityItem';
 import { AnnouncementItem } from '@/components/public/AnnouncementItem';
@@ -42,6 +43,7 @@ function Section({
 }
 
 export default async function ParishHomePage({ params }: Props) {
+  const t = await getTranslations('parishHome');
   const { parishId } = params;
   const [parish, celebrations, announcements, activities] = await orNotFound(
     Promise.all([
@@ -58,7 +60,7 @@ export default async function ParishHomePage({ params }: Props) {
       {parish.description && (
         <section aria-labelledby="presentation" className="space-y-2">
           <h2 id="presentation" className="font-playfair text-2xl font-bold text-churchy-700">
-            Présentation
+            {t('presentation')}
           </h2>
           <p className="max-w-prose whitespace-pre-wrap leading-relaxed text-churchy-900/85">
             {parish.description}
@@ -73,15 +75,12 @@ export default async function ParishHomePage({ params }: Props) {
 
       <Section
         id="next-masses"
-        title="Prochaines messes"
+        title={t('nextMasses')}
         href={`${base}/messes`}
-        linkLabel="Toutes les messes"
+        linkLabel={t('allMasses')}
       >
         {celebrations.length === 0 ? (
-          <EmptyState
-            title="Aucune messe annoncée pour l’instant"
-            hint="Revenez bientôt : la paroisse publie ses célébrations ici."
-          />
+          <EmptyState title={t('noMass')} hint={t('noMassHint')} />
         ) : (
           <div className="grid gap-3 xl:grid-cols-2">
             {celebrations.slice(0, 3).map((c) => (
@@ -93,12 +92,12 @@ export default async function ParishHomePage({ params }: Props) {
 
       <Section
         id="latest-announcements"
-        title="Annonces"
+        title={t('announcements')}
         href={`${base}/annonces`}
-        linkLabel="Toutes les annonces"
+        linkLabel={t('allAnnouncements')}
       >
         {announcements.length === 0 ? (
-          <EmptyState title="Aucune annonce pour l’instant" />
+          <EmptyState title={t('noAnnouncement')} />
         ) : (
           <div className="space-y-4">
             {announcements.slice(0, 2).map((a) => (
@@ -110,12 +109,12 @@ export default async function ParishHomePage({ params }: Props) {
 
       <Section
         id="next-activities"
-        title="Activités"
+        title={t('activities')}
         href={`${base}/activites`}
-        linkLabel="Toutes les activités"
+        linkLabel={t('allActivities')}
       >
         {activities.length === 0 ? (
-          <EmptyState title="Aucune activité à venir" />
+          <EmptyState title={t('noActivity')} />
         ) : (
           <div className="space-y-3">
             {activities.slice(0, 3).map((a) => (

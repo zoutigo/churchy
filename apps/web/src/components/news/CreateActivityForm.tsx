@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -25,8 +26,6 @@ const formSchema = createActivitySchema.extend({
 });
 type FormValues = z.infer<typeof formSchema>;
 
-const optionalHint = <span className="text-muted-foreground text-xs">(optionnel)</span>;
-
 export function CreateActivityForm({
   parishId,
   onSuccess,
@@ -34,6 +33,9 @@ export function CreateActivityForm({
   parishId: string;
   onSuccess?: () => void;
 }) {
+  const t = useTranslations('activityForm');
+  const tc = useTranslations('common');
+  const optionalHint = <span className="text-muted-foreground text-xs">{tc('optional')}</span>;
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: { title: '', description: '', startsAt: '', location: '', imageUrl: '' },
@@ -43,16 +45,16 @@ export function CreateActivityForm({
   async function onSubmit(data: FormValues) {
     const startsAt = localInputToIso(data.startsAt);
     if (!startsAt) {
-      form.setError('startsAt', { message: 'Date et heure invalides' });
+      form.setError('startsAt', { message: t('invalidDate') });
       return;
     }
     try {
       await activitiesApi.create(parishId, { ...data, startsAt });
-      notify.success('Activité publiée');
+      notify.success(t('published'));
       form.reset();
       onSuccess?.();
     } catch (err: unknown) {
-      handleSubmitError(form, err, 'Erreur lors de la publication');
+      handleSubmitError(form, err, t('error'));
     }
   }
 
@@ -64,9 +66,9 @@ export function CreateActivityForm({
           name="title"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Titre</FormLabel>
+              <FormLabel>{t('title')}</FormLabel>
               <FormControl>
-                <Input placeholder="Groupe de jeunes" {...field} />
+                <Input placeholder={t('titlePlaceholder')} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -77,10 +79,10 @@ export function CreateActivityForm({
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Description</FormLabel>
+              <FormLabel>{t('description')}</FormLabel>
               <FormControl>
                 <RichTextEditor
-                  aria-label="Description"
+                  aria-label={t('description')}
                   allowImages
                   value={field.value}
                   onChange={field.onChange}
@@ -98,7 +100,7 @@ export function CreateActivityForm({
             name="startsAt"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Date et heure</FormLabel>
+                <FormLabel>{t('startsAt')}</FormLabel>
                 <FormControl>
                   <Input type="datetime-local" {...field} />
                 </FormControl>
@@ -111,9 +113,11 @@ export function CreateActivityForm({
             name="location"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Lieu {optionalHint}</FormLabel>
+                <FormLabel>
+                  {t('location')} {optionalHint}
+                </FormLabel>
                 <FormControl>
-                  <Input placeholder="Salle paroissiale" {...field} />
+                  <Input placeholder={t('locationPlaceholder')} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -125,7 +129,9 @@ export function CreateActivityForm({
           name="imageUrl"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Adresse d’une image {optionalHint}</FormLabel>
+              <FormLabel>
+                {t('image')} {optionalHint}
+              </FormLabel>
               <FormControl>
                 <Input type="url" inputMode="url" placeholder="https://…" {...field} />
               </FormControl>
@@ -137,7 +143,7 @@ export function CreateActivityForm({
           <p className="text-sm text-destructive">{form.formState.errors.root.message}</p>
         )}
         <Button type="submit" className="w-full sm:w-auto" disabled={form.formState.isSubmitting}>
-          {form.formState.isSubmitting ? 'Publication…' : 'Publier l’activité'}
+          {form.formState.isSubmitting ? t('publishing') : t('submit')}
         </Button>
       </form>
     </Form>

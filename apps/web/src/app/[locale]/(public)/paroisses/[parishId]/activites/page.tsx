@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server';
 import { EmptyState } from '@/components/public/EmptyState';
 import { ActivityItem } from '@/components/public/ActivityItem';
 import { orNotFound, publicApi } from '@/lib/api/public.api';
@@ -7,18 +8,16 @@ interface Props {
 }
 
 export default async function Page({ params }: Props) {
+  const t = await getTranslations('parishActivities');
   const items = await orNotFound(publicApi.getActivities(params.parishId));
 
   return (
     <section aria-labelledby="page-title" className="space-y-4">
       <h2 id="page-title" className="font-playfair text-2xl font-bold text-churchy-700">
-        Activités à venir
+        {t('title')}
       </h2>
       {items.length === 0 ? (
-        <EmptyState
-          title="Aucune activité à venir"
-          hint="Les rencontres et événements de la paroisse apparaîtront ici."
-        />
+        <EmptyState title={t('empty')} hint={t('emptyHint')} />
       ) : (
         <div className="space-y-3">
           {items.map((a) => (

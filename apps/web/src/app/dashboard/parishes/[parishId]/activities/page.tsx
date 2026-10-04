@@ -1,4 +1,6 @@
 'use client';
+import { useTranslations } from 'next-intl';
+import { useAppLocale } from '@/i18n/locale';
 import { useCallback, useEffect, useState } from 'react';
 import { activitiesApi, type Activity } from '@/lib/api/activities.api';
 import { CreateActivityForm } from '@/components/news/CreateActivityForm';
@@ -16,6 +18,11 @@ interface Props {
 }
 
 export default function Page({ params }: Props) {
+  const t = useTranslations('dashActivities');
+  const td = useTranslations('dashboard');
+  const tc = useTranslations('common');
+  const tcn = useTranslations('dashContents');
+  const locale = useAppLocale();
   const { parishId } = params;
   const [items, setItems] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
@@ -27,11 +34,9 @@ export default function Page({ params }: Props) {
     return activitiesApi
       .findByParish(parishId)
       .then(setItems)
-      .catch((err: unknown) =>
-        setError(err instanceof Error ? err.message : 'Impossible de charger les données'),
-      )
+      .catch((err: unknown) => setError(err instanceof Error ? err.message : td('loadError')))
       .finally(() => setLoading(false));
-  }, [parishId]);
+  }, [parishId, td]);
 
   useEffect(() => {
     void load();
@@ -39,11 +44,7 @@ export default function Page({ params }: Props) {
 
   if (showForm) {
     return (
-      <FormView
-        title="Nouvelle activité"
-        description="Rencontre ou événement de la paroisse"
-        onBack={() => setShowForm(false)}
-      >
+      <FormView title={t('newTitle')} description={t('newDesc')} onBack={() => setShowForm(false)}>
         <CreateActivityForm
           parishId={parishId}
           onSuccess={() => {
@@ -58,17 +59,17 @@ export default function Page({ params }: Props) {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Activités"
-        description="Rencontres et événements de la paroisse"
-        action={<Button onClick={() => setShowForm(true)}>+ Nouvelle activité</Button>}
+        title={t('title')}
+        description={t('desc')}
+        action={<Button onClick={() => setShowForm(true)}>{t('add')}</Button>}
       />
 
       {error ? (
         <ErrorNotice message={error} />
       ) : loading ? (
-        <p className="text-muted-foreground">Chargement...</p>
+        <p className="text-muted-foreground">{tc('loading')}</p>
       ) : items.length === 0 ? (
-        <p className="text-center py-12 text-muted-foreground">Aucune activité pour l’instant.</p>
+        <p className="text-center py-12 text-muted-foreground">{t('empty')}</p>
       ) : (
         <ul className="grid gap-3 lg:grid-cols-2">
           {items.map((item) => (
@@ -79,7 +80,10 @@ export default function Page({ params }: Props) {
               <div className="min-w-0 space-y-1">
                 <p className="font-medium">{item.title}</p>
                 <p className="text-sm text-muted-foreground">
-                  {formatDateLong(item.startsAt)} à {formatTime(item.startsAt)}
+                  {t('at', {
+                    date: formatDateLong(item.startsAt, { locale }),
+                    time: formatTime(item.startsAt, { locale }),
+                  })}
                 </p>
               </div>
               <DeleteButton
@@ -87,13 +91,10 @@ export default function Page({ params }: Props) {
                 onConfirm={async () => {
                   try {
                     await activitiesApi.remove(parishId, item.id);
-                    notify.success('Activité supprimée', `« ${item.title} »`);
+                    notify.success(t('deleted'), tcn('quoted', { title: item.title }));
                     await load();
                   } catch (err: unknown) {
-                    notify.error(
-                      'Suppression impossible',
-                      errorMessage(err, 'Réessayez plus tard.'),
-                    );
+                    notify.error(tcn('deleteFailed'), errorMessage(err, tcn('retryLater')));
                   }
                 }}
               />

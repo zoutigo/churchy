@@ -1,12 +1,14 @@
+import { useTranslations } from 'next-intl';
 import { NotFoundPage } from '@/components/errors/NotFoundPage';
 
 export default function ParishNotFound() {
+  const t = useTranslations('errors');
   return (
     <NotFoundPage
-      title="Paroisse introuvable"
-      message="Cette paroisse n’existe pas ou n’est plus disponible. Essayez une recherche par nom ou par ville."
-      primary={{ href: '/paroisses', label: 'Rechercher une paroisse' }}
-      secondary={{ href: '/', label: 'Retour à l’accueil' }}
+      title={t('parishNotFound.title')}
+      message={t('parishNotFound.message')}
+      primary={{ href: '/paroisses', label: t('searchParish') }}
+      secondary={{ href: '/', label: t('backHome') }}
     />
   );
 }

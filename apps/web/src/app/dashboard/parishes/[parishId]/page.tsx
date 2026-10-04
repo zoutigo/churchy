@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { Link } from '@/i18n/link';
 import { ExternalLink } from 'lucide-react';
@@ -14,15 +15,11 @@ interface Props {
   params: { parishId: string };
 }
 
-const sections = [
-  { path: 'contents', title: 'Bibliothèque', text: 'Chants, psaumes, lectures, prières' },
-  { path: 'templates', title: 'Modèles', text: 'Modèles de célébration' },
-  { path: 'celebrations', title: 'Célébrations', text: 'Préparer et publier les messes' },
-  { path: 'announcements', title: 'Annonces', text: 'Informations pour les fidèles' },
-  { path: 'activities', title: 'Activités', text: 'Rencontres et événements' },
-];
+const SECTIONS = ['contents', 'templates', 'celebrations', 'announcements', 'activities'] as const;
 
 export default function ParishDetailPage({ params }: Props) {
+  const t = useTranslations('dashboard.parish');
+  const tc = useTranslations('common');
   const { parishId } = params;
   const { parish, error, setParish } = useParish(parishId);
   const [saved, setSaved] = useState(false);
@@ -31,8 +28,8 @@ export default function ParishDetailPage({ params }: Props) {
   if (editing && parish) {
     return (
       <FormView
-        title="Modifier les informations publiques"
-        description="Affichées sur la page de la paroisse et dans les résultats de recherche."
+        title={t('editTitle')}
+        description={t('publicDesc')}
         onBack={() => setEditing(false)}
       >
         <ParishInfoForm
@@ -50,25 +47,25 @@ export default function ParishDetailPage({ params }: Props) {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-bold">{parish?.name ?? 'Paroisse'}</h1>
+        <h1 className="text-2xl font-bold">{parish?.name ?? t('fallbackName')}</h1>
         <Link
           href={`/paroisses/${parishId}`}
           target="_blank"
           className="inline-flex items-center gap-2 text-sm font-medium text-churchy-500 hover:underline"
         >
-          Voir la page publique <ExternalLink size={14} aria-hidden />
+          {t('viewPublic')} <ExternalLink size={14} aria-hidden />
         </Link>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {sections.map((s) => (
+        {SECTIONS.map((s) => (
           <Link
-            key={s.path}
-            href={`/dashboard/parishes/${parishId}/${s.path}`}
+            key={s}
+            href={`/dashboard/parishes/${parishId}/${s}`}
             className="block rounded-lg border bg-card p-5 hover:shadow-md transition-shadow"
           >
-            <h2 className="font-semibold">{s.title}</h2>
-            <p className="text-sm text-muted-foreground mt-1">{s.text}</p>
+            <h2 className="font-semibold">{t(`sections.${s}.title`)}</h2>
+            <p className="text-sm text-muted-foreground mt-1">{t(`sections.${s}.text`)}</p>
           </Link>
         ))}
       </div>
@@ -80,11 +77,9 @@ export default function ParishDetailPage({ params }: Props) {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h2 id="public-info" className="font-semibold">
-              Informations publiques
+              {t('publicInfo')}
             </h2>
-            <p className="text-sm text-muted-foreground">
-              Affichées sur la page de la paroisse et dans les résultats de recherche.
-            </p>
+            <p className="text-sm text-muted-foreground">{t('publicDesc')}</p>
           </div>
           {parish && (
             <Button
@@ -96,7 +91,7 @@ export default function ParishDetailPage({ params }: Props) {
                 setEditing(true);
               }}
             >
-              Modifier
+              {tc('edit')}
             </Button>
           )}
         </div>
@@ -106,13 +101,13 @@ export default function ParishDetailPage({ params }: Props) {
           <>
             {saved && (
               <Alert variant="success">
-                <AlertDescription>Informations enregistrées.</AlertDescription>
+                <AlertDescription>{t('saved')}</AlertDescription>
               </Alert>
             )}
             <ParishInfoSummary parish={parish} />
           </>
         ) : (
-          <p className="text-muted-foreground">Chargement...</p>
+          <p className="text-muted-foreground">{tc('loading')}</p>
         )}
       </section>
     </div>

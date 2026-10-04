@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server';
+import { staticPageMetadata } from '@/lib/seo.server';
 import type { Metadata } from 'next';
 import { Link } from '@/i18n/link';
 import { EmptyState } from '@/components/public/EmptyState';
@@ -12,7 +14,8 @@ interface Props {
   searchParams: { q?: string; page?: string };
 }
 
-export const metadata: Metadata = { title: 'Trouver une paroisse — Churchy' };
+export const generateMetadata = (): Promise<Metadata> =>
+  staticPageMetadata('/paroisses', 'parishes');
 
 const pageLink = (q: string, page: number) => {
   const params = new URLSearchParams();
@@ -23,6 +26,7 @@ const pageLink = (q: string, page: number) => {
 };
 
 export default async function ParishSearchPage({ searchParams }: Props) {
+  const t = await getTranslations('parishSearch');
   const q = (searchParams.q ?? '').trim().slice(0, 100);
   const page = Math.max(1, Math.floor(Number(searchParams.page)) || 1);
   const result = await publicApi.searchParishes(q || undefined, page, PAGE_SIZE);
@@ -31,23 +35,21 @@ export default async function ParishSearchPage({ searchParams }: Props) {
   return (
     <div className={`${WRAP} space-y-6 py-8 sm:py-12`}>
       <h1 className="font-playfair text-3xl font-bold text-churchy-700">
-        {q ? `Résultats pour « ${q} »` : 'Toutes les paroisses'}
+        {q ? t('resultsFor', { q }) : t('all')}
       </h1>
       <div className="max-w-3xl">
         <ParishSearchForm id="results-search" defaultValue={q} size="compact" />
       </div>
 
       <p className="text-sm text-churchy-900/75" aria-live="polite">
-        {result.total === 0
-          ? 'Aucune paroisse trouvée'
-          : `${result.total} paroisse${result.total > 1 ? 's' : ''}`}
+        {result.total === 0 ? t('none') : t('count', { count: result.total })}
       </p>
 
       {result.items.length === 0 ? (
         <EmptyState
-          title="Aucune paroisse ne correspond à votre recherche"
-          hint="Vérifiez l’orthographe, ou essayez avec le nom d’une ville ou d’un quartier."
-          action={q ? { href: '/paroisses', label: 'Voir toutes les paroisses' } : undefined}
+          title={t('emptyTitle')}
+          hint={t('emptyHint')}
+          action={q ? { href: '/paroisses', label: t('seeAll') } : undefined}
         />
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">
@@ -58,26 +60,24 @@ export default async function ParishSearchPage({ searchParams }: Props) {
       )}
 
       {pages > 1 && (
-        <nav aria-label="Pagination" className="flex items-center justify-between gap-4 pt-2">
+        <nav aria-label={t('pagination')} className="flex items-center justify-between gap-4 pt-2">
           {page > 1 ? (
             <Link
               href={pageLink(q, page - 1)}
               className="inline-flex h-11 items-center rounded-lg border border-churchy-200 bg-white px-5 text-sm font-medium text-churchy-700"
             >
-              Page précédente
+              {t('previous')}
             </Link>
           ) : (
             <span />
           )}
-          <span className="text-sm text-churchy-900/75">
-            Page {page} sur {pages}
-          </span>
+          <span className="text-sm text-churchy-900/75">{t('pageOf', { page, pages })}</span>
           {page < pages ? (
             <Link
               href={pageLink(q, page + 1)}
               className="inline-flex h-11 items-center rounded-lg border border-churchy-200 bg-white px-5 text-sm font-medium text-churchy-700"
             >
-              Page suivante
+              {t('next')}
             </Link>
           ) : (
             <span />

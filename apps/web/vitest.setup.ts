@@ -10,18 +10,29 @@ const testState = { locale: 'fr' as 'fr' | 'en' };
 export const setTestLocale = (locale: 'fr' | 'en') => {
   testState.locale = locale;
 };
+// Comme dans next-intl, `useTranslations` renvoie la même fonction tant que langue et espace de noms ne
+// changent pas : sans cela, les effets qui l'ont en dépendance se relanceraient à chaque rendu.
+const translators = new Map<string, unknown>();
 vi.mock('next-intl', async (importOriginal) => {
   const actual = await importOriginal<typeof import('next-intl')>();
   const all = { fr: frMessages, en: enMessages };
   return {
     ...actual,
     useLocale: () => testState.locale,
-    useTranslations: (namespace?: string) =>
-      actual.createTranslator({
-        locale: testState.locale,
-        messages: all[testState.locale],
-        namespace,
-      } as never),
+    useTranslations: (namespace?: string) => {
+      const key = `${testState.locale}:${namespace ?? ''}`;
+      if (!translators.has(key)) {
+        translators.set(
+          key,
+          actual.createTranslator({
+            locale: testState.locale,
+            messages: all[testState.locale],
+            namespace,
+          } as never),
+        );
+      }
+      return translators.get(key);
+    },
   };
 });
 

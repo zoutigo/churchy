@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import { CheckCircle2, Clock } from 'lucide-react';
 import { AuthCard, AuthLink } from '@/components/auth/AuthCard';
 import { LoginForm } from '@/components/auth/LoginForm';
@@ -9,30 +10,25 @@ interface Props {
 }
 
 export default function LoginPage({ searchParams }: Props) {
+  const t = useTranslations('auth.login');
   return (
     <AuthCard
-      title="Connexion"
-      subtitle="Accédez à votre espace Churchy"
-      footer={
-        <>
-          Pas encore de compte ? <AuthLink href="/register">S&apos;inscrire</AuthLink>
-        </>
-      }
+      title={t('title')}
+      subtitle={t('subtitle')}
+      footer={t.rich('noAccount', {
+        link: (chunks) => <AuthLink href="/register">{chunks}</AuthLink>,
+      })}
     >
       {searchParams.expired && (
         <Alert variant="warning">
           <Clock size={16} />
-          <AlertDescription>
-            Votre session a expiré. Reconnectez-vous pour continuer.
-          </AlertDescription>
+          <AlertDescription>{t('expired')}</AlertDescription>
         </Alert>
       )}
       {searchParams.reset && (
         <Alert variant="success">
           <CheckCircle2 size={16} />
-          <AlertDescription>
-            Mot de passe modifié. Vous pouvez maintenant vous connecter.
-          </AlertDescription>
+          <AlertDescription>{t('resetDone')}</AlertDescription>
         </Alert>
       )}
       <LoginForm next={safeNextPath(searchParams.next)} />

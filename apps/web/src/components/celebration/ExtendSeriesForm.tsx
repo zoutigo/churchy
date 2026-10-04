@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import type { CelebrationDetail } from '@churchy/shared';
 import { celebrationsApi } from '@/lib/api/celebrations.api';
@@ -16,6 +17,9 @@ interface Props {
 
 /** Prolonge une série : de nouvelles dates s'ajoutent, celles qui existent déjà sont ignorées. */
 export function ExtendSeriesForm({ celebration, onDone, onCancel }: Props) {
+  const t = useTranslations('extendSeries');
+  const tf = useTranslations('celebrationForm');
+  const tc = useTranslations('common');
   const [draft, setDraft] = useState<ScheduleDraft>(emptyDraft);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -24,7 +28,7 @@ export function ExtendSeriesForm({ celebration, onDone, onCancel }: Props) {
     e.preventDefault();
     const preview = previewDraft(draft, celebration.timezone);
     if (preview.blank || !preview.schedule || preview.error || preview.instants.length === 0) {
-      setError(preview.error ?? 'Indiquez au moins une date');
+      setError(preview.error ?? tf('atLeastOneDate'));
       return;
     }
     setBusy(true);
@@ -35,17 +39,12 @@ export function ExtendSeriesForm({ celebration, onDone, onCancel }: Props) {
         schedule: preview.schedule,
       });
       const added = updated.occurrences.length - before;
-      notify.success(
-        'Série prolongée',
-        added > 0
-          ? `${added} date${added > 1 ? 's' : ''} ajoutée${added > 1 ? 's' : ''}`
-          : 'Ces dates existaient déjà',
-      );
+      notify.success(t('extended'), added > 0 ? t('added', { count: added }) : t('alreadyExisted'));
       onDone(updated);
     } catch (err) {
-      const message = errorMessage(err, 'Erreur lors de la prolongation');
+      const message = errorMessage(err, t('error'));
       setError(message);
-      notify.error('Erreur lors de la prolongation', message);
+      notify.error(t('error'), message);
     } finally {
       setBusy(false);
     }
@@ -69,10 +68,10 @@ export function ExtendSeriesForm({ celebration, onDone, onCancel }: Props) {
       )}
       <div className="flex flex-col gap-3 sm:flex-row">
         <Button type="submit" disabled={busy}>
-          {busy ? 'Ajout…' : 'Ajouter ces dates'}
+          {busy ? t('adding') : t('submit')}
         </Button>
         <Button type="button" variant="outline" onClick={onCancel}>
-          Annuler
+          {tc('cancel')}
         </Button>
       </div>
     </form>

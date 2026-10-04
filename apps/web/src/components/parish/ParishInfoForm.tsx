@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -28,22 +29,13 @@ import { notify } from '@/lib/notify';
 
 type Field = keyof UpdateParishDto;
 
-const TEXT_FIELDS: { name: Field; label: string; placeholder?: string; type?: string }[] = [
-  { name: 'mainChurch', label: 'Église principale', placeholder: 'Église Saint-Pierre' },
-  { name: 'address', label: 'Adresse', placeholder: '1 place de l’Église' },
-  {
-    name: 'addressComplement',
-    label: 'Complément d’adresse',
-    placeholder: 'En face de la poste centrale',
-  },
-  {
-    name: 'email',
-    label: 'Email de la paroisse',
-    placeholder: 'contact@paroisse.org',
-    type: 'email',
-  },
-  { name: 'website', label: 'Site web', placeholder: 'https://…', type: 'url' },
-  { name: 'imageUrl', label: 'Adresse de la photo', placeholder: 'https://…', type: 'url' },
+const TEXT_FIELDS: { name: Field; type?: string }[] = [
+  { name: 'mainChurch' },
+  { name: 'address' },
+  { name: 'addressComplement' },
+  { name: 'email', type: 'email' },
+  { name: 'website', type: 'url' },
+  { name: 'imageUrl', type: 'url' },
 ];
 
 /** Identité publique de la paroisse : ce qui s'affiche sur sa page et dans les résultats de recherche. */
@@ -54,6 +46,8 @@ export function ParishInfoForm({
   parish: Parish;
   onSaved?: (p: Parish) => void;
 }) {
+  const t = useTranslations('parishForm');
+  const tc = useTranslations('common');
   const form = useForm<UpdateParishDto>({
     resolver: zodResolver(withCompletePhone(updateParishSchema)),
     defaultValues: {
@@ -78,10 +72,10 @@ export function ParishInfoForm({
     try {
       const saved = await parishesApi.update(parish.id, data);
       form.clearErrors('root');
-      notify.success('Paroisse mise à jour');
+      notify.success(t('updated'));
       onSaved?.(saved);
     } catch (err: unknown) {
-      handleSubmitError(form, err, 'Erreur lors de l’enregistrement');
+      handleSubmitError(form, err, t('saveError'));
     }
   }
 
@@ -93,11 +87,11 @@ export function ParishInfoForm({
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Présentation</FormLabel>
+              <FormLabel>{t('presentation')}</FormLabel>
               <FormControl>
                 <Textarea
                   rows={4}
-                  placeholder="Quelques lignes pour présenter la paroisse"
+                  placeholder={t('presentationPlaceholder')}
                   {...field}
                   value={field.value ?? ''}
                 />
@@ -116,11 +110,11 @@ export function ParishInfoForm({
               name={f.name}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{f.label}</FormLabel>
+                  <FormLabel>{t(`fields.${f.name}.label`)}</FormLabel>
                   <FormControl>
                     <Input
                       type={f.type}
-                      placeholder={f.placeholder}
+                      placeholder={t(`fields.${f.name}.placeholder`)}
                       {...field}
                       value={field.value ?? ''}
                     />
@@ -135,7 +129,7 @@ export function ParishInfoForm({
             name="timezone"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Fuseau horaire</FormLabel>
+                <FormLabel>{t('timezone')}</FormLabel>
                 <FormControl>
                   <NativeSelect {...field} value={field.value ?? parish.timezone}>
                     {[...new Set([...TIMEZONE_CHOICES, parish.timezone])].sort().map((tz) => (
@@ -145,9 +139,7 @@ export function ParishInfoForm({
                     ))}
                   </NativeSelect>
                 </FormControl>
-                <p className="text-xs text-muted-foreground">
-                  Les heures des célébrations sont celles de ce fuseau.
-                </p>
+                <p className="text-xs text-muted-foreground">{t('timezoneHint')}</p>
                 <FormMessage />
               </FormItem>
             )}
@@ -157,7 +149,7 @@ export function ParishInfoForm({
           <p className="text-sm text-destructive">{form.formState.errors.root.message}</p>
         )}
         <Button type="submit" className="w-full sm:w-auto" disabled={form.formState.isSubmitting}>
-          {form.formState.isSubmitting ? 'Enregistrement…' : 'Enregistrer'}
+          {form.formState.isSubmitting ? t('saving') : tc('save')}
         </Button>
       </form>
     </Form>

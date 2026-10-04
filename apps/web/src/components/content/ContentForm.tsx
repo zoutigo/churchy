@@ -1,4 +1,7 @@
 'use client';
+import { useTranslations } from 'next-intl';
+import { useLabels } from '@/i18n/labels';
+import { useAppLocale } from '@/i18n/locale';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -26,7 +29,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { RichTextEditor } from '@/components/rich-text/RichTextEditor';
 import { Button } from '@/components/ui/button';
-import { CONTENT_TYPE_LABELS } from './content-labels';
 import { handleSubmitError } from '@/lib/forms/submit-error';
 import { notify } from '@/lib/notify';
 
@@ -38,6 +40,9 @@ interface Props {
 }
 
 export function ContentForm({ parishId, content, onSuccess }: Props) {
+  const t = useTranslations('contentForm');
+  const labels = useLabels();
+  const locale = useAppLocale();
   const editing = !!content;
   const form = useForm<CreateContentDto>({
     resolver: zodResolver(createContentSchema),
@@ -45,7 +50,7 @@ export function ContentForm({ parishId, content, onSuccess }: Props) {
       title: content?.title ?? '',
       type: content?.type ?? ContentType.FREE_TEXT,
       body: content?.body ?? '',
-      language: content?.language ?? 'fr',
+      language: content?.language ?? locale,
       tags: content?.tags ?? [],
     },
     mode: 'onChange',
@@ -57,15 +62,13 @@ export function ContentForm({ parishId, content, onSuccess }: Props) {
         ? await contentsApi.update(content.id, data)
         : await contentsApi.create(parishId, data);
       notify.success(
-        editing ? 'Contenu modifié' : 'Contenu ajouté',
-        editing
-          ? `« ${data.title} » a été mis à jour.`
-          : `« ${data.title} » est dans la bibliothèque.`,
+        editing ? t('updated') : t('added'),
+        editing ? t('updatedText', { title: data.title }) : t('addedText', { title: data.title }),
       );
       if (!editing) form.reset();
       onSuccess?.(saved);
     } catch (err: unknown) {
-      handleSubmitError(form, err, editing ? 'Modification impossible' : 'Création impossible');
+      handleSubmitError(form, err, editing ? t('updateError') : t('createError'));
     }
   }
 
@@ -78,9 +81,9 @@ export function ContentForm({ parishId, content, onSuccess }: Props) {
             name="title"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Titre</FormLabel>
+                <FormLabel>{t('title')}</FormLabel>
                 <FormControl>
-                  <Input placeholder="Titre du contenu" {...field} />
+                  <Input placeholder={t('titlePlaceholder')} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -91,17 +94,17 @@ export function ContentForm({ parishId, content, onSuccess }: Props) {
             name="type"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Type</FormLabel>
+                <FormLabel>{t('type')}</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Choisir un type" />
+                      <SelectValue placeholder={t('chooseType')} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
                     {Object.values(ContentType).map((type) => (
                       <SelectItem key={type} value={type}>
-                        {CONTENT_TYPE_LABELS[type]}
+                        {labels.contentType(type)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -116,10 +119,10 @@ export function ContentForm({ parishId, content, onSuccess }: Props) {
           name="body"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Contenu</FormLabel>
+              <FormLabel>{t('body')}</FormLabel>
               <FormControl>
                 <RichTextEditor
-                  aria-label="Contenu"
+                  aria-label={t('body')}
                   value={field.value}
                   onChange={field.onChange}
                   onBlur={field.onBlur}
@@ -135,10 +138,10 @@ export function ContentForm({ parishId, content, onSuccess }: Props) {
         )}
         <Button type="submit" className="w-full sm:w-auto" disabled={form.formState.isSubmitting}>
           {form.formState.isSubmitting
-            ? 'Enregistrement...'
+            ? t('saving')
             : editing
-              ? 'Enregistrer les modifications'
-              : 'Ajouter le contenu'}
+              ? t('saveChanges')
+              : t('submitCreate')}
         </Button>
       </form>
     </Form>

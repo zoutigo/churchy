@@ -113,6 +113,42 @@ test.describe('langues : français / anglais', () => {
     });
   }
 
+  for (const [device, viewport] of Object.entries(VIEWPORTS)) {
+    test.describe(`interface en anglais : ${device} (${viewport.width}×${viewport.height})`, () => {
+      test.use({ viewport });
+
+      test('landing, recherche et page de paroisse sont traduites', async ({ page }) => {
+        await page.goto('/en');
+        await expect(
+          page.getByRole('heading', { level: 1, name: 'Your parish, at your fingertips' }),
+        ).toBeVisible();
+        expect(await hasHorizontalOverflow(page)).toBe(false);
+
+        const search = page.getByRole('searchbox').first();
+        await expect(search).toHaveAttribute(
+          'placeholder',
+          'Search for a parish, a city or a neighbourhood',
+        );
+        await search.fill(parish.token.toLowerCase());
+        await page.getByRole('button', { name: 'Search' }).first().click();
+        await expect(page).toHaveURL(/\/en\/parishes\?q=/);
+        const card = page.getByRole('article').filter({ hasText: parish.name });
+        await expect(card).toContainText('Next Mass:');
+        await card.getByRole('link', { name: /View the parish/ }).click();
+
+        await expect(page).toHaveURL(new RegExp(`/en/parishes/${parish.id}$`));
+        await expect(page.getByRole('heading', { name: 'Upcoming Masses' })).toBeVisible();
+        await expect(page.getByRole('link', { name: 'All Masses' })).toBeVisible();
+        await expect(page.getByText('Sheet available').first()).toBeVisible();
+        expect(await hasHorizontalOverflow(page)).toBe(false);
+
+        await page.getByRole('link', { name: 'Calendar', exact: true }).click();
+        await expect(page).toHaveURL(new RegExp(`/en/parishes/${parish.id}/calendar$`));
+        await expect(page.getByRole('link', { name: 'Previous month' })).toBeVisible();
+      });
+    });
+  }
+
   test('le changement de langue conserve la recherche', async ({ page }) => {
     await page.goto(`/fr/paroisses?q=${parish.token}`);
     await page.getByRole('link', { name: 'English', exact: true }).first().click();
@@ -141,15 +177,17 @@ test.describe('langues : français / anglais', () => {
   test.describe('compte connecté : la langue est enregistrée en base', () => {
     test('l’inscription retient la langue de l’interface', async ({ page }) => {
       await page.goto('/en/register');
-      await page.getByLabel('Prénom').fill('John');
-      await page.getByLabel('Nom', { exact: true }).fill('Doe');
+      await page.getByLabel('First name').fill('John');
+      await page.getByLabel('Last name', { exact: true }).fill('Doe');
       await page.getByLabel('Email').fill(uniqueEmail('i18n-en'));
-      await page.getByLabel('Mot de passe', { exact: true }).fill(PASSWORD);
-      await page.getByRole('button', { name: 'Créer mon compte' }).click();
+      await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
+      await page.getByRole('button', { name: 'Create my account' }).click();
       await expect(page).toHaveURL(/\/dashboard$/);
       expect(await accountLocale(page)).toBe('en');
       // Le tableau de bord (sans préfixe) suit la langue du compte.
       await expect.poll(() => lang(page)).toBe('en');
+      await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
+      await expect(page.getByRole('link', { name: 'My parishes' }).first()).toBeVisible();
     });
 
     test('changer de langue sur le tableau de bord est enregistré, rechargement compris', async ({
@@ -203,11 +241,11 @@ test.describe('langues : français / anglais', () => {
       page,
     }) => {
       await page.goto('/en/register');
-      await page.getByLabel('Prénom').fill('Ann');
-      await page.getByLabel('Nom', { exact: true }).fill('Doe');
+      await page.getByLabel('First name').fill('Ann');
+      await page.getByLabel('Last name', { exact: true }).fill('Doe');
       await page.getByLabel('Email').fill(uniqueEmail('i18n-shared'));
-      await page.getByLabel('Mot de passe', { exact: true }).fill(PASSWORD);
-      await page.getByRole('button', { name: 'Créer mon compte' }).click();
+      await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
+      await page.getByRole('button', { name: 'Create my account' }).click();
       await expect(page).toHaveURL(/\/dashboard$/);
 
       await page.goto(`/fr/paroisses/${parish.id}`);

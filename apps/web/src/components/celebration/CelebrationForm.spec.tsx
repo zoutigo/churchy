@@ -83,7 +83,7 @@ describe('CelebrationForm — création', () => {
   it('envoie le planning en heure locale, le modèle par défaut, la description et la note', async () => {
     create.mockResolvedValue(detail({ occurrences: [{} as never] }));
     const { user, onDone } = renderForm();
-    await screen.findByRole('option', { name: 'Messe courte (1 étapes)' });
+    await screen.findByRole('option', { name: 'Messe courte (1 étape)' });
 
     await user.type(screen.getByLabelText('Titre'), 'Messe du dimanche');
     await user.selectOptions(screen.getByLabelText(/Modèle de feuille par défaut/), 't2');

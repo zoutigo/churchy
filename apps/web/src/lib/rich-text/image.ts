@@ -4,7 +4,17 @@ export const MAX_IMAGE_DIMENSION = 1280;
 export const MAX_IMAGE_DATA_URL_LENGTH = 540_000;
 const KEEP_GIF_MAX_BYTES = 300_000;
 
-export class ImageError extends Error {}
+export type ImageErrorCode = 'unreadable' | 'format' | 'canvas' | 'tooHeavy';
+
+/** `code` sert à afficher le message dans la langue de l'interface ; `message` reste lisible dans les journaux. */
+export class ImageError extends Error {
+  constructor(
+    readonly code: ImageErrorCode,
+    message: string,
+  ) {
+    super(message);
+  }
+}
 
 export function isSupportedImage(file: Pick<File, 'type'>): boolean {
   return /^image\/(png|jpe?g|webp|gif)$/i.test(file.type);
@@ -23,7 +33,7 @@ function readAsDataUrl(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(new ImageError('Image illisible'));
+    reader.onerror = () => reject(new ImageError('unreadable', 'Image illisible'));
     reader.readAsDataURL(blob);
   });
 }
@@ -38,7 +48,7 @@ function loadImage(file: Blob): Promise<HTMLImageElement> {
     };
     img.onerror = () => {
       URL.revokeObjectURL(url);
-      reject(new ImageError('Image illisible'));
+      reject(new ImageError('unreadable', 'Image illisible'));
     };
     img.src = url;
   });
@@ -47,7 +57,7 @@ function loadImage(file: Blob): Promise<HTMLImageElement> {
 /** Convertit un fichier image en data URL légère (JPEG ≤ 1280 px), ou lève une `ImageError` lisible. */
 export async function imageFileToDataUrl(file: File): Promise<string> {
   if (!isSupportedImage(file))
-    throw new ImageError('Format non pris en charge (PNG, JPEG, WebP ou GIF)');
+    throw new ImageError('format', 'Format non pris en charge (PNG, JPEG, WebP ou GIF)');
   // Un petit GIF est gardé tel quel pour ne pas perdre l'animation.
   if (/gif/i.test(file.type) && file.size <= KEEP_GIF_MAX_BYTES) return readAsDataUrl(file);
 
@@ -58,7 +68,7 @@ export async function imageFileToDataUrl(file: File): Promise<string> {
     canvas.width = width;
     canvas.height = height;
     const ctx = canvas.getContext('2d');
-    if (!ctx) throw new ImageError('Traitement d’image indisponible');
+    if (!ctx) throw new ImageError('canvas', 'Traitement d’image indisponible');
     ctx.fillStyle = '#fff'; // JPEG sans transparence
     ctx.fillRect(0, 0, width, height);
     ctx.drawImage(img, 0, 0, width, height);
@@ -67,5 +77,5 @@ export async function imageFileToDataUrl(file: File): Promise<string> {
     if (quality <= 0.55)
       ({ width, height } = fitSize(width, height, Math.round(Math.max(width, height) * 0.75)));
   }
-  throw new ImageError('Image trop lourde, même compressée');
+  throw new ImageError('tooHeavy', 'Image trop lourde, même compressée');
 }

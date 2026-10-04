@@ -16,29 +16,16 @@ const poppins = Poppins({
 });
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://churchy.tigilabs.com';
-const SITE_TITLE = 'Churchy — Votre paroisse, à portée de main';
-const SITE_DESCRIPTION =
-  'Retrouvez les messes, les feuilles de célébration, les annonces et les activités de votre paroisse.';
 
+/** Base commune à toutes les pages (y compris le tableau de bord) ; le texte par langue vient de `[locale]/layout.tsx`. */
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: SITE_TITLE,
-  description: SITE_DESCRIPTION,
+  title: 'Churchy',
   applicationName: 'Churchy',
   icons: {
     icon: '/icon.png',
     apple: '/apple-icon.png',
   },
-  // Aperçu des liens partagés (WhatsApp, Facebook, X, Telegram…) ; l'image vient de opengraph-image.tsx.
-  openGraph: {
-    type: 'website',
-    locale: 'fr_FR',
-    siteName: 'Churchy',
-    url: '/',
-    title: SITE_TITLE,
-    description: SITE_DESCRIPTION,
-  },
-  twitter: { card: 'summary_large_image', title: SITE_TITLE, description: SITE_DESCRIPTION },
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

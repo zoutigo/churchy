@@ -1,8 +1,9 @@
 import { CheckCircle2, Clock } from 'lucide-react';
 import type { SheetStatus } from '@churchy/shared';
-import { SHEET_STATUS_LABELS } from '@/lib/format';
+import { useLabels } from '@/i18n/labels';
 
 export function SheetStatusBadge({ status }: { status: SheetStatus }) {
+  const labels = useLabels();
   const available = status === 'AVAILABLE';
   return (
     <span
@@ -11,7 +12,7 @@ export function SheetStatusBadge({ status }: { status: SheetStatus }) {
       }`}
     >
       {available ? <CheckCircle2 size={14} aria-hidden /> : <Clock size={14} aria-hidden />}
-      {SHEET_STATUS_LABELS[status]}
+      {labels.sheetStatus(status)}
     </span>
   );
 }

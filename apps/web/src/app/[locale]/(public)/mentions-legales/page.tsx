@@ -1,25 +1,26 @@
 import type { Metadata } from 'next';
+import { getTranslations } from 'next-intl/server';
+import { staticPageMetadata } from '@/lib/seo.server';
 import { ProsePage } from '@/components/public/ProsePage';
 
-export const metadata: Metadata = { title: 'Mentions légales — Churchy' };
+export const generateMetadata = (): Promise<Metadata> =>
+  staticPageMetadata('/mentions-legales', 'legalNotice');
 
-export default function Page() {
+export default async function Page() {
+  const t = await getTranslations('legalNotice');
   return (
-    <ProsePage title="Mentions légales" provisional>
+    <ProsePage title={t('title')} provisional>
       <section>
-        <h2>Éditeur du site</h2>
-        <p>
-          [À compléter : dénomination, forme juridique, adresse, numéro d’immatriculation, directeur
-          de la publication.]
-        </p>
+        <h2>{t('publisherTitle')}</h2>
+        <p>{t('publisherText')}</p>
       </section>
       <section>
-        <h2>Hébergeur</h2>
-        <p>[À compléter : nom et adresse de l’hébergeur.]</p>
+        <h2>{t('hostTitle')}</h2>
+        <p>{t('hostText')}</p>
       </section>
       <section>
-        <h2>Contact</h2>
-        <p>Pour toute question, utilisez la page Contact du site.</p>
+        <h2>{t('contactTitle')}</h2>
+        <p>{t('contactText')}</p>
       </section>
     </ProsePage>
   );

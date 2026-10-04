@@ -1,13 +1,14 @@
+import { useTranslations } from 'next-intl';
 import { NotFoundPage } from '@/components/errors/NotFoundPage';
 
 export default function DashboardNotFound() {
+  const t = useTranslations('errors');
   return (
     <NotFoundPage
       size="inline"
-      title="Page introuvable"
-      message="Cette page n’existe pas, ou vous n’y avez pas accès. Retrouvez vos paroisses depuis le tableau de bord."
-      primary={{ href: '/dashboard', label: 'Tableau de bord' }}
-      secondary={{ href: '/dashboard/parishes', label: 'Mes paroisses' }}
+      message={t('dashboardNotFound.message')}
+      primary={{ href: '/dashboard', label: t('dashboard') }}
+      secondary={{ href: '/dashboard/parishes', label: t('myParishes') }}
     />
   );
 }

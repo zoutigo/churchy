@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import type { Content, SheetView } from '@churchy/shared';
@@ -23,11 +24,12 @@ interface Props {
 
 /** Feuille de préparation d'une date : étapes, ordre, ajout à la volée, changement de modèle, publication. */
 export function SheetPanel({ sheet, templates, contents, readOnly, onChange, onPublished }: Props) {
+  const t = useTranslations('sheetPanel');
   const [busy, setBusy] = useState(false);
   const [changing, setChanging] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const published = sheet.status === 'PUBLISHED';
-  const template = templates.find((t) => t.id === sheet.templateId);
+  const template = templates.find((tpl) => tpl.id === sheet.templateId);
 
   /** Exécute un appel, met la feuille à jour et annonce le résultat par un toast. */
   async function run(call: () => Promise<SheetView>, success: string, failure: string) {
@@ -48,8 +50,8 @@ export function SheetPanel({ sheet, templates, contents, readOnly, onChange, onP
         published
           ? celebrationsApi.unpublishSheet(sheet.id)
           : celebrationsApi.publishSheet(sheet.id),
-      published ? 'Feuille dépubliée' : 'Feuille publiée',
-      published ? 'Erreur lors de la dépublication' : 'Erreur lors de la publication',
+      published ? t('unpublished') : t('published'),
+      published ? t('unpublishError') : t('publishError'),
     );
     setBusy(false);
     // Publier est l'aboutissement du travail : on ne reste pas devant le formulaire.
@@ -62,8 +64,8 @@ export function SheetPanel({ sheet, templates, contents, readOnly, onChange, onP
     [ids[index], ids[target]] = [ids[target], ids[index]];
     await run(
       () => celebrationsApi.reorderSteps(sheet.id, { stepIds: ids }),
-      'Ordre enregistré',
-      'Erreur lors du changement d’ordre',
+      t('orderSaved'),
+      t('orderError'),
     );
   }
 
@@ -73,8 +75,8 @@ export function SheetPanel({ sheet, templates, contents, readOnly, onChange, onP
     if (!title) return;
     await run(
       () => celebrationsApi.addStep(sheet.id, { title }),
-      'Étape ajoutée',
-      'Erreur lors de l’ajout de l’étape',
+      t('stepAdded'),
+      t('addStepError'),
     );
     setNewTitle('');
   }
@@ -92,22 +94,20 @@ export function SheetPanel({ sheet, templates, contents, readOnly, onChange, onP
               }`}
               data-testid="sheet-status"
             >
-              {published ? 'Publiée' : 'Brouillon'}
+              {published ? t('statusPublished') : t('statusDraft')}
             </span>
           </p>
           <p className="text-sm text-muted-foreground" data-testid="sheet-template-name">
-            {sheet.templateId
-              ? `Modèle : ${template?.name ?? '—'}`
-              : 'Feuille construite à la volée'}
+            {sheet.templateId ? t('template', { name: template?.name ?? '—' }) : t('onTheFly')}
           </p>
         </div>
         {!readOnly && (
           <div className="grid grid-cols-2 gap-2 sm:flex">
             <Button type="button" variant="outline" onClick={() => setChanging(true)}>
-              Changer de modèle
+              {t('changeTemplate')}
             </Button>
             <Button type="button" disabled={busy} onClick={togglePublish}>
-              {published ? 'Dépublier' : 'Publier la feuille'}
+              {published ? t('unpublish') : t('publish')}
             </Button>
           </div>
         )}
@@ -115,7 +115,7 @@ export function SheetPanel({ sheet, templates, contents, readOnly, onChange, onP
 
       {sheet.steps.length === 0 ? (
         <p className="rounded-lg border border-dashed p-6 text-center text-muted-foreground">
-          La feuille est vide. Ajoutez les étapes de votre choix (chant d’entrée, lecture…).
+          {t('empty')}
         </p>
       ) : (
         <ol className="space-y-3">
@@ -130,16 +130,16 @@ export function SheetPanel({ sheet, templates, contents, readOnly, onChange, onP
               onChange={(patch) =>
                 run(
                   () => celebrationsApi.updateStep(sheet.id, step.id, patch),
-                  'Étape enregistrée',
-                  'Erreur lors de l’enregistrement de l’étape',
+                  t('stepSaved'),
+                  t('stepSaveError'),
                 )
               }
               onMove={(d) => move(index, d)}
               onRemove={() =>
                 run(
                   () => celebrationsApi.removeStep(sheet.id, step.id),
-                  'Étape retirée',
-                  'Erreur lors du retrait de l’étape',
+                  t('stepRemoved'),
+                  t('stepRemoveError'),
                 )
               }
             />
@@ -154,14 +154,14 @@ export function SheetPanel({ sheet, templates, contents, readOnly, onChange, onP
           data-testid="add-step-form"
         >
           <Input
-            aria-label="Titre de la nouvelle étape"
-            placeholder="Nouvelle étape (ex. Chant à Marie)"
+            aria-label={t('newStepAria')}
+            placeholder={t('newStepPlaceholder')}
             value={newTitle}
             maxLength={100}
             onChange={(e) => setNewTitle(e.target.value)}
           />
           <Button type="submit" variant="outline" className="gap-2" disabled={!newTitle.trim()}>
-            <Plus size={16} aria-hidden /> Ajouter une étape
+            <Plus size={16} aria-hidden /> {t('addStep')}
           </Button>
         </form>
       )}

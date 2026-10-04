@@ -10,12 +10,18 @@ const register = vi.fn();
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push, refresh }) }));
 vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ register, loading: false }) }));
 
-const fill = async () => {
-  await userEvent.type(screen.getByLabelText('Prénom'), 'Jean');
-  await userEvent.type(screen.getByLabelText('Nom'), 'Dupont');
+const LABELS = {
+  fr: { first: 'Prénom', last: 'Nom', password: 'Mot de passe', submit: 'Créer mon compte' },
+  en: { first: 'First name', last: 'Last name', password: 'Password', submit: 'Create my account' },
+};
+
+const fill = async (lang: 'fr' | 'en' = 'fr') => {
+  const l = LABELS[lang];
+  await userEvent.type(screen.getByLabelText(l.first), 'Jean');
+  await userEvent.type(screen.getByLabelText(l.last), 'Dupont');
   await userEvent.type(screen.getByLabelText('Email'), 'jean@paroisse.fr');
-  await userEvent.type(screen.getByLabelText('Mot de passe', { exact: true }), 'motdepasse1');
-  await userEvent.click(screen.getByRole('button', { name: /créer|s’inscrire|inscription/i }));
+  await userEvent.type(screen.getByLabelText(l.password, { exact: true }), 'motdepasse1');
+  await userEvent.click(screen.getByRole('button', { name: l.submit }));
 };
 
 describe('RegisterForm : langue du compte', () => {
@@ -35,7 +41,7 @@ describe('RegisterForm : langue du compte', () => {
   it('inscrit avec la langue de l’interface (anglais)', async () => {
     setTestLocale('en');
     render(<RegisterForm />);
-    await fill();
+    await fill('en');
     await waitFor(() => expect(register).toHaveBeenCalled());
     expect(register.mock.calls[0][0]).toMatchObject({ locale: 'en' });
     expect(push).toHaveBeenCalledWith('/dashboard');

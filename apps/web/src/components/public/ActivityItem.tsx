@@ -1,10 +1,15 @@
+import { useTranslations } from 'next-intl';
+import { useAppLocale } from '@/i18n/locale';
 import { MapPin } from 'lucide-react';
 import type { PublicActivity } from '@churchy/shared';
 import { RichContent } from '@/components/rich-text/RichContent';
 import { formatDateParts, formatDateLong, formatTime } from '@/lib/format';
 
 export function ActivityItem({ activity: a }: { activity: PublicActivity }) {
-  const d = formatDateParts(a.startsAt);
+  const t = useTranslations('activity');
+  const locale = useAppLocale();
+  const tz = { locale };
+  const d = formatDateParts(a.startsAt, tz);
   return (
     <article className="flex gap-4 overflow-hidden rounded-xl border border-churchy-100 bg-white p-4">
       <div
@@ -19,7 +24,7 @@ export function ActivityItem({ activity: a }: { activity: PublicActivity }) {
         <h2 className="font-playfair text-lg font-semibold text-churchy-700">{a.title}</h2>
         <p className="text-sm font-medium text-churchy-900">
           <time dateTime={a.startsAt}>
-            {formatDateLong(a.startsAt)} à {formatTime(a.startsAt)}
+            {t('at', { date: formatDateLong(a.startsAt, tz), time: formatTime(a.startsAt, tz) })}
           </time>
         </p>
         {a.location && (

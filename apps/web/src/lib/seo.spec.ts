@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parishMetadata, plainDescription } from './seo';
+import { pageMetadata, parishMetadata, plainDescription } from './seo';
 
 describe('plainDescription', () => {
   it('retire les balises et réduit les espaces', () => {
@@ -43,9 +43,21 @@ describe('parishMetadata', () => {
       title: 'Saint-Pierre — Churchy',
       siteName: 'Churchy',
     });
-    expect(m.twitter).toMatchObject({ card: 'summary_large_image', images: ['/opengraph-image'] });
+    expect(m.twitter).toMatchObject({
+      card: 'summary_large_image',
+      images: ['/fr/opengraph-image'],
+    });
     expect(m.openGraph).toMatchObject({
-      images: [{ url: '/opengraph-image', width: 1200, height: 630 }],
+      images: [{ url: '/fr/opengraph-image', width: 1200, height: 630 }],
+    });
+  });
+
+  it('en anglais : image d’aperçu et phrase de repli dans la langue de la page', () => {
+    const m = parishMetadata(parish, 'en');
+    expect(m.description).toBe('Masses, announcements and activities of Saint-Pierre (Lyon).');
+    expect(m.openGraph).toMatchObject({
+      alternateLocale: ['fr_FR'],
+      images: [{ url: '/en/opengraph-image' }],
     });
   });
 
@@ -59,5 +71,17 @@ describe('parishMetadata', () => {
     const m = parishMetadata({ ...parish, description: '<p>Une paroisse <b>vivante</b>.</p>' });
     expect(m.description).toBe('Une paroisse vivante.');
     expect(m.openGraph?.description).toBe(m.description);
+  });
+});
+
+describe('pageMetadata', () => {
+  it('donne canonical, hreflang, Open Graph et Twitter pour une page statique traduite', () => {
+    const m = pageMetadata({ locale: 'en', path: '/a-propos', title: 'About', description: 'd' });
+    expect(m.alternates).toEqual({
+      canonical: '/en/about',
+      languages: { fr: '/fr/a-propos', en: '/en/about', 'x-default': '/fr/a-propos' },
+    });
+    expect(m.openGraph).toMatchObject({ url: '/en/about', title: 'About', locale: 'en_US' });
+    expect(m.twitter).toMatchObject({ images: ['/en/opengraph-image'] });
   });
 });

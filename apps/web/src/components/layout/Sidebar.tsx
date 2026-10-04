@@ -1,19 +1,21 @@
 'use client';
+import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/link';
 import { usePathname } from '@/i18n/link';
 import { LayoutDashboard, Church, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
-  { href: '/dashboard', label: 'Tableau de bord', exact: true, icon: LayoutDashboard },
-  { href: '/dashboard/parishes', label: 'Paroisses', exact: false, icon: Church },
-  { href: '/favoris', label: 'Mes favoris', exact: false, icon: Star },
-];
+  { href: '/dashboard', key: 'dashboard', exact: true, icon: LayoutDashboard },
+  { href: '/dashboard/parishes', key: 'parishes', exact: false, icon: Church },
+  { href: '/favoris', key: 'favorites', exact: false, icon: Star },
+] as const;
 
 /** Entrées de navigation du tableau de bord (partagées avec la barre mobile). */
 export const dashboardNav = navItems;
 
 export function Sidebar() {
+  const t = useTranslations('layout.nav');
   const pathname = usePathname();
 
   return (
@@ -43,7 +45,7 @@ export function Sidebar() {
               )}
             >
               <Icon size={16} strokeWidth={1.8} />
-              {item.label}
+              {t(item.key)}
             </Link>
           );
         })}

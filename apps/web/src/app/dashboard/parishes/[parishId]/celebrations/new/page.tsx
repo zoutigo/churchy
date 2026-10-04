@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/link';
 import { DEFAULT_TIMEZONE } from '@churchy/shared';
 import { useParish } from '@/hooks/useParish';
@@ -11,20 +12,18 @@ interface Props {
 }
 
 export default function NewCelebrationPage({ params }: Props) {
+  const t = useTranslations('dashCelebrations');
+  const tc = useTranslations('common');
   const { parishId } = params;
   const router = useRouter();
   const { parish, loading, error } = useParish(parishId);
 
   return (
-    <FormView
-      title="Nouvelle célébration"
-      description="Une ou plusieurs dates : la feuille de préparation se crée ensuite, pour chaque date"
-      onBack={() => router.back()}
-    >
+    <FormView title={t('newTitle')} description={t('newDesc')} onBack={() => router.back()}>
       {error ? (
         <ErrorNotice message={error} />
       ) : loading ? (
-        <p className="text-muted-foreground">Chargement…</p>
+        <p className="text-muted-foreground">{tc('loadingShort')}</p>
       ) : (
         <CelebrationForm
           parishId={parishId}

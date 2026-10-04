@@ -1,29 +1,31 @@
 'use client';
+import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/link';
 import { usePathname } from '@/i18n/link';
 import { cn } from '@/lib/utils';
 
 /** Sous-navigation d'une paroisse : défilement horizontal sur mobile, onglets complets sur desktop. */
 export function ParishTabs({ parishId }: { parishId: string }) {
+  const t = useTranslations('parishTabs');
   const pathname = usePathname();
   const base = `/paroisses/${parishId}`;
   const tabs = [
-    { href: base, label: 'Accueil', exact: true },
-    { href: `${base}/messes`, label: 'Messes' },
-    { href: `${base}/calendrier`, label: 'Calendrier' },
-    { href: `${base}/annonces`, label: 'Annonces' },
-    { href: `${base}/activites`, label: 'Activités' },
+    { href: base, label: t('home'), exact: true },
+    { href: `${base}/messes`, label: t('masses') },
+    { href: `${base}/calendrier`, label: t('calendar') },
+    { href: `${base}/annonces`, label: t('announcements') },
+    { href: `${base}/activites`, label: t('activities') },
   ];
 
   return (
-    <nav aria-label="Pages de la paroisse" className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+    <nav aria-label={t('label')} className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
       <ul className="flex min-w-max gap-1">
-        {tabs.map((t) => {
-          const active = t.exact ? pathname === t.href : pathname.startsWith(t.href);
+        {tabs.map((tab) => {
+          const active = tab.exact ? pathname === tab.href : pathname.startsWith(tab.href);
           return (
-            <li key={t.href}>
+            <li key={tab.href}>
               <Link
-                href={t.href}
+                href={tab.href}
                 aria-current={active ? 'page' : undefined}
                 className={cn(
                   'inline-flex h-11 items-center border-b-2 px-4 text-sm font-medium transition-colors',
@@ -32,7 +34,7 @@ export function ParishTabs({ parishId }: { parishId: string }) {
                     : 'border-transparent text-churchy-100/75 hover:text-white',
                 )}
               >
-                {t.label}
+                {tab.label}
               </Link>
             </li>
           );

@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createAnnouncementSchema, type CreateAnnouncementDto } from '@churchy/shared';
@@ -17,8 +18,6 @@ import { RichTextEditor } from '@/components/rich-text/RichTextEditor';
 import { handleSubmitError } from '@/lib/forms/submit-error';
 import { notify } from '@/lib/notify';
 
-const optionalHint = <span className="text-muted-foreground text-xs">(optionnel)</span>;
-
 export function CreateAnnouncementForm({
   parishId,
   onSuccess,
@@ -26,6 +25,9 @@ export function CreateAnnouncementForm({
   parishId: string;
   onSuccess?: () => void;
 }) {
+  const t = useTranslations('announcementForm');
+  const tc = useTranslations('common');
+  const optionalHint = <span className="text-muted-foreground text-xs">{tc('optional')}</span>;
   const form = useForm<CreateAnnouncementDto>({
     resolver: zodResolver(createAnnouncementSchema),
     defaultValues: { title: '', summary: '', body: '', imageUrl: '' },
@@ -35,11 +37,11 @@ export function CreateAnnouncementForm({
   async function onSubmit(data: CreateAnnouncementDto) {
     try {
       await announcementsApi.create(parishId, data);
-      notify.success('Annonce publiée');
+      notify.success(t('published'));
       form.reset();
       onSuccess?.();
     } catch (err: unknown) {
-      handleSubmitError(form, err, 'Erreur lors de la publication');
+      handleSubmitError(form, err, t('error'));
     }
   }
 
@@ -51,9 +53,9 @@ export function CreateAnnouncementForm({
           name="title"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Titre</FormLabel>
+              <FormLabel>{t('title')}</FormLabel>
               <FormControl>
-                <Input placeholder="Changement d’horaire de la messe du dimanche" {...field} />
+                <Input placeholder={t('titlePlaceholder')} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -64,9 +66,11 @@ export function CreateAnnouncementForm({
           name="summary"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Résumé {optionalHint}</FormLabel>
+              <FormLabel>
+                {t('summary')} {optionalHint}
+              </FormLabel>
               <FormControl>
-                <Input placeholder="Une phrase pour résumer l’annonce" {...field} />
+                <Input placeholder={t('summaryPlaceholder')} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -77,10 +81,10 @@ export function CreateAnnouncementForm({
           name="body"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Contenu</FormLabel>
+              <FormLabel>{t('body')}</FormLabel>
               <FormControl>
                 <RichTextEditor
-                  aria-label="Contenu"
+                  aria-label={t('body')}
                   value={field.value}
                   onChange={field.onChange}
                   onBlur={field.onBlur}
@@ -96,7 +100,9 @@ export function CreateAnnouncementForm({
           name="imageUrl"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Adresse d’une image {optionalHint}</FormLabel>
+              <FormLabel>
+                {t('image')} {optionalHint}
+              </FormLabel>
               <FormControl>
                 <Input type="url" inputMode="url" placeholder="https://…" {...field} />
               </FormControl>
@@ -108,7 +114,7 @@ export function CreateAnnouncementForm({
           <p className="text-sm text-destructive">{form.formState.errors.root.message}</p>
         )}
         <Button type="submit" className="w-full sm:w-auto" disabled={form.formState.isSubmitting}>
-          {form.formState.isSubmitting ? 'Publication…' : 'Publier l’annonce'}
+          {form.formState.isSubmitting ? t('publishing') : t('submit')}
         </Button>
       </form>
     </Form>

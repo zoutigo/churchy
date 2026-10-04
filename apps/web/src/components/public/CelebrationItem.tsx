@@ -1,7 +1,10 @@
 import { Link } from '@/i18n/link';
 import { MapPin } from 'lucide-react';
 import type { PublicCelebrationSummary } from '@churchy/shared';
-import { CELEBRATION_TYPE_LABELS, formatDateParts, formatTime } from '@/lib/format';
+import { useLocale, useTranslations } from 'next-intl';
+import { formatDateParts, formatTime } from '@/lib/format';
+import { useLabels } from '@/i18n/labels';
+import { isLocale } from '@/i18n/routing';
 import { SheetStatusBadge } from './SheetStatusBadge';
 
 interface Props {
@@ -11,7 +14,10 @@ interface Props {
 
 /** Une messe dans une liste : bloc-date, intitulé, heure, lieu, état de la feuille. */
 export function CelebrationItem({ celebration: c, parishId }: Props) {
-  const tz = { timeZone: c.timezone };
+  const t = useTranslations('celebration');
+  const labels = useLabels();
+  const raw = useLocale();
+  const tz = { timeZone: c.timezone, locale: isLocale(raw) ? raw : undefined };
   const d = formatDateParts(c.date, tz);
   return (
     <Link
@@ -37,7 +43,7 @@ export function CelebrationItem({ celebration: c, parishId }: Props) {
         <p className="text-sm text-churchy-900/80">
           <time dateTime={c.date}>{formatTime(c.date, tz)}</time>
           {' — '}
-          {CELEBRATION_TYPE_LABELS[c.type]}
+          {labels.celebrationType(c.type)}
         </p>
         {c.location && (
           <p className="flex items-center gap-1 text-sm text-churchy-900/70">
@@ -47,7 +53,9 @@ export function CelebrationItem({ celebration: c, parishId }: Props) {
         <div className="pt-1">
           {c.cancelled ? (
             <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-1 text-xs font-medium text-red-700">
-              Annulée{c.cancelReason ? ` — ${c.cancelReason}` : ''}
+              {c.cancelReason
+                ? t('cancelledWithReason', { reason: c.cancelReason })
+                : t('cancelled')}
             </span>
           ) : (
             <SheetStatusBadge status={c.sheetStatus} />

@@ -1,6 +1,7 @@
 'use client';
 import { Link } from '@/i18n/link';
 import { useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { ErrorPage, errorButtonClass, errorSecondaryButtonClass } from './ErrorPage';
 
 interface Props {
@@ -11,12 +12,9 @@ interface Props {
 }
 
 /** Panne inattendue : « Réessayer » relance le rendu, le lien ramène en lieu sûr. L'erreur reste dans la console. */
-export function ServerErrorPage({
-  error,
-  reset,
-  size,
-  home = { href: '/', label: 'Retour à l’accueil' },
-}: Props) {
+export function ServerErrorPage({ error, reset, size, home }: Props) {
+  const t = useTranslations('errors');
+  const exit = home ?? { href: '/', label: t('backHome') };
   useEffect(() => {
     if (error) console.error(error);
   }, [error]);
@@ -25,15 +23,15 @@ export function ServerErrorPage({
     <ErrorPage
       kind="server"
       code="500"
-      title="Un problème est survenu"
-      message="Nous n’avons pas pu afficher cette page. Cela vient de nous, pas de vous : réessayez dans un instant."
+      title={t('server.title')}
+      message={t('server.message')}
       size={size}
     >
       <button type="button" onClick={reset} className={errorButtonClass}>
-        Réessayer
+        {t('server.retry')}
       </button>
-      <Link href={home.href} className={errorSecondaryButtonClass}>
-        {home.label}
+      <Link href={exit.href} className={errorSecondaryButtonClass}>
+        {exit.label}
       </Link>
     </ErrorPage>
   );

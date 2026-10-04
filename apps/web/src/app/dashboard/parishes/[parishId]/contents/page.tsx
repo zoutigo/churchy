@@ -1,4 +1,6 @@
 'use client';
+import { useTranslations } from 'next-intl';
+import { useLabels } from '@/i18n/labels';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from '@/i18n/link';
 import { Search } from 'lucide-react';
@@ -6,7 +8,6 @@ import { contentsApi } from '@/lib/api/contents.api';
 import { ContentForm } from '@/components/content/ContentForm';
 import { FormView } from '@/components/layout/FormView';
 import { PageHeader } from '@/components/layout/PageHeader';
-import { CONTENT_TYPE_LABELS } from '@/components/content/content-labels';
 import { filterContents, ALL_TYPES, type ContentTypeFilter } from '@/components/content/filter';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +22,10 @@ interface Props {
 const PAGE_SIZE = 24;
 
 export default function ContentsPage({ params }: Props) {
+  const t = useTranslations('dashContents');
+  const td = useTranslations('dashboard');
+  const tc = useTranslations('common');
+  const labels = useLabels();
   const { parishId } = params;
   const [contents, setContents] = useState<Content[]>([]);
   const [loading, setLoading] = useState(true);
@@ -35,11 +40,9 @@ export default function ContentsPage({ params }: Props) {
     return contentsApi
       .findByParish(parishId)
       .then(setContents)
-      .catch((err: unknown) =>
-        setError(err instanceof Error ? err.message : 'Impossible de charger les données'),
-      )
+      .catch((err: unknown) => setError(err instanceof Error ? err.message : td('loadError')))
       .finally(() => setLoading(false));
-  }, [parishId]);
+  }, [parishId, td]);
 
   useEffect(() => {
     void load();
@@ -51,11 +54,7 @@ export default function ContentsPage({ params }: Props) {
 
   if (showForm) {
     return (
-      <FormView
-        title="Nouveau contenu"
-        description="Chant, lecture, prière… réutilisable dans vos célébrations"
-        onBack={() => setShowForm(false)}
-      >
+      <FormView title={t('newTitle')} description={t('newDesc')} onBack={() => setShowForm(false)}>
         <ContentForm
           parishId={parishId}
           onSuccess={() => {
@@ -70,19 +69,17 @@ export default function ContentsPage({ params }: Props) {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Bibliothèque de contenus"
-        description="Chants, lectures, prières et plus"
-        action={<Button onClick={() => setShowForm(true)}>+ Ajouter un contenu</Button>}
+        title={t('title')}
+        description={t('desc')}
+        action={<Button onClick={() => setShowForm(true)}>{t('add')}</Button>}
       />
 
       {error ? (
         <ErrorNotice message={error} />
       ) : loading ? (
-        <p className="text-muted-foreground">Chargement...</p>
+        <p className="text-muted-foreground">{tc('loading')}</p>
       ) : contents.length === 0 ? (
-        <p className="text-center py-12 text-muted-foreground">
-          Aucun contenu pour l&apos;instant.
-        </p>
+        <p className="text-center py-12 text-muted-foreground">{t('empty')}</p>
       ) : (
         <>
           <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_14rem] lg:max-w-3xl">
@@ -94,35 +91,33 @@ export default function ContentsPage({ params }: Props) {
               />
               <Input
                 type="search"
-                aria-label="Rechercher un contenu"
-                placeholder="Rechercher par titre ou texte"
+                aria-label={t('searchAria')}
+                placeholder={t('searchPlaceholder')}
                 className="pl-9"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
               />
             </div>
             <NativeSelect
-              aria-label="Filtrer par type"
+              aria-label={t('filterAria')}
               value={type}
               onChange={(e) => setType(e.target.value as ContentTypeFilter)}
             >
-              <option value={ALL_TYPES}>Tous les types</option>
-              {Object.values(ContentType).map((t) => (
-                <option key={t} value={t}>
-                  {CONTENT_TYPE_LABELS[t]}
+              <option value={ALL_TYPES}>{t('allTypes')}</option>
+              {Object.values(ContentType).map((ct) => (
+                <option key={ct} value={ct}>
+                  {labels.contentType(ct)}
                 </option>
               ))}
             </NativeSelect>
           </div>
           <p className="text-sm text-muted-foreground" role="status">
-            {filtered.length} {filtered.length > 1 ? 'contenus' : 'contenu'}
-            {filtered.length !== contents.length && ` sur ${contents.length}`}
+            {t('count', { count: filtered.length })}
+            {filtered.length !== contents.length && t('ofTotal', { total: contents.length })}
           </p>
 
           {filtered.length === 0 ? (
-            <p className="py-12 text-center text-muted-foreground">
-              Aucun contenu ne correspond à votre recherche.
-            </p>
+            <p className="py-12 text-center text-muted-foreground">{t('noMatch')}</p>
           ) : (
             <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               {filtered.slice(0, visible).map((c) => (
@@ -133,7 +128,7 @@ export default function ContentsPage({ params }: Props) {
                   >
                     <span className="min-w-0 truncate font-medium">{c.title}</span>
                     <span className="shrink-0 rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground">
-                      {CONTENT_TYPE_LABELS[c.type]}
+                      {labels.contentType(c.type)}
                     </span>
                   </Link>
                 </li>
@@ -143,7 +138,7 @@ export default function ContentsPage({ params }: Props) {
           {filtered.length > visible && (
             <div className="flex justify-center">
               <Button variant="outline" onClick={() => setVisible((v) => v + PAGE_SIZE)}>
-                Afficher plus ({filtered.length - visible} restants)
+                {t('showMore', { remaining: filtered.length - visible })}
               </Button>
             </div>
           )}

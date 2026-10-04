@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from '@/i18n/link';
@@ -24,6 +25,7 @@ interface Props {
 }
 
 export function LoginForm({ next = '/dashboard' }: Props) {
+  const t = useTranslations('auth');
   const router = useRouter();
   const { login, loading } = useAuth();
 
@@ -39,7 +41,7 @@ export function LoginForm({ next = '/dashboard' }: Props) {
       router.push(next);
       router.refresh();
     } catch (err: unknown) {
-      handleSubmitError(form, err, 'Identifiants invalides');
+      handleSubmitError(form, err, t('login.errorFallback'));
     }
   }
 
@@ -51,11 +53,11 @@ export function LoginForm({ next = '/dashboard' }: Props) {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel>{t('email')}</FormLabel>
               <FormControl>
                 <Input
                   type="email"
-                  placeholder="vous@paroisse.fr"
+                  placeholder={t('emailPlaceholder')}
                   autoComplete="email"
                   {...field}
                 />
@@ -70,9 +72,9 @@ export function LoginForm({ next = '/dashboard' }: Props) {
           render={({ field }) => (
             <FormItem>
               <div className="flex items-center justify-between">
-                <FormLabel>Mot de passe</FormLabel>
+                <FormLabel>{t('password')}</FormLabel>
                 <span className="text-xs">
-                  <AuthLink href="/forgot-password">Mot de passe oublié ?</AuthLink>
+                  <AuthLink href="/forgot-password">{t('login.forgot')}</AuthLink>
                 </span>
               </div>
               <FormControl>
@@ -88,7 +90,7 @@ export function LoginForm({ next = '/dashboard' }: Props) {
           </p>
         )}
         <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? 'Connexion...' : 'Se connecter'}
+          {loading ? t('login.submitting') : t('login.submit')}
         </Button>
       </form>
     </Form>

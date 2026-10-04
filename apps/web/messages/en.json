@@ -4,5 +4,1051 @@
     "fr": "Français",
     "en": "English",
     "switchTo": "Change language"
+  },
+  "common": {
+    "appName": "Churchy",
+    "search": "Search",
+    "back": "Back",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "loading": "Loading...",
+    "optional": "(optional)",
+    "loadingShort": "Loading…",
+    "loadingLabel": "Loading"
+  },
+  "nav": {
+    "home": "Churchy, home",
+    "main": "Main navigation",
+    "mobile": "Mobile menu",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "forParishes": "For parishes",
+    "favorites": "My favorites",
+    "favoritesCount": "{count, plural, one {# favorite} other {# favorites}}",
+    "mySpace": "My space",
+    "login": "Sign in"
+  },
+  "footer": {
+    "tagline": "Masses, celebration sheets, announcements and activities of your parish.",
+    "groupChurchy": "Churchy",
+    "findParish": "Find a parish",
+    "forParishes": "For parishes",
+    "login": "Sign in",
+    "groupAbout": "About",
+    "about": "About",
+    "contact": "Contact",
+    "groupLegal": "Legal information",
+    "terms": "Terms and conditions",
+    "privacy": "Privacy policy",
+    "legalNotice": "Legal notice"
+  },
+  "search": {
+    "label": "Search for a parish, a city or a neighbourhood",
+    "placeholder": "Search for a parish, a city or a neighbourhood",
+    "submit": "Search"
+  },
+  "home": {
+    "title": "Your parish, at your fingertips",
+    "intro": "Find the Masses, celebration sheets, announcements and activities of your parish.",
+    "featuresTitle": "Your whole parish, in one place",
+    "features": {
+      "masses": {
+        "title": "Masses",
+        "text": "See the upcoming celebrations of your parish."
+      },
+      "sheets": {
+        "title": "Celebration sheets",
+        "text": "See which sheets are available before Mass."
+      },
+      "announcements": {
+        "title": "Announcements",
+        "text": "Find the important news published by the parish."
+      },
+      "activities": {
+        "title": "Activities",
+        "text": "Discover upcoming events, gatherings and activities."
+      }
+    },
+    "prepareTitle": "Prepare for Mass before you even arrive at church.",
+    "steps": {
+      "one": "The parish publishes its celebration.",
+      "two": "The sheet is made available before Mass.",
+      "three": "You prepare your participation in advance.",
+      "four": "On the day of Mass, no more hunting for a paper sheet."
+    },
+    "parishesTitle": "Do you represent a parish?",
+    "parishesText": "Churchy lets you publish your Masses, celebration sheets, announcements and activities from a single place.",
+    "parishesCta": "Discover Churchy for parishes",
+    "benefits": {
+      "paper": "Cut down on paper printing",
+      "modern": "Modernise how celebration sheets are shared",
+      "central": "Keep all the parish information in one place"
+    },
+    "finalTitle": "Find your parish on Churchy"
+  },
+  "sheetCard": {
+    "label": "Example of a celebration sheet",
+    "when": "Sunday 10:30 a.m.",
+    "title": "Sunday Mass"
+  },
+  "errors": {
+    "notFound": {
+      "title": "Page not found",
+      "message": "This page does not exist or is no longer available. The link may be wrong or the page may have been moved."
+    },
+    "backHome": "Back to home",
+    "findParish": "Find a parish",
+    "searchParish": "Search for a parish",
+    "server": {
+      "title": "Something went wrong",
+      "message": "We could not display this page. It is on our side, not yours: please try again in a moment.",
+      "retry": "Try again"
+    },
+    "parishNotFound": {
+      "title": "Parish not found",
+      "message": "This parish does not exist or is no longer available. Try searching by name or by city."
+    },
+    "parishPageNotFound": {
+      "message": "This page does not exist or is no longer available.",
+      "back": "Back to the parish"
+    },
+    "dashboardNotFound": {
+      "message": "This page does not exist, or you do not have access to it. Find your parishes from the dashboard."
+    },
+    "dashboard": "Dashboard",
+    "myParishes": "My parishes",
+    "global": {
+      "title": "Churchy is temporarily unavailable",
+      "message": "An unexpected problem occurred. Please try again in a moment."
+    }
+  },
+  "enums": {
+    "celebrationType": {
+      "SUNDAY_MASS": "Sunday Mass",
+      "WEEKDAY_MASS": "Weekday Mass",
+      "WEDDING": "Wedding",
+      "BAPTISM": "Baptism",
+      "FUNERAL": "Funeral",
+      "OTHER": "Celebration"
+    },
+    "contentType": {
+      "SONG": "Song",
+      "PSALM": "Psalm",
+      "GOSPEL": "Gospel",
+      "READING": "Reading",
+      "PRAYER": "Prayer",
+      "UNIVERSAL_PRAYER": "Universal prayer",
+      "ANNOUNCEMENT": "Announcement",
+      "FREE_TEXT": "Free text"
+    },
+    "sheetStatus": {
+      "AVAILABLE": "Sheet available",
+      "IN_PREPARATION": "Sheet in preparation"
+    },
+    "contactTopic": {
+      "QUESTION": "Ask a question",
+      "PARISH": "I represent a parish",
+      "PROBLEM": "Report a problem",
+      "OTHER": "Other request"
+    }
+  },
+  "weekdays": {
+    "short": {
+      "1": "Mon",
+      "2": "Tue",
+      "3": "Wed",
+      "4": "Thu",
+      "5": "Fri",
+      "6": "Sat",
+      "0": "Sun"
+    },
+    "long": {
+      "1": "Monday",
+      "2": "Tuesday",
+      "3": "Wednesday",
+      "4": "Thursday",
+      "5": "Friday",
+      "6": "Saturday",
+      "0": "Sunday"
+    }
+  },
+  "celebration": {
+    "cancelled": "Cancelled",
+    "cancelledWithReason": "Cancelled — {reason}",
+    "cancelledSr": " (cancelled)"
+  },
+  "parishResult": {
+    "nextMass": "Next Mass: {date} at {time}",
+    "view": "View the parish",
+    "viewLabel": "View the parish {name}"
+  },
+  "parishTabs": {
+    "label": "Parish pages",
+    "home": "Home",
+    "masses": "Masses",
+    "calendar": "Calendar",
+    "announcements": "Announcements",
+    "activities": "Activities"
+  },
+  "parishInfo": {
+    "title": "Practical information"
+  },
+  "activity": {
+    "at": "{date} at {time}"
+  },
+  "calendar": {
+    "weekdays": {
+      "1": "Mon",
+      "2": "Tue",
+      "3": "Wed",
+      "4": "Thu",
+      "5": "Fri",
+      "6": "Sat",
+      "0": "Sun"
+    },
+    "previous": "Previous month",
+    "next": "Next month",
+    "empty": "No celebration announced this month.",
+    "today": " — today",
+    "legend": "Parish time. <green>Green</green>: sheet available · <amber>amber</amber>: sheet in preparation · <red>red</red>: cancelled."
+  },
+  "prose": {
+    "provisional": "Draft version: this text must be reviewed and completed before going live."
+  },
+  "contact": {
+    "name": "Name",
+    "email": "Email",
+    "topic": "Subject",
+    "message": "Message",
+    "honeypot": "Do not fill in",
+    "submit": "Send message",
+    "sending": "Sending…",
+    "toastSent": "Message sent",
+    "errorFallback": "The message could not be sent. Please try again.",
+    "sentTitle": "Message sent",
+    "sentText": "Thank you! We will reply by email as soon as possible.",
+    "another": "Send another message"
+  },
+  "meta": {
+    "siteTitle": "Churchy — Your parish, at your fingertips",
+    "siteDescription": "Find the Masses, celebration sheets, announcements and activities of your parish.",
+    "parishes": "Find a parish — Churchy",
+    "favorites": "My favorites — Churchy",
+    "contact": "Contact — Churchy",
+    "parishFallback": "Parish — Churchy",
+    "massFallback": "Mass — Churchy",
+    "forParishes": "For parishes — Churchy",
+    "about": "About — Churchy",
+    "terms": "Terms and conditions — Churchy",
+    "privacy": "Privacy — Churchy",
+    "legalNotice": "Legal notice — Churchy"
+  },
+  "parishSearch": {
+    "resultsFor": "Results for “{q}”",
+    "all": "All parishes",
+    "count": "{count, plural, one {# parish} other {# parishes}}",
+    "none": "No parish found",
+    "emptyTitle": "No parish matches your search",
+    "emptyHint": "Check the spelling, or try the name of a city or a neighbourhood.",
+    "seeAll": "See all parishes",
+    "pagination": "Pagination",
+    "previous": "Previous page",
+    "next": "Next page",
+    "pageOf": "Page {page} of {pages}"
+  },
+  "parishHome": {
+    "presentation": "About",
+    "nextMasses": "Upcoming Masses",
+    "allMasses": "All Masses",
+    "noMass": "No Mass announced yet",
+    "noMassHint": "Come back soon: the parish publishes its celebrations here.",
+    "announcements": "Announcements",
+    "allAnnouncements": "All announcements",
+    "noAnnouncement": "No announcement yet",
+    "activities": "Activities",
+    "allActivities": "All activities",
+    "noActivity": "No upcoming activity"
+  },
+  "parishMasses": {
+    "title": "Upcoming Masses",
+    "calendar": "View the calendar",
+    "empty": "No Mass announced yet",
+    "emptyHint": "The parish has not yet published its upcoming celebrations."
+  },
+  "publicCelebration": {
+    "at": "{date} at {time}",
+    "cancelled": "This celebration has been cancelled.",
+    "cancelledWithReason": "This celebration has been cancelled: {reason}",
+    "about": "About this celebration",
+    "inPreparation": "The parish is preparing the sheet for this celebration. It will be visible here as soon as it is published.",
+    "steps": "Order of celebration",
+    "contentSoon": "Content coming soon",
+    "loginPrompt": "To follow the sheet or prepare your participation, <link>sign in</link>."
+  },
+  "parishAnnouncements": {
+    "title": "Announcements",
+    "empty": "No announcement yet",
+    "emptyHint": "The parish's important news will appear here."
+  },
+  "parishActivities": {
+    "title": "Upcoming activities",
+    "empty": "No upcoming activity",
+    "emptyHint": "The parish's gatherings and events will appear here."
+  },
+  "contactPage": {
+    "title": "Contact",
+    "intro": "A question, a problem, or do you represent a parish and want to know more? Write to us: we reply by email."
+  },
+  "parishLayout": {
+    "photo": "Photo of {name}"
+  },
+  "forParishes": {
+    "title": "Publish your Masses, sheets, announcements and activities from a single place",
+    "intro": "Churchy is the platform that helps parishes prepare and share their celebrations, without unnecessary paper.",
+    "create": "Create my parish account",
+    "ask": "Ask a question",
+    "changesTitle": "What Churchy changes for your parish",
+    "sections": {
+      "publish": {
+        "title": "Publish your celebrations",
+        "text": "Build each Mass from templates, add the readings, songs and prayers from your library, then publish in one click. You can also announce the Mass before the sheet is ready."
+      },
+      "sheets": {
+        "title": "Share digital sheets",
+        "text": "The celebration sheet can be read on a phone, before Mass. The faithful prepare their participation in advance."
+      },
+      "news": {
+        "title": "Publish announcements and activities",
+        "text": "Schedules, registrations, collections, pilgrimages, gatherings: everything is published from the same place, on your parish's public page."
+      },
+      "paper": {
+        "title": "Cut down on printing",
+        "text": "Fewer sheets to print and fold every week: time saved for the team and paper saved for the parish."
+      },
+      "central": {
+        "title": "Centralise communication",
+        "text": "One single address to give the faithful to find the Masses, announcements and activities of the parish."
+      },
+      "team": {
+        "title": "Work as a team",
+        "text": "Invite your collaborators with suitable roles: administrator, preparer, reader."
+      }
+    },
+    "readyTitle": "Ready to publish your first Mass?",
+    "createShort": "Create an account"
+  },
+  "about": {
+    "title": "About Churchy",
+    "intro": "Churchy brings parishes and their faithful closer together through digital tools.",
+    "whyTitle": "Why Churchy exists",
+    "whyText": "Preparing a Mass takes time, and parish information is often scattered: printed sheets, notice boards, messages. Churchy brings it all together in one place, easy for the parish to publish and easy for the faithful to read.",
+    "missionTitle": "Our mission",
+    "missionText": "To let every parish publish its Masses, celebration sheets, announcements and activities, and every member of the faithful find them before coming.",
+    "question": "A question? <link>Write to us</link>."
+  },
+  "terms": {
+    "title": "Terms of use",
+    "purposeTitle": "Purpose",
+    "purposeText": "These terms govern the use of the Churchy site, which lets parishes publish their celebrations, announcements and activities, and lets visitors read them.",
+    "accountsTitle": "Accounts",
+    "accountsText": "An account is required to prepare and publish celebrations. You are responsible for keeping your password confidential.",
+    "contentTitle": "Published content",
+    "contentText": "Parishes are responsible for the content they publish (texts, images, practical information) and for the rights attached to it.",
+    "liabilityTitle": "Liability",
+    "liabilityText": "[To be completed: limitation of liability, service availability, termination.]"
+  },
+  "privacy": {
+    "title": "Privacy policy",
+    "collectedTitle": "Data collected",
+    "collectedText": "For an account: last name, first name, email address and password (stored in encrypted form). For the contact form: name, email and message.",
+    "useTitle": "Use",
+    "useText": "This data is used only to provide the service (sign-in, verification and reset emails, replies to your messages).",
+    "cookiesTitle": "Cookies",
+    "cookiesText": "Churchy only uses cookies that are needed for your sign-in session and to remember your language. No advertising cookies are used.",
+    "rightsTitle": "Your rights",
+    "rightsText": "You can request access to, correction of or deletion of your data through the Contact page. [To be completed: data controller, retention period.]"
+  },
+  "legalNotice": {
+    "title": "Legal notice",
+    "publisherTitle": "Site publisher",
+    "publisherText": "[To be completed: company name, legal form, address, registration number, publication director.]",
+    "hostTitle": "Host",
+    "hostText": "[To be completed: name and address of the host.]",
+    "contactTitle": "Contact",
+    "contactText": "For any question, use the Contact page of the site."
+  },
+  "favorites": {
+    "loading": "Loading favorites",
+    "shelfOne": "My parish",
+    "shelfMany": "My favorite parishes",
+    "link": "My favorites",
+    "title": "My favorites",
+    "intro": "Go straight to your parishes, without going through the search.",
+    "count": "{count} of {max}.",
+    "emptyTitle": "No favorite parish yet",
+    "emptyHint": "Find your parish, then tap the star to find it here.",
+    "find": "Find a parish",
+    "add": "Add to favorites",
+    "remove": "Remove from favorites",
+    "inFavorites": "In my favorites",
+    "labelFor": "{label}: {name}",
+    "limitTitle": "Favorites limit reached",
+    "limitText": "You can keep {max} parishes as favorites. Remove one to add another.",
+    "removeFail": "Could not remove this favorite",
+    "addFail": "Could not add this favorite",
+    "retry": "Please try again in a moment.",
+    "removed": "Favorite removed",
+    "removedText": "{name} is no longer in your favorites.",
+    "added": "Added to your favorites",
+    "addedText": "{name} is in “My favorites”."
+  },
+  "auth": {
+    "email": "Email",
+    "emailPlaceholder": "you@parish.org",
+    "password": "Password",
+    "passwordHint": "At least 8 characters",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "login": {
+      "title": "Sign in",
+      "subtitle": "Access your Churchy space",
+      "noAccount": "No account yet? <link>Sign up</link>",
+      "expired": "Your session has expired. Sign in again to continue.",
+      "resetDone": "Password changed. You can now sign in.",
+      "forgot": "Forgot your password?",
+      "submit": "Sign in",
+      "submitting": "Signing in...",
+      "errorFallback": "Invalid credentials"
+    },
+    "register": {
+      "title": "Create an account",
+      "subtitle": "Join Churchy to manage your celebrations",
+      "haveAccount": "Already have an account? <link>Sign in</link>",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "firstNamePlaceholder": "John",
+      "lastNamePlaceholder": "Doe",
+      "submit": "Create my account",
+      "submitting": "Signing up...",
+      "errorFallback": "Sign-up failed"
+    },
+    "forgot": {
+      "title": "Forgot password",
+      "subtitle": "We will send you a link to choose a new one",
+      "back": "Back to sign in",
+      "checkTitle": "Check your inbox",
+      "sent": "If an account exists for <strong>{email}</strong>, a reset link has just been sent. It is valid for 1 hour. Remember to check your spam folder.",
+      "another": "Use another address",
+      "submit": "Send the link",
+      "submitting": "Sending...",
+      "errorFallback": "Could not send the link"
+    },
+    "reset": {
+      "title": "New password",
+      "subtitle": "Choose a password of at least 8 characters",
+      "missingToken": "Invalid link: the token is missing.",
+      "newLink": "Request a new link",
+      "newPassword": "New password",
+      "confirm": "Confirm password",
+      "submit": "Change password",
+      "saving": "Saving...",
+      "errorFallback": "Could not change the password"
+    },
+    "verify": {
+      "title": "Email confirmation",
+      "loading": "Verifying...",
+      "successTitle": "Email address confirmed",
+      "successText": "Thank you! Your account is now verified.",
+      "goSpace": "Go to my space",
+      "errorTitle": "Could not confirm the address",
+      "missingToken": "Invalid link: the token is missing.",
+      "invalidLink": "Invalid or expired link",
+      "loginHint": "Sign in to receive a new link from your dashboard. <link>Sign in</link>"
+    },
+    "banner": {
+      "title": "Confirm your email address",
+      "sentTo": "We sent a link to <strong>{email}</strong>.",
+      "resent": "A new link has just been sent.",
+      "resend": "Resend the link",
+      "sending": "Sending...",
+      "error": "Could not send, please try again in a moment."
+    }
+  },
+  "layout": {
+    "nav": {
+      "dashboard": "Dashboard",
+      "parishes": "Parishes",
+      "favorites": "My favorites",
+      "label": "Dashboard navigation"
+    },
+    "userMenu": "User menu",
+    "emailUnverified": "Email not confirmed",
+    "myParishes": "My parishes",
+    "logout": "Sign out"
+  },
+  "dashboard": {
+    "loadError": "Could not load the data",
+    "home": {
+      "title": "Dashboard",
+      "welcome": "Welcome to Churchy",
+      "myParishes": "My parishes",
+      "myParishesText": "Manage your parishes, members and celebrations",
+      "recent": "Recent celebrations",
+      "recentText": "Browse and prepare your upcoming celebrations"
+    },
+    "parishes": {
+      "createTitle": "Create a parish",
+      "createDesc": "This information feeds the parish's public page",
+      "title": "My parishes",
+      "desc": "Manage your parish spaces",
+      "new": "+ New parish",
+      "empty": "No parish yet.",
+      "emptyHint": "Create your first parish above."
+    },
+    "parish": {
+      "fallbackName": "Parish",
+      "viewPublic": "View the public page",
+      "editTitle": "Edit public information",
+      "publicDesc": "Shown on the parish page and in search results.",
+      "publicInfo": "Public information",
+      "saved": "Information saved.",
+      "sections": {
+        "contents": {
+          "title": "Library",
+          "text": "Songs, psalms, readings, prayers"
+        },
+        "templates": {
+          "title": "Templates",
+          "text": "Celebration templates"
+        },
+        "celebrations": {
+          "title": "Celebrations",
+          "text": "Prepare and publish Masses"
+        },
+        "announcements": {
+          "title": "Announcements",
+          "text": "News for the faithful"
+        },
+        "activities": {
+          "title": "Activities",
+          "text": "Gatherings and events"
+        }
+      }
+    }
+  },
+  "parishSummary": {
+    "description": "About",
+    "place": "Location",
+    "addressComplement": "Address details",
+    "mainChurch": "Main church",
+    "phone": "Phone",
+    "email": "Email",
+    "website": "Website",
+    "photo": "Photo",
+    "notSet": "Not provided"
+  },
+  "parishForm": {
+    "name": "Parish name",
+    "namePlaceholder": "Saint Joseph Parish, Mvog-Ada",
+    "description": "Description",
+    "descriptionPlaceholder": "Describe your parish...",
+    "email": "Parish email",
+    "create": "Create the parish",
+    "creating": "Creating...",
+    "created": "Parish created",
+    "createdText": "“{name}” is ready.",
+    "createError": "Error while creating",
+    "presentation": "About",
+    "presentationPlaceholder": "A few lines to introduce the parish",
+    "timezone": "Time zone",
+    "timezoneHint": "Celebration times use this time zone.",
+    "saving": "Saving…",
+    "updated": "Parish updated",
+    "saveError": "Error while saving",
+    "fields": {
+      "mainChurch": {
+        "label": "Main church",
+        "placeholder": "Saint Peter's Church"
+      },
+      "address": {
+        "label": "Address",
+        "placeholder": "1 Church Square"
+      },
+      "addressComplement": {
+        "label": "Address details",
+        "placeholder": "Opposite the central post office"
+      },
+      "email": {
+        "label": "Parish email",
+        "placeholder": "contact@parish.org"
+      },
+      "website": {
+        "label": "Website",
+        "placeholder": "https://…"
+      },
+      "imageUrl": {
+        "label": "Photo URL",
+        "placeholder": "https://…"
+      }
+    }
+  },
+  "phoneField": {
+    "label": "Phone"
+  },
+  "location": {
+    "country": "Country",
+    "region": "Region",
+    "chooseRegion": "Choose a region",
+    "regionPlaceholder": "Region, province, state…",
+    "city": "City",
+    "chooseCity": "Choose a city",
+    "chooseRegionFirst": "Choose a region first",
+    "otherCity": "Other city…",
+    "cityName": "City name",
+    "cityMissing": "City not in the list",
+    "district": "Neighbourhood",
+    "chooseDistrict": "Choose a neighbourhood",
+    "otherDistrict": "Other neighbourhood…",
+    "districtName": "Neighbourhood name",
+    "districtMissing": "Neighbourhood not in the list"
+  },
+  "celebrationCard": {
+    "next": "Next: {date} at {time}",
+    "cancelledSuffix": " (cancelled)",
+    "noUpcoming": "No upcoming date",
+    "dates": "{count, plural, one {# date} other {# dates}}",
+    "ofWhichUpcoming": " of which {upcoming} upcoming",
+    "template": " — template “{name}”",
+    "archived": "Archived",
+    "published": "Published to the public",
+    "draft": "Draft",
+    "endingSoon": "Ending soon"
+  },
+  "celebrationForm": {
+    "title": "Title",
+    "titlePlaceholder": "Sunday Mass",
+    "type": "Type",
+    "location": "Place",
+    "locationPlaceholder": "Saint Peter's Church",
+    "template": "Default sheet template",
+    "noTemplate": "None — sheet built on the fly",
+    "steps": "{count, plural, one {# step} other {# steps}}",
+    "templateHint": "Offered for each date; whoever prepares can change it at any time.",
+    "templatesError": "Could not load the templates",
+    "publicDescription": "Public description",
+    "publicDescriptionHint": "Visible to everyone on the parish page (e.g. “the Archbishop of Yaoundé will be with us”).",
+    "internalNote": "Internal note",
+    "internalNotePlaceholder": "Point of attention for whoever prepares the Mass…",
+    "internalNoteHint": "Reserved for the preparation team: never visible to the public.",
+    "dates": "Dates",
+    "atLeastOneDate": "Enter at least one date",
+    "announce": "Publish the series to the public",
+    "announceHint": "All dates appear on the parish page, as “sheet in preparation” until each sheet is published.",
+    "updated": "Celebration updated",
+    "created": "Celebration created",
+    "scheduled": "{count, plural, one {# date scheduled} other {# dates scheduled}}",
+    "updateError": "Error while updating",
+    "createError": "Error while creating",
+    "saving": "Saving…",
+    "creating": "Creating…",
+    "submitCreate": "Create the celebration"
+  },
+  "schedule": {
+    "modeGroup": "Schedule type",
+    "modeDates": "One or several dates",
+    "modeRecurrence": "Every week",
+    "date": "Date",
+    "dateN": "Date {n}",
+    "time": "Time",
+    "removeDate": "Remove date {n}",
+    "remove": "Remove",
+    "addDate": "Add a date",
+    "weekdays": "Days of the week",
+    "start": "Start",
+    "end": "End",
+    "hint": "Parish time ({timezone}). A series can be scheduled up to a year ahead; you will be notified a month before it ends so you can extend it.",
+    "willCreateOne": "1 date will be created",
+    "willCreateMany": "{count} dates will be created",
+    "range": " — from {from} to {to}",
+    "line": "{date} at {time}",
+    "more": "… and {count} more"
+  },
+  "occurrenceItem": {
+    "noSheet": "No sheet",
+    "sheetPublished": "Sheet published",
+    "draftProgress": "Draft — {filled}/{total} steps filled",
+    "at": "{date} at {time}",
+    "cancelled": "Cancelled",
+    "cancelledWithReason": "Cancelled — {reason}",
+    "past": "Past",
+    "internalNote": "Internal note:",
+    "reasonLabel": "Reason for cancelling (optional)",
+    "reasonPlaceholder": "Reason (optional)",
+    "confirmCancel": "Confirm cancellation",
+    "back": "Back",
+    "consult": "View",
+    "details": "Details",
+    "prepare": "Prepare",
+    "prepareSheet": "Prepare the sheet",
+    "reinstate": "Reinstate",
+    "cancelDate": "Cancel this date"
+  },
+  "occurrenceForm": {
+    "publicNote": "Public note for this date",
+    "publicNoteAria": "Public note",
+    "publicNoteHint": "Added to the series description (e.g. “the Archbishop of Yaoundé will be with us”).",
+    "internalNote": "Internal note for this date",
+    "internalNotePlaceholder": "Point of attention for whoever prepares…",
+    "internalNoteHint": "Reserved for the team: never visible to the public.",
+    "saved": "Date saved",
+    "timeChanged": "Time changed",
+    "saveError": "Error while saving",
+    "saving": "Saving…"
+  },
+  "extendSeries": {
+    "extended": "Series extended",
+    "added": "{count, plural, one {# date added} other {# dates added}}",
+    "alreadyExisted": "These dates already existed",
+    "error": "Error while extending",
+    "adding": "Adding…",
+    "submit": "Add these dates"
+  },
+  "endingSoon": {
+    "titleOne": "A series is ending soon",
+    "titleMany": "{count} series are ending soon",
+    "descOne": "The faithful will no longer see any Mass after the last date. Remember to extend this series (up to a year ahead).",
+    "descMany": "The faithful will no longer see any Mass after the last date. Remember to extend these series (up to a year ahead).",
+    "lastDate": "Last date: {date}",
+    "extend": "Extend the series",
+    "later": "Later"
+  },
+  "deleteButton": {
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "deleteLabel": "Delete {label}",
+    "confirmLabel": "Confirm deletion of {label}"
+  },
+  "sheetPanel": {
+    "unpublished": "Sheet unpublished",
+    "published": "Sheet published",
+    "unpublishError": "Error while unpublishing",
+    "publishError": "Error while publishing",
+    "orderSaved": "Order saved",
+    "orderError": "Error while changing the order",
+    "stepAdded": "Step added",
+    "addStepError": "Error while adding the step",
+    "statusPublished": "Published",
+    "statusDraft": "Draft",
+    "template": "Template: {name}",
+    "onTheFly": "Sheet built on the fly",
+    "changeTemplate": "Change template",
+    "unpublish": "Unpublish",
+    "publish": "Publish the sheet",
+    "empty": "The sheet is empty. Add the steps you want (entrance song, reading…).",
+    "stepSaved": "Step saved",
+    "stepSaveError": "Error while saving the step",
+    "stepRemoved": "Step removed",
+    "stepRemoveError": "Error while removing the step",
+    "newStepAria": "Title of the new step",
+    "newStepPlaceholder": "New step (e.g. Hymn to Mary)",
+    "addStep": "Add a step"
+  },
+  "sheetCreator": {
+    "created": "Sheet created",
+    "blankHint": "Empty sheet, to be completed",
+    "error": "Error while creating the sheet",
+    "title": "This date does not have a preparation sheet yet",
+    "hint": "Start from a parish template, or build the sheet on the fly.",
+    "template": "Template",
+    "defaultTemplate": "Default template — {name}",
+    "blank": "On the fly — empty sheet",
+    "creating": "Creating…",
+    "create": "Create the sheet"
+  },
+  "stepCard": {
+    "free": "Free step",
+    "moveUp": "Move step {title} up",
+    "moveDown": "Move step {title} down",
+    "content": "Library content",
+    "noContent": "— No content —",
+    "customText": "Free text or note",
+    "customPlaceholder": "E.g.: 2 verses only",
+    "removeLabel": "the step {title}"
+  },
+  "templateChange": {
+    "previewError": "Could not compute the preview",
+    "changed": "Template changed",
+    "changedHint": "Content already placed was kept",
+    "error": "Error while changing the template",
+    "title": "Change template",
+    "desc": "Steps with the same name keep their content. A filled step with no equivalent is kept as a free step.",
+    "newTemplate": "New template",
+    "none": "None — on the fly",
+    "computing": "Computing the preview…",
+    "current": "This is the sheet's current template.",
+    "kept": "Kept",
+    "added": "Added (empty)",
+    "keptAsFree": "Kept as free steps",
+    "removed": "Removed (empty)",
+    "nothing": "No step changes.",
+    "applying": "Applying…",
+    "submit": "Change template"
+  },
+  "defaultSteps": {
+    "entrance": "Entrance song",
+    "kyrie": "Kyrie",
+    "gloria": "Gloria",
+    "first_reading": "First reading",
+    "psalm": "Psalm",
+    "gospel": "Gospel",
+    "homily": "Homily",
+    "universal_prayer": "Universal prayer",
+    "offertory": "Offertory",
+    "communion": "Communion",
+    "sending": "Dismissal"
+  },
+  "templateForm": {
+    "name": "Template name",
+    "namePlaceholder": "Sunday Mass",
+    "type": "Type",
+    "description": "Description",
+    "steps": "Sheet steps",
+    "prefill": "Pre-fill: Sunday Mass",
+    "stepN": "Step {n}",
+    "stepPlaceholder": "E.g.: Entrance song",
+    "moveUp": "Move step {n} up",
+    "moveDown": "Move step {n} down",
+    "remove": "Remove step {n}",
+    "addStep": "Add a step",
+    "nameRequired": "Name required",
+    "stepsRequired": "Add at least one step",
+    "updateError": "Error while updating the template",
+    "createError": "Error while creating the template",
+    "updated": "Template updated",
+    "created": "Template created",
+    "saveChanges": "Save changes",
+    "saving": "Saving…",
+    "creating": "Creating…",
+    "submitCreate": "Create the template"
+  },
+  "templateCard": {
+    "collapse": "Collapse",
+    "expand": "Expand",
+    "noSteps": "No step.",
+    "editAria": "Edit {name}"
+  },
+  "contentForm": {
+    "title": "Title",
+    "titlePlaceholder": "Content title",
+    "type": "Type",
+    "chooseType": "Choose a type",
+    "body": "Content",
+    "saving": "Saving...",
+    "saveChanges": "Save changes",
+    "submitCreate": "Add the content",
+    "updated": "Content updated",
+    "added": "Content added",
+    "updatedText": "“{title}” has been updated.",
+    "addedText": "“{title}” is in the library.",
+    "updateError": "Update failed",
+    "createError": "Creation failed"
+  },
+  "announcementForm": {
+    "title": "Title",
+    "titlePlaceholder": "Change of time for the Sunday Mass",
+    "summary": "Summary",
+    "summaryPlaceholder": "One sentence to summarise the announcement",
+    "body": "Content",
+    "image": "Image URL",
+    "publishing": "Publishing…",
+    "submit": "Publish the announcement",
+    "published": "Announcement published",
+    "error": "Error while publishing"
+  },
+  "activityForm": {
+    "title": "Title",
+    "titlePlaceholder": "Youth group",
+    "description": "Description",
+    "startsAt": "Date and time",
+    "invalidDate": "Invalid date and time",
+    "location": "Place",
+    "locationPlaceholder": "Parish hall",
+    "image": "Image URL",
+    "publishing": "Publishing…",
+    "submit": "Publish the activity",
+    "published": "Activity published",
+    "error": "Error while publishing"
+  },
+  "dashCelebrations": {
+    "title": "Celebrations",
+    "desc": "Celebration series, their dates and their preparation sheets",
+    "new": "+ New celebration",
+    "empty": "No celebration yet.",
+    "archived": "Archived ({count})",
+    "newTitle": "New celebration",
+    "newDesc": "One or several dates: the preparation sheet is created afterwards, for each date"
+  },
+  "celebrationPage": {
+    "editTitle": "Edit the celebration",
+    "extendTitle": "Extend the series",
+    "extendDesc": "Add dates to “{title}”",
+    "archivedStatus": "Archived — removed from the public site",
+    "publishedStatus": "Published to the public (all dates)",
+    "draftStatus": "Draft — not visible to the public",
+    "extend": "Extend",
+    "unannounced": "Series removed from the public site",
+    "announced": "Series published to the public",
+    "updateError": "Error while updating",
+    "withdraw": "Withdraw from the public",
+    "publishToPublic": "Publish to the public",
+    "unarchived": "Series unarchived",
+    "archivedToast": "Series archived",
+    "archiveError": "Error while archiving",
+    "unarchive": "Unarchive",
+    "archive": "Archive",
+    "endingTitle": "This series is ending soon",
+    "endingText": "Last date: {date}. Extend it so the faithful can see the upcoming Masses.",
+    "internalNoteTitle": "Internal note — reserved for the team",
+    "upcomingDates": "Upcoming dates ({count})",
+    "noUpcoming": "No upcoming date. Extend the series to add some.",
+    "cancelled": "Date cancelled",
+    "cancelError": "Error while cancelling",
+    "reinstated": "Date reinstated",
+    "reinstateError": "Error while reinstating",
+    "pastDates": "Past dates ({count}) — view only"
+  },
+  "occurrencePage": {
+    "line": "{time} — {title} · {type}",
+    "location": " · {location}",
+    "reinstateDate": "Reinstate this date",
+    "cancelDate": "Cancel this date",
+    "pastTitle": "Past date",
+    "pastText": "It can be viewed, but can no longer be changed.",
+    "cancelledTitle": "Date cancelled",
+    "cancelledText": "{reason} It remains displayed as cancelled on the public site.",
+    "noReason": "No reason given.",
+    "notesTitle": "To know before preparing — internal note",
+    "forThisDate": "For this date: ",
+    "whatPublicSees": "What the public sees",
+    "tablist": "Preparation",
+    "tabSheet": "Preparation sheet",
+    "tabDate": "Date information",
+    "noSheet": "No sheet was prepared for this date.",
+    "locked": "This date can no longer be changed."
+  },
+  "dashContents": {
+    "newTitle": "New content",
+    "newDesc": "Song, reading, prayer… reusable in your celebrations",
+    "title": "Content library",
+    "desc": "Songs, readings, prayers and more",
+    "add": "+ Add content",
+    "empty": "No content yet.",
+    "searchAria": "Search for content",
+    "searchPlaceholder": "Search by title or text",
+    "filterAria": "Filter by type",
+    "allTypes": "All types",
+    "count": "{count, plural, one {# item} other {# items}}",
+    "ofTotal": " of {total}",
+    "noMatch": "No content matches your search.",
+    "showMore": "Show more ({remaining} remaining)",
+    "loadOneError": "Could not load the content",
+    "backToLibrary": "Back to the library",
+    "editTitle": "Edit the content",
+    "quoted": "“{title}”",
+    "library": "Library",
+    "addedOn": "Added on {date}",
+    "by": "by {name}",
+    "deleted": "Content deleted",
+    "deleteFailed": "Deletion failed",
+    "retryLater": "Please try again later.",
+    "onlyAuthor": "Only the author of this content can edit or delete it."
+  },
+  "dashAnnouncements": {
+    "newTitle": "New announcement",
+    "newDesc": "Visible on the parish's public page",
+    "title": "Announcements",
+    "desc": "News published on the parish's public page",
+    "add": "+ New announcement",
+    "empty": "No announcement yet.",
+    "deleted": "Announcement deleted"
+  },
+  "dashActivities": {
+    "newTitle": "New activity",
+    "newDesc": "Parish gathering or event",
+    "title": "Activities",
+    "desc": "Parish gatherings and events",
+    "add": "+ New activity",
+    "empty": "No activity yet.",
+    "deleted": "Activity deleted",
+    "at": "{date} at {time}"
+  },
+  "dashTemplates": {
+    "editTitle": "Edit “{name}”",
+    "newTitle": "New template",
+    "editDesc": "Sheets already prepared keep their steps",
+    "newDesc": "The steps of the preparation sheet, in order",
+    "removed": "Template deleted",
+    "removeError": "Error while deleting",
+    "removeFailed": "Deletion failed",
+    "title": "Sheet templates",
+    "desc": "Define the order of your celebrations",
+    "add": "+ New template",
+    "empty": "No template yet."
+  },
+  "richText": {
+    "placeholder": "Type your text here…",
+    "imageFail": "Could not add the image",
+    "strike": "Strikethrough",
+    "superscript": "Superscript",
+    "subscript": "Subscript",
+    "textColor": "Text colour",
+    "highlight": "Highlight",
+    "alignLeft": "Align left",
+    "center": "Centre",
+    "alignRight": "Align right",
+    "justify": "Justify",
+    "quote": "Refrain / quotation",
+    "separator": "Separator",
+    "insertTable": "Insert a table",
+    "toolbar": "Formatting",
+    "undo": "Undo",
+    "redo": "Redo",
+    "paragraphStyle": "Paragraph style",
+    "paragraph": "Paragraph",
+    "heading": "Heading",
+    "subheading": "Subheading",
+    "bold": "Bold",
+    "italic": "Italic",
+    "underline": "Underline",
+    "bullets": "Bulleted list",
+    "numbered": "Numbered list",
+    "link": "Link",
+    "insertImage": "Insert an image",
+    "moreOptions": "More options",
+    "lessOptions": "Fewer options",
+    "linkAddress": "Link address",
+    "apply": "Apply",
+    "remove": "Remove",
+    "default": "Default",
+    "none": "None",
+    "colourSwatch": "Colour {c}",
+    "table": "Table",
+    "rowAdd": "Row +",
+    "rowDelete": "Row −",
+    "columnAdd": "Column +",
+    "columnDelete": "Column −",
+    "deleteTable": "Delete the table",
+    "image": "Image",
+    "deleteImage": "Delete the image",
+    "counter": "{words} words · {chars} characters",
+    "imageErrors": {
+      "unreadable": "Unreadable image",
+      "format": "Unsupported format (PNG, JPEG, WebP or GIF)",
+      "canvas": "Image processing unavailable",
+      "tooHeavy": "Image too heavy, even compressed"
+    }
   }
 }

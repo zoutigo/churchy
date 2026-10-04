@@ -1,4 +1,6 @@
 'use client';
+import { useTranslations } from 'next-intl';
+import { useLabels } from '@/i18n/labels';
 import { useState } from 'react';
 import { ArrowDown, ArrowUp, Plus, X } from 'lucide-react';
 import {
@@ -8,7 +10,6 @@ import {
   uniqueKeys,
 } from '@churchy/shared';
 import { templatesApi, type TemplateWithSteps } from '@/lib/api/celebrations.api';
-import { CELEBRATION_TYPE_LABELS } from '@/lib/format';
 
 import { errorMessage } from '@/lib/forms/submit-error';
 import { notify } from '@/lib/notify';
@@ -33,6 +34,11 @@ interface StepRow {
 
 /** Modèle de feuille de préparation : un nom, un type et la liste ordonnée des étapes (chant d'entrée, psaume…). */
 export function TemplateForm({ parishId, template, onDone, onCancel }: Props) {
+  const t = useTranslations('templateForm');
+  const tc = useTranslations('common');
+  const tf = useTranslations('celebrationForm');
+  const td = useTranslations('defaultSteps');
+  const labels = useLabels();
   const editing = !!template;
   const [name, setName] = useState(template?.name ?? '');
   const [type, setType] = useState<CelebrationType>(template?.type ?? CelebrationType.SUNDAY_MASS);
@@ -64,15 +70,14 @@ export function TemplateForm({ parishId, template, onDone, onCancel }: Props) {
       description: description.trim() || undefined,
     });
     const next: typeof errors = {};
-    if (!parsed.success) next.name = parsed.error.flatten().fieldErrors.name?.[0] ?? 'Nom requis';
-    if (titles.length === 0) next.steps = 'Ajoutez au moins une étape';
+    if (!parsed.success)
+      next.name = parsed.error.flatten().fieldErrors.name?.[0] ?? t('nameRequired');
+    if (titles.length === 0) next.steps = t('stepsRequired');
     setErrors(next);
     if (!parsed.success || titles.length === 0) return;
 
-    const count = `${titles.length} étape${titles.length > 1 ? 's' : ''}`;
-    const failure = editing
-      ? 'Erreur lors de la modification du modèle'
-      : 'Erreur lors de la création du modèle';
+    const count = tf('steps', { count: titles.length });
+    const failure = editing ? t('updateError') : t('createError');
     setBusy(true);
     try {
       if (template) {
@@ -82,7 +87,7 @@ export function TemplateForm({ parishId, template, onDone, onCancel }: Props) {
           description: parsed.data.description ?? null,
           steps: rows.map((s) => ({ id: s.id, title: s.title })),
         });
-        notify.success('Modèle modifié', count);
+        notify.success(t('updated'), count);
       } else {
         const created = await templatesApi.create(parishId, parsed.data);
         const keys = uniqueKeys(titles);
@@ -94,7 +99,7 @@ export function TemplateForm({ parishId, template, onDone, onCancel }: Props) {
             isRequired: true,
           });
         }
-        notify.success('Modèle créé', count);
+        notify.success(t('created'), count);
       }
       onDone();
     } catch (err) {
@@ -110,27 +115,27 @@ export function TemplateForm({ parishId, template, onDone, onCancel }: Props) {
     <form onSubmit={submit} className="space-y-5" noValidate>
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-1.5">
-          <Label htmlFor="tpl-name">Nom du modèle</Label>
+          <Label htmlFor="tpl-name">{t('name')}</Label>
           <Input
             id="tpl-name"
             value={name}
             maxLength={100}
-            placeholder="Messe dominicale"
+            placeholder={t('namePlaceholder')}
             aria-invalid={!!errors.name || undefined}
             onChange={(e) => setName(e.target.value)}
           />
           {errors.name && <p className="text-sm font-medium text-destructive">{errors.name}</p>}
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="tpl-type">Type</Label>
+          <Label htmlFor="tpl-type">{t('type')}</Label>
           <NativeSelect
             id="tpl-type"
             value={type}
             onChange={(e) => setType(e.target.value as CelebrationType)}
           >
-            {Object.values(CelebrationType).map((t) => (
-              <option key={t} value={t}>
-                {CELEBRATION_TYPE_LABELS[t]}
+            {Object.values(CelebrationType).map((ct) => (
+              <option key={ct} value={ct}>
+                {labels.celebrationType(ct)}
               </option>
             ))}
           </NativeSelect>
@@ -138,7 +143,7 @@ export function TemplateForm({ parishId, template, onDone, onCancel }: Props) {
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="tpl-description">
-          Description <span className="text-xs text-muted-foreground">(optionnel)</span>
+          {t('description')} <span className="text-xs text-muted-foreground">{tc('optional')}</span>
         </Label>
         <Textarea
           id="tpl-description"
@@ -150,14 +155,16 @@ export function TemplateForm({ parishId, template, onDone, onCancel }: Props) {
 
       <fieldset className="space-y-3">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <legend className="text-base font-semibold">Étapes de la feuille</legend>
+          <legend className="text-base font-semibold">{t('steps')}</legend>
           <Button
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => setSteps(CELEBRATION_STEPS_SUNDAY_MASS.map((s) => ({ title: s.title })))}
+            onClick={() =>
+              setSteps(CELEBRATION_STEPS_SUNDAY_MASS.map((s) => ({ title: td(s.key) })))
+            }
           >
-            Pré-remplir : messe dominicale
+            {t('prefill')}
           </Button>
         </div>
         <ol className="space-y-2">
@@ -167,10 +174,10 @@ export function TemplateForm({ parishId, template, onDone, onCancel }: Props) {
                 {i + 1}.
               </span>
               <Input
-                aria-label={`Étape ${i + 1}`}
+                aria-label={t('stepN', { n: i + 1 })}
                 value={title}
                 maxLength={100}
-                placeholder="Ex. : Chant d’entrée"
+                placeholder={t('stepPlaceholder')}
                 onChange={(e) => setStep(i, e.target.value)}
               />
               <Button
@@ -179,7 +186,7 @@ export function TemplateForm({ parishId, template, onDone, onCancel }: Props) {
                 size="icon"
                 className="h-10 w-10 shrink-0"
                 disabled={i === 0}
-                aria-label={`Monter l’étape ${i + 1}`}
+                aria-label={t('moveUp', { n: i + 1 })}
                 onClick={() => move(i, -1)}
               >
                 <ArrowUp size={16} aria-hidden />
@@ -190,7 +197,7 @@ export function TemplateForm({ parishId, template, onDone, onCancel }: Props) {
                 size="icon"
                 className="h-10 w-10 shrink-0"
                 disabled={i === steps.length - 1}
-                aria-label={`Descendre l’étape ${i + 1}`}
+                aria-label={t('moveDown', { n: i + 1 })}
                 onClick={() => move(i, 1)}
               >
                 <ArrowDown size={16} aria-hidden />
@@ -201,7 +208,7 @@ export function TemplateForm({ parishId, template, onDone, onCancel }: Props) {
                 size="icon"
                 className="h-10 w-10 shrink-0"
                 disabled={steps.length === 1}
-                aria-label={`Retirer l’étape ${i + 1}`}
+                aria-label={t('remove', { n: i + 1 })}
                 onClick={() => setSteps(steps.filter((_, j) => j !== i))}
               >
                 <X size={16} aria-hidden />
@@ -216,7 +223,7 @@ export function TemplateForm({ parishId, template, onDone, onCancel }: Props) {
           className="gap-2"
           onClick={() => setSteps([...steps, { title: '' }])}
         >
-          <Plus size={16} aria-hidden /> Ajouter une étape
+          <Plus size={16} aria-hidden /> {t('addStep')}
         </Button>
         {errors.steps && <p className="text-sm font-medium text-destructive">{errors.steps}</p>}
       </fieldset>
@@ -226,14 +233,14 @@ export function TemplateForm({ parishId, template, onDone, onCancel }: Props) {
         <Button type="submit" disabled={busy}>
           {editing
             ? busy
-              ? 'Enregistrement…'
-              : 'Enregistrer les modifications'
+              ? t('saving')
+              : t('saveChanges')
             : busy
-              ? 'Création…'
-              : 'Créer le modèle'}
+              ? t('creating')
+              : t('submitCreate')}
         </Button>
         <Button type="button" variant="outline" onClick={onCancel}>
-          Annuler
+          {tc('cancel')}
         </Button>
       </div>
     </form>

@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Link } from '@/i18n/link';
 import { Menu, Star, X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 import { useFavorites } from '@/components/favorites/FavoritesProvider';
 import { useAuth } from '@/hooks/useAuth';
@@ -20,6 +21,7 @@ const ctaClass =
  * Non fourni (page d'erreur) : on attend la fin de la vérification de session.
  */
 export function PublicHeader({ hasSession }: { hasSession?: boolean }) {
+  const t = useTranslations('nav');
   const { user, initializing } = useAuth();
   const { ids, ready } = useFavorites();
   const [open, setOpen] = useState(false);
@@ -29,7 +31,7 @@ export function PublicHeader({ hasSession }: { hasSession?: boolean }) {
   const links = (
     <>
       <Link href="/pour-les-paroisses" className={linkClass} onClick={close}>
-        Pour les paroisses
+        {t('forParishes')}
       </Link>
       <Link
         href="/favoris"
@@ -37,11 +39,11 @@ export function PublicHeader({ hasSession }: { hasSession?: boolean }) {
         onClick={close}
       >
         <Star size={15} className="text-amber-500" aria-hidden />
-        Mes favoris
+        {t('favorites')}
         {ready && ids.length > 0 && (
           <span
             className="rounded-full bg-churchy-700 px-1.5 text-xs font-semibold leading-5 text-white"
-            aria-label={`${ids.length} favori${ids.length > 1 ? 's' : ''}`}
+            aria-label={t('favoritesCount', { count: ids.length })}
           >
             {ids.length}
           </span>
@@ -49,13 +51,13 @@ export function PublicHeader({ hasSession }: { hasSession?: boolean }) {
       </Link>
       {!sessionKnown ? null : user ? (
         <Link href="/dashboard" className={ctaClass} onClick={close}>
-          Mon espace
+          {t('mySpace')}
         </Link>
       ) : (
         <>
           {/* Connexion seule : l'inscription s'atteint depuis la page de connexion (« S'inscrire »). */}
           <Link href="/login" className={ctaClass} onClick={close}>
-            Connexion
+            {t('login')}
           </Link>
         </>
       )}
@@ -65,7 +67,7 @@ export function PublicHeader({ hasSession }: { hasSession?: boolean }) {
   return (
     <header className="sticky top-0 z-30 border-b border-churchy-100 bg-churchy-50/95 backdrop-blur">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="flex items-center gap-2" aria-label="Churchy, accueil">
+        <Link href="/" className="flex items-center gap-2" aria-label={t('home')}>
           <span className="text-amber-500" aria-hidden>
             ✦
           </span>
@@ -74,7 +76,7 @@ export function PublicHeader({ hasSession }: { hasSession?: boolean }) {
           </span>
         </Link>
 
-        <nav aria-label="Navigation principale" className="hidden items-center gap-1 md:flex">
+        <nav aria-label={t('main')} className="hidden items-center gap-1 md:flex">
           {links}
           <LanguageSwitcher className="ml-2" />
         </nav>
@@ -84,7 +86,7 @@ export function PublicHeader({ hasSession }: { hasSession?: boolean }) {
         <button
           type="button"
           className="-mr-2 inline-flex h-11 w-11 items-center justify-center rounded-md text-churchy-700 hover:bg-churchy-100 md:hidden"
-          aria-label={open ? 'Fermer le menu' : 'Ouvrir le menu'}
+          aria-label={open ? t('closeMenu') : t('openMenu')}
           aria-expanded={open}
           aria-controls="public-mobile-menu"
           onClick={() => setOpen((o) => !o)}
@@ -96,7 +98,7 @@ export function PublicHeader({ hasSession }: { hasSession?: boolean }) {
       {open && (
         <nav
           id="public-mobile-menu"
-          aria-label="Menu mobile"
+          aria-label={t('mobile')}
           className="flex flex-col gap-1 border-t border-churchy-100 px-4 py-3 md:hidden"
         >
           {links}

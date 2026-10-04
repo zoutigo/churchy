@@ -1,9 +1,11 @@
+import { useTranslations } from 'next-intl';
 import { Globe, Mail, MapPin, Phone } from 'lucide-react';
 import type { PublicParish } from '@churchy/shared';
 import { placeLabel, telHref } from '@/lib/format';
 
 /** Informations pratiques d'une paroisse : adresse, téléphone, email, site. */
 export function ParishInfoPanel({ parish }: { parish: PublicParish }) {
+  const t = useTranslations('parishInfo');
   const address = [parish.address, placeLabel(parish)].filter(Boolean).join(', ');
   return (
     <section
@@ -11,7 +13,7 @@ export function ParishInfoPanel({ parish }: { parish: PublicParish }) {
       className="space-y-3 rounded-xl border border-churchy-100 bg-white p-5"
     >
       <h2 id="parish-info-title" className="font-playfair text-lg font-semibold text-churchy-700">
-        Informations pratiques
+        {t('title')}
       </h2>
       <ul className="space-y-2 text-sm text-churchy-900">
         <li className="flex gap-2">

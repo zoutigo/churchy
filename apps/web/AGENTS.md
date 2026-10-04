@@ -67,7 +67,8 @@ src/
 │   │   ├── (auth)/   # login, register, forgot-password, reset-password, verify-email
 │   │   └── (public)/ # Site public : landing, /paroisses (+ [parishId]/messes|annonces|activites), contact, légal
 │   └── dashboard/    # Dashboard admin/préparateur, sans préfixe de langue (protégé : middleware + AuthGuard)
-├── i18n/             # routing.ts (langues, pathnames), paths.ts (chemins interne ⇄ visible), link.tsx (Link/useRouter/usePathname), request.ts, cookie.ts
+├── i18n/             # routing.ts (langues, pathnames), paths.ts (chemins interne ⇄ visible), link.tsx (Link/useRouter/usePathname), request.ts, cookie.ts, locale.ts (useAppLocale), labels.ts(+.server.ts) (libellés des valeurs de l'API)
+├── ../messages/      # fr.json, en.json : tous les textes de l'interface (mêmes clés)
 ├── middleware.ts     # langue (/ et anciennes URL → /fr|/en), pages privées sans session → connexion, connexion & co. si session
 ├── components/
 │   ├── ui/           # Composants shadcn + PasswordInput, ErrorNotice (alert : variantes success/warning)

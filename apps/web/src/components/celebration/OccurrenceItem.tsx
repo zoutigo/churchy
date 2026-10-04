@@ -1,4 +1,6 @@
 'use client';
+import { useTranslations } from 'next-intl';
+import { useAppLocale } from '@/i18n/locale';
 import { useState } from 'react';
 import { Link } from '@/i18n/link';
 import type { OccurrenceView } from '@churchy/shared';
@@ -18,27 +20,29 @@ interface Props {
 const badge = 'rounded-full border px-2 py-0.5 text-xs font-medium';
 
 function SheetBadge({ sheet }: { sheet: OccurrenceView['sheet'] }) {
+  const t = useTranslations('occurrenceItem');
   if (!sheet)
     return (
-      <span className={`${badge} border-gray-200 bg-gray-100 text-gray-600`}>Pas de feuille</span>
+      <span className={`${badge} border-gray-200 bg-gray-100 text-gray-600`}>{t('noSheet')}</span>
     );
   if (sheet.status === 'PUBLISHED') {
     return (
       <span className={`${badge} border-churchy-300 bg-churchy-200 text-churchy-700`}>
-        Feuille publiée
+        {t('sheetPublished')}
       </span>
     );
   }
   return (
     <span className={`${badge} border-amber-300 bg-amber-50 text-amber-800`}>
-      Brouillon — {sheet.filledCount}/{sheet.stepCount} étapes remplies
+      {t('draftProgress', { filled: sheet.filledCount, total: sheet.stepCount })}
     </span>
   );
 }
 
 /** Une date d'une série : bloc-date, état, note, et actions (préparer, annuler / rétablir). */
 export function OccurrenceItem({ occurrence: o, href, timezone, onCancel, onReinstate }: Props) {
-  const tz = { timeZone: timezone };
+  const t = useTranslations('occurrenceItem');
+  const tz = { timeZone: timezone, locale: useAppLocale() };
   const d = formatDateParts(o.startsAt, tz);
   const [asking, setAsking] = useState(false);
   const [reason, setReason] = useState('');
@@ -78,23 +82,27 @@ export function OccurrenceItem({ occurrence: o, href, timezone, onCancel, onRein
         </div>
         <div className="min-w-0 flex-1 space-y-1">
           <p className={cn('font-medium', cancelled && 'line-through')}>
-            {formatDateLong(o.startsAt, tz)} à {formatTime(o.startsAt, tz)}
+            {t('at', { date: formatDateLong(o.startsAt, tz), time: formatTime(o.startsAt, tz) })}
           </p>
           <div className="flex flex-wrap gap-1.5">
             {cancelled ? (
               <span className={`${badge} border-destructive/40 bg-destructive/5 text-destructive`}>
-                Annulée{o.cancelReason ? ` — ${o.cancelReason}` : ''}
+                {o.cancelReason
+                  ? t('cancelledWithReason', { reason: o.cancelReason })
+                  : t('cancelled')}
               </span>
             ) : (
               <SheetBadge sheet={o.sheet} />
             )}
             {o.isPast && (
-              <span className={`${badge} border-gray-200 bg-gray-100 text-gray-600`}>Passée</span>
+              <span className={`${badge} border-gray-200 bg-gray-100 text-gray-600`}>
+                {t('past')}
+              </span>
             )}
           </div>
           {o.internalNote && (
             <p className="rounded bg-amber-50 px-2 py-1 text-xs text-amber-900">
-              <span className="font-semibold">Note interne :</span> {o.internalNote}
+              <span className="font-semibold">{t('internalNote')}</span> {o.internalNote}
             </p>
           )}
         </div>
@@ -103,8 +111,8 @@ export function OccurrenceItem({ occurrence: o, href, timezone, onCancel, onRein
       {asking ? (
         <div className="flex flex-col gap-2 sm:flex-row md:w-96">
           <Input
-            aria-label="Motif de l’annulation (facultatif)"
-            placeholder="Motif (facultatif)"
+            aria-label={t('reasonLabel')}
+            placeholder={t('reasonPlaceholder')}
             value={reason}
             maxLength={200}
             onChange={(e) => setReason(e.target.value)}
@@ -116,10 +124,10 @@ export function OccurrenceItem({ occurrence: o, href, timezone, onCancel, onRein
               disabled={busy}
               onClick={() => run(() => onCancel(reason))}
             >
-              Confirmer l’annulation
+              {t('confirmCancel')}
             </Button>
             <Button type="button" variant="ghost" onClick={() => setAsking(false)}>
-              Retour
+              {t('back')}
             </Button>
           </div>
         </div>
@@ -133,12 +141,12 @@ export function OccurrenceItem({ occurrence: o, href, timezone, onCancel, onRein
           >
             <Link href={href}>
               {o.isPast
-                ? 'Consulter'
+                ? t('consult')
                 : cancelled
-                  ? 'Détails'
+                  ? t('details')
                   : o.sheet
-                    ? 'Préparer'
-                    : 'Préparer la feuille'}
+                    ? t('prepare')
+                    : t('prepareSheet')}
             </Link>
           </Button>
           {!o.isPast &&
@@ -151,7 +159,7 @@ export function OccurrenceItem({ occurrence: o, href, timezone, onCancel, onRein
                 className="flex-1 md:flex-none"
                 onClick={() => run(onReinstate)}
               >
-                Rétablir
+                {t('reinstate')}
               </Button>
             ) : (
               <Button
@@ -161,7 +169,7 @@ export function OccurrenceItem({ occurrence: o, href, timezone, onCancel, onRein
                 className="flex-1 md:flex-none"
                 onClick={() => setAsking(true)}
               >
-                Annuler cette date
+                {t('cancelDate')}
               </Button>
             ))}
         </div>

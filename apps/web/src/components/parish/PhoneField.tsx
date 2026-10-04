@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 import { useFormContext } from 'react-hook-form';
 import {
   maskNationalPhone,
@@ -16,6 +17,8 @@ import { Input } from '@/components/ui/input';
  * international (« +237 6 77 12 34 56 »), directement utilisable dans un lien `tel:`.
  */
 export function PhoneField({ optionalHint = false }: { optionalHint?: boolean }) {
+  const t = useTranslations('phoneField');
+  const tc = useTranslations('common');
   const { watch } = useFormContext<{ country?: string; phone?: string | null }>();
   const country = watch('country') ?? '';
   const format = phoneFormatOf(country);
@@ -26,8 +29,10 @@ export function PhoneField({ optionalHint = false }: { optionalHint?: boolean })
       render={({ field }) => (
         <FormItem>
           <FormLabel>
-            Téléphone{' '}
-            {optionalHint && <span className="text-muted-foreground text-xs">(optionnel)</span>}
+            {t('label')}{' '}
+            {optionalHint && (
+              <span className="text-muted-foreground text-xs">{tc('optional')}</span>
+            )}
           </FormLabel>
           <div className="flex">
             {format && (

@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 import {
   useCallback,
   useEffect,
@@ -128,13 +129,15 @@ export function RichTextEditor({
   onChange,
   onBlur,
   id,
-  placeholder = 'Saisissez le texte ici…',
+  placeholder: placeholderProp,
   allowImages = false,
   minHeight,
   invalid,
   disabled,
   'aria-label': ariaLabel,
 }: RichTextEditorProps) {
+  const t = useTranslations('richText');
+  const placeholder = placeholderProp ?? t('placeholder');
   const [panel, setPanel] = useState<Panel>(null);
   const [moreOpen, setMoreOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
@@ -143,23 +146,26 @@ export function RichTextEditor({
   const lastEmitted = useRef(value);
   const editorRef = useRef<Editor | null>(null);
 
-  const insertImages = useCallback(async (files: File[]) => {
-    const images = files.filter(isSupportedImage);
-    if (images.length === 0) return;
-    setImageError(null);
-    for (const file of images) {
-      try {
-        const src = await imageFileToDataUrl(file);
-        editorRef.current
-          ?.chain()
-          .focus()
-          .setImage({ src, alt: file.name.replace(/\.[^.]+$/, '') })
-          .run();
-      } catch (err) {
-        setImageError(err instanceof ImageError ? err.message : 'Impossible d’ajouter l’image');
+  const insertImages = useCallback(
+    async (files: File[]) => {
+      const images = files.filter(isSupportedImage);
+      if (images.length === 0) return;
+      setImageError(null);
+      for (const file of images) {
+        try {
+          const src = await imageFileToDataUrl(file);
+          editorRef.current
+            ?.chain()
+            .focus()
+            .setImage({ src, alt: file.name.replace(/\.[^.]+$/, '') })
+            .run();
+        } catch (err) {
+          setImageError(err instanceof ImageError ? t(`imageErrors.${err.code}`) : t('imageFail'));
+        }
       }
-    }
-  }, []);
+    },
+    [t],
+  );
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -281,71 +287,73 @@ export function RichTextEditor({
   const secondaryRow = (
     <>
       {textButton(
-        'Barré',
+        t('strike'),
         <Strikethrough className={ic} />,
         () => run((c) => c.toggleStrike()),
         editor.isActive('strike'),
       )}
       {textButton(
-        'Exposant',
+        t('superscript'),
         <SuperscriptIcon className={ic} />,
         () => run((c) => c.toggleSuperscript()),
         editor.isActive('superscript'),
       )}
       {textButton(
-        'Indice',
+        t('subscript'),
         <SubscriptIcon className={ic} />,
         () => run((c) => c.toggleSubscript()),
         editor.isActive('subscript'),
       )}
       <Sep />
       {textButton(
-        'Couleur du texte',
+        t('textColor'),
         <Palette className={ic} />,
         () => setPanel(panel === 'color' ? null : 'color'),
         panel === 'color',
       )}
       {textButton(
-        'Surligner',
+        t('highlight'),
         <Highlighter className={ic} />,
         () => setPanel(panel === 'highlight' ? null : 'highlight'),
         panel === 'highlight',
       )}
       <Sep />
       {textButton(
-        'Aligner à gauche',
+        t('alignLeft'),
         <AlignLeft className={ic} />,
         () => run((c) => c.setTextAlign('left')),
         editor.isActive({ textAlign: 'left' }),
       )}
       {textButton(
-        'Centrer',
+        t('center'),
         <AlignCenter className={ic} />,
         () => run((c) => c.setTextAlign('center')),
         editor.isActive({ textAlign: 'center' }),
       )}
       {textButton(
-        'Aligner à droite',
+        t('alignRight'),
         <AlignRight className={ic} />,
         () => run((c) => c.setTextAlign('right')),
         editor.isActive({ textAlign: 'right' }),
       )}
       {textButton(
-        'Justifier',
+        t('justify'),
         <AlignJustify className={ic} />,
         () => run((c) => c.setTextAlign('justify')),
         editor.isActive({ textAlign: 'justify' }),
       )}
       <Sep />
       {textButton(
-        'Refrain / citation',
+        t('quote'),
         <Quote className={ic} />,
         () => run((c) => c.toggleBlockquote()),
         editor.isActive('blockquote'),
       )}
-      {textButton('Séparateur', <Minus className={ic} />, () => run((c) => c.setHorizontalRule()))}
+      {textButton(t('separator'), <Minus className={ic} />, () =>
+        run((c) => c.setHorizontalRule()),
+      )}
       {textButton(
-        'Insérer un tableau',
+        t('insertTable'),
         <TableIcon className={ic} />,
         () => run((c) => c.insertTable({ rows: 3, cols: 2, withHeaderRow: true })),
         inTable,
@@ -367,7 +375,7 @@ export function RichTextEditor({
         <button
           key={c}
           type="button"
-          aria-label={`Couleur ${c}`}
+          aria-label={t('colourSwatch', { c })}
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => {
             onPick(c);
@@ -405,19 +413,19 @@ export function RichTextEditor({
       <div className="sticky top-0 z-10 rounded-t-md border-b bg-card">
         <div
           role="toolbar"
-          aria-label="Mise en forme"
+          aria-label={t('toolbar')}
           className="flex flex-col md:flex-row md:flex-wrap md:items-center md:px-1.5 md:py-1"
         >
           <div className="flex flex-wrap items-center gap-0.5 px-1.5 py-1 md:p-0">
             {textButton(
-              'Annuler',
+              t('undo'),
               <Undo2 className={ic} />,
               () => run((c) => c.undo()),
               false,
               !editor.can().undo(),
             )}
             {textButton(
-              'Rétablir',
+              t('redo'),
               <Redo2 className={ic} />,
               () => run((c) => c.redo()),
               false,
@@ -425,7 +433,7 @@ export function RichTextEditor({
             )}
             <Sep />
             <select
-              aria-label="Style du paragraphe"
+              aria-label={t('paragraphStyle')}
               value={heading}
               onChange={(e) => {
                 const v = e.target.value;
@@ -434,54 +442,54 @@ export function RichTextEditor({
               }}
               className="h-10 shrink-0 rounded-md border border-input bg-background px-2 text-sm md:h-8"
             >
-              <option value="p">Paragraphe</option>
-              <option value="h2">Titre</option>
-              <option value="h3">Sous-titre</option>
+              <option value="p">{t('paragraph')}</option>
+              <option value="h2">{t('heading')}</option>
+              <option value="h3">{t('subheading')}</option>
             </select>
             <Sep />
             {textButton(
-              'Gras',
+              t('bold'),
               <Bold className={ic} />,
               () => run((c) => c.toggleBold()),
               editor.isActive('bold'),
             )}
             {textButton(
-              'Italique',
+              t('italic'),
               <Italic className={ic} />,
               () => run((c) => c.toggleItalic()),
               editor.isActive('italic'),
             )}
             {textButton(
-              'Souligné',
+              t('underline'),
               <UnderlineIcon className={ic} />,
               () => run((c) => c.toggleUnderline()),
               editor.isActive('underline'),
             )}
             <Sep />
             {textButton(
-              'Liste à puces',
+              t('bullets'),
               <List className={ic} />,
               () => run((c) => c.toggleBulletList()),
               editor.isActive('bulletList'),
             )}
             {textButton(
-              'Liste numérotée',
+              t('numbered'),
               <ListOrdered className={ic} />,
               () => run((c) => c.toggleOrderedList()),
               editor.isActive('orderedList'),
             )}
             {textButton(
-              'Lien',
+              t('link'),
               <Link2 className={ic} />,
               openLink,
               editor.isActive('link') || panel === 'link',
             )}
             {allowImages &&
-              textButton('Insérer une image', <ImagePlus className={ic} />, () =>
+              textButton(t('insertImage'), <ImagePlus className={ic} />, () =>
                 fileInput.current?.click(),
               )}
             <ToolButton
-              label={moreOpen ? 'Moins d’options' : 'Plus d’options'}
+              label={moreOpen ? t('lessOptions') : t('moreOptions')}
               onClick={() => setMoreOpen(!moreOpen)}
               active={moreOpen}
               className="md:hidden"
@@ -511,7 +519,7 @@ export function RichTextEditor({
               type="text"
               inputMode="url"
               autoFocus
-              aria-label="Adresse du lien"
+              aria-label={t('linkAddress')}
               placeholder="https://…"
               value={linkUrl}
               onChange={(e) => setLinkUrl(e.target.value)}
@@ -521,7 +529,7 @@ export function RichTextEditor({
               type="submit"
               className="h-10 rounded-md bg-primary px-3 text-sm text-primary-foreground md:h-8"
             >
-              Appliquer
+              {t('apply')}
             </button>
             {editor.isActive('link') && (
               <button
@@ -529,7 +537,7 @@ export function RichTextEditor({
                 onClick={removeLink}
                 className="h-10 rounded-md border px-3 text-sm md:h-8"
               >
-                Retirer
+                {t('remove')}
               </button>
             )}
           </form>
@@ -540,7 +548,7 @@ export function RichTextEditor({
               TEXT_COLORS,
               (c) => run((ch) => ch.setColor(c)),
               () => run((ch) => ch.unsetColor()),
-              'Par défaut',
+              t('default'),
             )}
           </div>
         )}
@@ -550,22 +558,22 @@ export function RichTextEditor({
               HIGHLIGHT_COLORS,
               (c) => run((ch) => ch.setHighlight({ color: c })),
               () => run((ch) => ch.unsetHighlight()),
-              'Aucun',
+              t('none'),
             )}
           </div>
         )}
         {inTable && (
           <div
             className="flex flex-wrap items-center gap-1 border-t px-2 py-1.5 text-xs"
-            aria-label="Tableau"
+            aria-label={t('table')}
           >
             {(
               [
-                ['Ligne +', () => run((c) => c.addRowAfter())],
-                ['Ligne −', () => run((c) => c.deleteRow())],
-                ['Colonne +', () => run((c) => c.addColumnAfter())],
-                ['Colonne −', () => run((c) => c.deleteColumn())],
-                ['Supprimer le tableau', () => run((c) => c.deleteTable())],
+                [t('rowAdd'), () => run((c) => c.addRowAfter())],
+                [t('rowDelete'), () => run((c) => c.deleteRow())],
+                [t('columnAdd'), () => run((c) => c.addColumnAfter())],
+                [t('columnDelete'), () => run((c) => c.deleteColumn())],
+                [t('deleteTable'), () => run((c) => c.deleteTable())],
               ] as const
             ).map(([label, action]) => (
               <button
@@ -583,7 +591,7 @@ export function RichTextEditor({
         {imageActive && (
           <div
             className="flex flex-wrap items-center gap-1 border-t px-2 py-1.5 text-xs"
-            aria-label="Image"
+            aria-label={t('image')}
           >
             <span className="text-muted-foreground">Largeur</span>
             {IMAGE_WIDTHS.map((w) => (
@@ -607,7 +615,7 @@ export function RichTextEditor({
               onClick={() => run((c) => c.deleteSelection())}
               className="h-8 rounded-md border border-destructive/40 px-2 text-destructive hover:bg-destructive/10"
             >
-              Supprimer l’image
+              {t('deleteImage')}
             </button>
           </div>
         )}
@@ -635,8 +643,10 @@ export function RichTextEditor({
         </p>
       )}
       <div className="hidden items-center justify-end border-t px-3 py-1 text-xs text-muted-foreground md:flex">
-        {editor.storage.characterCount.words()} mots · {editor.storage.characterCount.characters()}{' '}
-        caractères
+        {t('counter', {
+          words: editor.storage.characterCount.words(),
+          chars: editor.storage.characterCount.characters(),
+        })}
       </div>
     </div>
   );
