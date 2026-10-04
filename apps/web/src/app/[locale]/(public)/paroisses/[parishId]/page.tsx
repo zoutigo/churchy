@@ -7,6 +7,9 @@ import { EmptyState } from '@/components/public/EmptyState';
 import { ParishInfoPanel } from '@/components/public/ParishInfoPanel';
 import { orNotFound, publicApi } from '@/lib/api/public.api';
 
+/** Sur mobile, l'accueil n'affiche que les 2 premiers éléments de chaque bloc (le lien « Tout voir » donne la suite). */
+const MOBILE_COUNT = 2;
+
 interface Props {
   params: { parishId: string };
 }
@@ -68,11 +71,6 @@ export default async function ParishHomePage({ params }: Props) {
         </section>
       )}
 
-      {/* Sur desktop, la fiche pratique est dans la colonne de droite. */}
-      <div className="lg:hidden">
-        <ParishInfoPanel parish={parish} />
-      </div>
-
       <Section
         id="next-masses"
         title={t('nextMasses')}
@@ -83,8 +81,10 @@ export default async function ParishHomePage({ params }: Props) {
           <EmptyState title={t('noMass')} hint={t('noMassHint')} />
         ) : (
           <div className="grid gap-3 xl:grid-cols-2">
-            {celebrations.slice(0, 3).map((c) => (
-              <CelebrationItem key={c.id} celebration={c} parishId={parishId} />
+            {celebrations.slice(0, 3).map((c, i) => (
+              <div key={c.id} className={i >= MOBILE_COUNT ? 'hidden sm:block' : undefined}>
+                <CelebrationItem celebration={c} parishId={parishId} />
+              </div>
             ))}
           </div>
         )}
@@ -117,12 +117,19 @@ export default async function ParishHomePage({ params }: Props) {
           <EmptyState title={t('noActivity')} />
         ) : (
           <div className="space-y-3">
-            {activities.slice(0, 3).map((a) => (
-              <ActivityItem key={a.id} activity={a} />
+            {activities.slice(0, 3).map((a, i) => (
+              <div key={a.id} className={i >= MOBILE_COUNT ? 'hidden sm:block' : undefined}>
+                <ActivityItem activity={a} />
+              </div>
             ))}
           </div>
         )}
       </Section>
+
+      {/* Sur mobile, la fiche pratique passe en dernier ; sur desktop elle est dans la colonne de droite. */}
+      <div className="lg:hidden">
+        <ParishInfoPanel parish={parish} />
+      </div>
     </>
   );
 }

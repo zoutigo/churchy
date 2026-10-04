@@ -87,7 +87,7 @@ test.describe('gestion du contenu public d’une paroisse (tableau de bord → s
     await expect(page.getByText('Aucune activité à venir')).toBeVisible();
   });
 
-  test('crée une célébration annoncée depuis l’interface : elle apparaît « feuille en préparation »', async ({
+  test('crée une célébration annoncée depuis l’interface : elle apparaît sans mention de feuille', async ({
     page,
   }) => {
     const token = `Zc${Date.now()}${Math.floor(Math.random() * 1000)}`;
@@ -111,7 +111,7 @@ test.describe('gestion du contenu public d’une paroisse (tableau de bord → s
 
     await page.goto(`/fr/paroisses/${parish.id}/messes`);
     await expect(page.getByText('Messe annoncée par le formulaire')).toBeVisible();
-    await expect(page.getByText('Feuille en préparation')).toBeVisible();
+    await expect(page.getByText('Feuille en préparation')).toHaveCount(0);
   });
 
   for (const [device, viewport] of Object.entries(VIEWPORTS)) {

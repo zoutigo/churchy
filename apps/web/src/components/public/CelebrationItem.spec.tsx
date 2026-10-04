@@ -30,14 +30,14 @@ describe('CelebrationItem', () => {
     expect(screen.getByText('Feuille disponible')).toBeInTheDocument();
   });
 
-  it('feuille en préparation', () => {
+  it('ne mentionne pas une feuille en préparation', () => {
     render(
       <CelebrationItem
         celebration={{ ...celebration, sheetStatus: 'IN_PREPARATION' }}
         parishId="p1"
       />,
     );
-    expect(screen.getByText('Feuille en préparation')).toBeInTheDocument();
+    expect(screen.queryByText(/préparation/)).not.toBeInTheDocument();
     expect(screen.queryByText('Feuille disponible')).not.toBeInTheDocument();
   });
 

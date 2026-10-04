@@ -34,4 +34,12 @@ describe('ParishTabs', () => {
     expect(screen.getByRole('link', { name: 'Messes' })).toHaveAttribute('aria-current', 'page');
     expect(screen.getByRole('link', { name: 'Accueil' })).not.toHaveAttribute('aria-current');
   });
+
+  it('l’accueil est une icône sur mobile : le mot reste accessible et visible dès sm', () => {
+    render(<ParishTabs parishId="p1" />);
+    const home = screen.getByRole('link', { name: 'Accueil' });
+    expect(home.querySelector('svg')).toHaveClass('sm:hidden');
+    expect(screen.getByText('Accueil')).toHaveClass('sr-only', 'sm:not-sr-only');
+    expect(screen.getByText('Messes')).not.toHaveClass('sr-only');
+  });
 });

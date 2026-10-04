@@ -131,7 +131,7 @@ describe('site public en anglais', () => {
       />,
     );
     expect(screen.getByText(/^Next Mass: Sun,? 4 Oct at 09:00$/)).toBeInTheDocument();
-    expect(screen.getByText('Sheet in preparation')).toBeInTheDocument();
+    expect(screen.queryByText(/preparation/)).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'View the parish Saint Peter' })).toHaveAttribute(
       'href',
       '/en/parishes/p1',

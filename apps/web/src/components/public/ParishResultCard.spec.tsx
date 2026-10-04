@@ -69,6 +69,29 @@ describe('ParishResultCard', () => {
       />,
     );
     expect(screen.getByText(/Prochaine messe :/)).toBeInTheDocument();
-    expect(screen.getByText('Feuille en préparation')).toBeInTheDocument();
+    expect(screen.queryByText(/préparation/)).not.toBeInTheDocument();
+  });
+
+  it('affiche « Feuille disponible » quand la feuille de la prochaine messe est publiée', () => {
+    render(
+      <ParishResultCard
+        parish={{
+          ...parish,
+          nextCelebration: {
+            id: 'c1',
+            celebrationId: 's1',
+            cancelled: false,
+            cancelReason: null,
+            timezone: 'Europe/Paris',
+            title: 'Messe',
+            date: '2026-10-04T12:00:00.000Z',
+            location: null,
+            type: CelebrationType.SUNDAY_MASS,
+            sheetStatus: 'AVAILABLE',
+          },
+        }}
+      />,
+    );
+    expect(screen.getByText('Feuille disponible')).toBeInTheDocument();
   });
 });

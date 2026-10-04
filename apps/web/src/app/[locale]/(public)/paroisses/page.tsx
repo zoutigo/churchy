@@ -33,8 +33,8 @@ export default async function ParishSearchPage({ searchParams }: Props) {
   const pages = Math.max(1, Math.ceil(result.total / PAGE_SIZE));
 
   return (
-    <div className={`${WRAP} space-y-6 py-8 sm:py-12`}>
-      <h1 className="font-playfair text-3xl font-bold text-churchy-700">
+    <div className={`${WRAP} space-y-4 py-5 sm:space-y-6 sm:py-12`}>
+      <h1 className="break-words font-playfair text-xl font-bold text-churchy-700 sm:text-3xl">
         {q ? t('resultsFor', { q }) : t('all')}
       </h1>
       <div className="max-w-3xl">

@@ -21,10 +21,6 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: 'Churchy',
   applicationName: 'Churchy',
-  icons: {
-    icon: '/icon.png',
-    apple: '/apple-icon.png',
-  },
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

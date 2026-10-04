@@ -50,7 +50,7 @@ test.describe('site public', () => {
         await expect(card).toContainText('Église Saint-Pierre');
         // La prochaine messe visible est la messe annoncée (le brouillon est caché).
         await expect(card).toContainText('Prochaine messe');
-        await expect(card).toContainText('Feuille en préparation');
+        await expect(card).not.toContainText('préparation');
 
         await card.getByRole('link', { name: 'Voir la paroisse' }).click();
         await expect(page).toHaveURL(`/fr/paroisses/${parish.id}`);
@@ -63,7 +63,7 @@ test.describe('site public', () => {
         await expect(page).toHaveURL(`/fr/paroisses/${parish.id}/messes`);
         await expect(page.getByText('Messe brouillon cachée')).toHaveCount(0);
         await expect(page.getByText('Feuille disponible')).toBeVisible();
-        await expect(page.getByText('Feuille en préparation')).toBeVisible();
+        await expect(page.getByText('Feuille en préparation')).toHaveCount(0);
 
         await page.getByRole('link', { name: /Messe publiée/ }).click();
         await expect(page).toHaveURL(`/fr/paroisses/${parish.id}/messes/${parish.publishedId}`);
@@ -100,10 +100,51 @@ test.describe('site public', () => {
         await expect(page.getByText('Salle paroissiale')).toBeVisible();
       });
 
+      test('accueil de la paroisse : menu contenu dans l’écran, fiche pratique et nombre d’éléments selon l’écran', async ({
+        page,
+      }) => {
+        const mobile = viewport.width < 640;
+        await page.goto(`/fr/paroisses/${parish.id}`);
+        const nav = page.getByRole('navigation', { name: 'Pages de la paroisse' });
+        await expect(nav.getByRole('link', { name: 'Accueil' })).toBeVisible();
+        await expect(nav.getByRole('link', { name: 'Activités' })).toBeVisible();
+        if (mobile) {
+          const overflow = await nav.evaluate((el) => el.scrollWidth - el.clientWidth);
+          expect(overflow).toBeLessThanOrEqual(0);
+          // Le mot « Accueil » est remplacé par une icône.
+          const label = await nav.getByText('Accueil').boundingBox();
+          expect(label!.width).toBeLessThanOrEqual(1); // texte réservé aux lecteurs d’écran
+          await expect(nav.getByRole('link', { name: 'Accueil' }).locator('svg')).toBeVisible();
+        } else {
+          await expect(nav.getByText('Accueil')).toBeVisible();
+        }
+
+        const info = page.getByRole('heading', { name: 'Informations pratiques' }).last();
+        await expect(info).toBeVisible();
+        const lastSection = await page
+          .getByRole('heading', { level: 2, name: /Activités/ })
+          .first()
+          .boundingBox();
+        const infoBox = await info.boundingBox();
+        // Sous 1024 px (mobile et tablette) la fiche passe en dernier ; au-delà, colonne de droite.
+        if (viewport.width < 1024) expect(infoBox!.y).toBeGreaterThan(lastSection!.y);
+        else expect(infoBox!.x).toBeGreaterThan(viewport.width / 2);
+
+        const masses = page.locator('#next-masses a[href*="/messes/"]');
+        if (mobile) expect(await masses.locator(':visible').count()).toBeLessThanOrEqual(2);
+      });
+
+      test('le favicon est servi', async ({ request }) => {
+        for (const path of ['/favicon.ico', '/icon.png', '/apple-icon.png']) {
+          const res = await request.get(path);
+          expect(res.status(), path).toBe(200);
+        }
+      });
+
       test('la messe annoncée est visible sans déroulement', async ({ page }) => {
         await page.goto(`/fr/paroisses/${parish.id}/messes/${parish.announcedId}`);
         await expect(page.getByRole('heading', { name: 'Messe annoncée' })).toBeVisible();
-        await expect(page.getByText('Feuille en préparation')).toBeVisible();
+        await expect(page.getByText('Feuille en préparation')).toHaveCount(0);
         await expect(page.getByText(/La paroisse prépare la feuille/)).toBeVisible();
         await expect(page.getByRole('heading', { name: 'Déroulement' })).toHaveCount(0);
       });
