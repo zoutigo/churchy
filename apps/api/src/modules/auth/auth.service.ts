@@ -18,6 +18,8 @@ import {
   type RegisterDto,
   type UserRole,
   ERR,
+  authLinkPath,
+  type AuthLinkKind,
 } from '@churchy/shared';
 import type { AuthLinkEmailPayload } from '@churchy/contracts';
 import { env } from '../../config/env';
@@ -160,6 +162,7 @@ export class AuthService {
       email: user.email,
       firstName: user.firstName,
       url,
+      locale: isLocale(user.locale) ? user.locale : DEFAULT_LOCALE,
       expiresAt,
     });
   }
@@ -226,6 +229,7 @@ export class AuthService {
       email: user.email,
       firstName: user.firstName,
       url,
+      locale: isLocale(user.locale) ? user.locale : DEFAULT_LOCALE,
       expiresAt,
     });
   }
@@ -234,7 +238,7 @@ export class AuthService {
   private async createLinkToken(
     user: User,
     type: 'PASSWORD_RESET' | 'EMAIL_VERIFICATION',
-    path: string,
+    path: AuthLinkKind,
     ttlMs: number,
   ) {
     const token = generateToken();
@@ -247,7 +251,7 @@ export class AuthService {
       data: { userId: user.id, type, tokenHash: hashToken(token), expiresAt },
     });
     return {
-      url: `${env.FRONTEND_URL}/${path}?token=${encodeURIComponent(token)}`,
+      url: `${env.FRONTEND_URL}${authLinkPath(path, user.locale)}?token=${encodeURIComponent(token)}`,
       expiresAt: expiresAt.toISOString(),
     };
   }

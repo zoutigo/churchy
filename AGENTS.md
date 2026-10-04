@@ -102,8 +102,11 @@ Le Cameroun est bilingue. Langues : `fr` (défaut) et `en` (`LOCALES`, `DEFAULT_
   le traduit (fr/en, `{max}` rempli ; un texte inconnu est rendu tel quel). Le client API traduit `ApiError.message` et les erreurs
   de champ avec la langue de la page ; `FormMessage` (et les erreurs écrites à la main : `useErrorText()` de `i18n/error-text.ts`)
   traduit les codes des schémas côté navigateur. **Nouveau message d'erreur = nouvelle entrée du catalogue (fr + en)**, puis `ERR.xxx`.
-- **Reste à faire** : noms de pays/régions (stockés en français, `geo.constants`), emails bilingues (`locale` dans les payloads de
-  `@churchy/contracts`), paramètres de requête traduits (`mois` → `month`), sitemap multilingue.
+- **Emails** : les jobs d'authentification portent `locale` (`authLinkEmailPayloadSchema`, `fr` par défaut) = `User.locale` ; le worker
+  (`apps/notifications/src/email-templates.ts`, textes `AUTH_TEXTS`) écrit sujet, texte, HTML (`lang`) et date dans cette langue. Le lien
+  est celui de la langue du compte (`authLinkPath` de `@churchy/shared` : `/en/reset-password`, `/fr/reinitialisation` ; table vérifiée
+  contre `routing.pathnames`). L'email de contact, destiné à l'équipe, reste en français.
+- **Reste à faire** : noms de pays/régions (stockés en français, `geo.constants`), paramètres de requête traduits (`mois` → `month`), sitemap multilingue.
 
 ## Site public (sans authentification)
 Pages servies par le web (rendu serveur, `force-dynamic`, URL **par id** de paroisse, pas par slug ; chemins ci-dessous = chemins **internes** en français, voir « Langues » pour les URL visibles `/fr/…` et `/en/…`) :

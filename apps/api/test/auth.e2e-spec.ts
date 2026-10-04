@@ -222,6 +222,38 @@ describe('Authentification (cookies httpOnly, refresh, reset, vérification)', (
   });
 
   describe('vérification d’email', () => {
+    it('un compte anglophone reçoit un lien /en/… et un email en anglais (locale du job)', async () => {
+      await newAgent(app)
+        .post('/api/auth/register')
+        .send({
+          email: 'verify-en@test.fr',
+          password: 'password123',
+          firstName: 'Jane',
+          lastName: 'Doe',
+          locale: 'en',
+        })
+        .expect(201);
+      const job = await findJobFor(
+        queue,
+        NotificationJob.EMAIL_VERIFICATION_REQUESTED,
+        'verify-en@test.fr',
+      );
+      expect(job.data.locale).toBe('en');
+      expect(job.data.url).toContain('/en/verify-email?token=');
+
+      await http()
+        .post('/api/auth/forgot-password')
+        .send({ email: 'verify-en@test.fr' })
+        .expect(200);
+      const reset = await findJobFor(
+        queue,
+        NotificationJob.PASSWORD_RESET_REQUESTED,
+        'verify-en@test.fr',
+      );
+      expect(reset.data.locale).toBe('en');
+      expect(reset.data.url).toContain('/en/reset-password?token=');
+    });
+
     it('envoie un lien à l’inscription, le vérifie une seule fois', async () => {
       const agent = await registerAgent(app, 'verify@test.fr');
       const job = await findJobFor(
@@ -230,7 +262,7 @@ describe('Authentification (cookies httpOnly, refresh, reset, vérification)', (
         'verify@test.fr',
       );
       expect(job).toBeDefined();
-      expect(job.data.url).toContain('/verify-email?token=');
+      expect(job.data.url).toContain('/fr/verification-email?token=');
       const token = tokenFromUrl(job.data.url);
 
       await http().post('/api/auth/verify-email').send({ token: 'inventé' }).expect(400);
@@ -301,7 +333,7 @@ describe('Authentification (cookies httpOnly, refresh, reset, vérification)', (
         NotificationJob.PASSWORD_RESET_REQUESTED,
         'reset@test.fr',
       );
-      expect(job.data.url).toContain('/reset-password?token=');
+      expect(job.data.url).toContain('/fr/reinitialisation?token=');
       const token = tokenFromUrl(job.data.url);
 
       await http().post('/api/auth/reset-password').send({ token, password: 'court' }).expect(400);

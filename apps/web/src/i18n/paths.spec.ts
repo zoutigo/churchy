@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { AUTH_LINK_PATHS, authLinkPath } from '@churchy/shared';
+import { routing } from './routing';
 import { localizeHref, splitLocale, toInternalPath, toLocalizedPath } from './paths';
 
 describe('toLocalizedPath', () => {
@@ -75,5 +77,24 @@ describe('localizeHref', () => {
 
   it('« /dashboardx » n’est pas le tableau de bord', () => {
     expect(localizeHref('fr', '/dashboardx')).toBe('/fr/dashboardx');
+  });
+});
+
+describe('liens des emails (@churchy/shared)', () => {
+  it('suivent exactement les URL visibles du site (routing.pathnames)', () => {
+    for (const [kind, byLocale] of Object.entries(AUTH_LINK_PATHS)) {
+      const internal = `/${kind}` as keyof typeof routing.pathnames;
+      expect(routing.pathnames[internal], kind).toEqual(byLocale);
+      expect(authLinkPath(kind as keyof typeof AUTH_LINK_PATHS, 'en')).toBe(
+        toLocalizedPath('en', internal),
+      );
+      expect(authLinkPath(kind as keyof typeof AUTH_LINK_PATHS, 'fr')).toBe(
+        toLocalizedPath('fr', internal),
+      );
+    }
+  });
+
+  it('langue inconnue : français', () => {
+    expect(authLinkPath('verify-email', 'zz')).toBe('/fr/verification-email');
   });
 });

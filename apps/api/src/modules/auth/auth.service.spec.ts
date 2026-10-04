@@ -90,7 +90,7 @@ describe('AuthService', () => {
       expect(notifications.emailVerificationRequested).toHaveBeenCalledWith(
         expect.objectContaining({
           email: dto.email,
-          url: expect.stringContaining('/verify-email?token='),
+          url: expect.stringContaining('/fr/verification-email?token='),
         }),
       );
     });
@@ -270,8 +270,26 @@ describe('AuthService', () => {
       );
       const payload = notifications.passwordResetRequested.mock.calls[0][0];
       const rawToken = new URL(payload.url).searchParams.get('token') as string;
-      expect(payload.url).toContain('/reset-password?token=');
+      expect(payload.url).toContain('/fr/reinitialisation?token=');
       expect(prisma.authToken.create.mock.calls[0][0].data.tokenHash).toBe(hashToken(rawToken));
+    });
+  });
+
+  describe('langue des emails', () => {
+    it('le lien et le job suivent la langue du compte', async () => {
+      prisma.user.findUnique.mockResolvedValue(dbUser({ locale: 'en' }));
+      await service.forgotPassword('a@b.fr');
+      const payload = notifications.passwordResetRequested.mock.calls[0][0];
+      expect(payload.locale).toBe('en');
+      expect(payload.url).toContain('/en/reset-password?token=');
+    });
+
+    it('une langue inattendue en base retombe sur le français', async () => {
+      prisma.user.findUnique.mockResolvedValue(dbUser({ locale: 'zz' }));
+      await service.forgotPassword('a@b.fr');
+      const payload = notifications.passwordResetRequested.mock.calls[0][0];
+      expect(payload.locale).toBe('fr');
+      expect(payload.url).toContain('/fr/reinitialisation?token=');
     });
   });
 
