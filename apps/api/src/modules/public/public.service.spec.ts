@@ -105,6 +105,23 @@ describe('PublicService', () => {
       timezone: 'Europe/Paris',
     });
 
+    it('listParishSummaries : respecte l’ordre demandé et ignore les ids inconnus', async () => {
+      prisma.parish.findMany.mockResolvedValue([parish('p1', 'A'), parish('p2', 'B')]);
+      prisma.celebrationOccurrence.findMany.mockResolvedValue([row({ parishId: 'p2' })]);
+
+      const res = await service.listParishSummaries(['p2', 'ghost', 'p1']);
+
+      expect(res.map((p) => p.id)).toEqual(['p2', 'p1']);
+      expect(res[0].nextCelebration?.id).toBe('o1');
+      expect(res[1].nextCelebration).toBeNull();
+      expect(prisma.celebrationOccurrence.findMany).toHaveBeenCalledTimes(1);
+    });
+
+    it('listParishSummaries : aucun id → aucune requête', async () => {
+      expect(await service.listParishSummaries([])).toEqual([]);
+      expect(prisma.parish.findMany).not.toHaveBeenCalled();
+    });
+
     it('pagine et joint la prochaine célébration en UNE requête', async () => {
       prisma.parish.count.mockResolvedValue(30);
       prisma.parish.findMany.mockResolvedValue([parish('p1', 'A'), parish('p2', 'B')]);

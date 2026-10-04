@@ -1,12 +1,13 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Church } from 'lucide-react';
+import { LayoutDashboard, Church, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { href: '/dashboard', label: 'Tableau de bord', exact: true, icon: LayoutDashboard },
   { href: '/dashboard/parishes', label: 'Paroisses', exact: false, icon: Church },
+  { href: '/favoris', label: 'Mes favoris', exact: false, icon: Star },
 ];
 
 /** Entrées de navigation du tableau de bord (partagées avec la barre mobile). */

@@ -1,8 +1,10 @@
 import type { Metadata } from 'next';
 import { MapPin } from 'lucide-react';
+import { FavoriteButton } from '@/components/favorites/FavoriteButton';
 import { ParishInfoPanel } from '@/components/public/ParishInfoPanel';
 import { ParishTabs } from '@/components/public/ParishTabs';
 import { orNotFound, publicApi } from '@/lib/api/public.api';
+import { parishMetadata } from '@/lib/seo';
 import { placeLabel } from '@/lib/format';
 
 const WRAP = 'mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8';
@@ -15,11 +17,7 @@ interface Props {
 export async function generateMetadata({ params }: Pick<Props, 'params'>): Promise<Metadata> {
   try {
     const parish = await publicApi.getParish(params.parishId);
-    return {
-      title: `${parish.name} — Churchy`,
-      description:
-        parish.description ?? `Messes, annonces et activités de ${parish.name} (${parish.city}).`,
-    };
+    return parishMetadata(parish);
   } catch {
     return { title: 'Paroisse — Churchy' };
   }
@@ -41,6 +39,7 @@ export default async function ParishLayout({ children, params }: Props) {
               <p className="flex items-center gap-1.5 text-churchy-100">
                 <MapPin size={16} aria-hidden /> {placeLabel(parish)}, {parish.country}
               </p>
+              <FavoriteButton parishId={parish.id} parishName={parish.name} className="mt-2" />
             </div>
             {parish.imageUrl && (
               <img

@@ -1,7 +1,8 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
-import { Menu, X } from 'lucide-react';
+import { Menu, Star, X } from 'lucide-react';
+import { useFavorites } from '@/components/favorites/FavoritesProvider';
 import { useAuth } from '@/hooks/useAuth';
 
 const linkClass =
@@ -12,28 +13,48 @@ const ctaClass =
 /**
  * En-tête léger des pages publiques. Mobile : logo + bouton de menu (panneau déroulant) ;
  * à partir de `md` : liens en ligne.
+ *
+ * `hasSession` (lu côté serveur dans le cookie indicateur) permet d'afficher Connexion dès le
+ * rendu serveur à un visiteur sans session, sans attendre le JavaScript : sans cookie, il est forcément anonyme.
+ * Non fourni (page d'erreur) : on attend la fin de la vérification de session.
  */
-export function PublicHeader() {
+export function PublicHeader({ hasSession }: { hasSession?: boolean }) {
   const { user, initializing } = useAuth();
+  const { ids, ready } = useFavorites();
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
+  const sessionKnown = !initializing || hasSession === false;
 
   const links = (
     <>
       <Link href="/pour-les-paroisses" className={linkClass} onClick={close}>
         Pour les paroisses
       </Link>
-      {initializing ? null : user ? (
+      <Link
+        href="/favoris"
+        className={`${linkClass} inline-flex items-center gap-1.5`}
+        onClick={close}
+      >
+        <Star size={15} className="text-amber-500" aria-hidden />
+        Mes favoris
+        {ready && ids.length > 0 && (
+          <span
+            className="rounded-full bg-churchy-700 px-1.5 text-xs font-semibold leading-5 text-white"
+            aria-label={`${ids.length} favori${ids.length > 1 ? 's' : ''}`}
+          >
+            {ids.length}
+          </span>
+        )}
+      </Link>
+      {!sessionKnown ? null : user ? (
         <Link href="/dashboard" className={ctaClass} onClick={close}>
           Mon espace
         </Link>
       ) : (
         <>
-          <Link href="/login" className={linkClass} onClick={close}>
+          {/* Connexion seule : l'inscription s'atteint depuis la page de connexion (« S'inscrire »). */}
+          <Link href="/login" className={ctaClass} onClick={close}>
             Connexion
-          </Link>
-          <Link href="/register" className={ctaClass} onClick={close}>
-            Créer un compte
           </Link>
         </>
       )}

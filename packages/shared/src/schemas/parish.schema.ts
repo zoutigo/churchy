@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { ParishRole } from '../enums/parish-role.enum';
 import { isCompletePhone } from '../constants/phone.constants';
+import { MAX_FAVORITE_PARISHES } from '../constants/business.constants';
 import { isValidMonth, isValidTimezone } from '../schedule';
 
 /** Texte facultatif : une chaîne vide (champ de formulaire non rempli) équivaut à « non renseigné ». */
@@ -105,6 +106,32 @@ export const searchParishesSchema = z.object({
   limit: z.coerce.number().int().min(1).max(50).default(12),
 });
 
+/** Identifiants de paroisses (favoris) : dédoublonnés, bornés par `MAX_FAVORITE_PARISHES`. */
+const parishIdList = z
+  .array(z.string().trim().min(1).max(64))
+  .transform((ids) => [...new Set(ids)])
+  .pipe(
+    z
+      .array(z.string())
+      .max(MAX_FAVORITE_PARISHES, `${MAX_FAVORITE_PARISHES} paroisses favorites au maximum`),
+  );
+
+/** Résumés de paroisses par identifiants (`?ids=a,b,c`), pour l'affichage des favoris. */
+export const parishIdsQuerySchema = z.object({
+  ids: z
+    .string()
+    .transform((v) =>
+      v
+        .split(',')
+        .map((id) => id.trim())
+        .filter(Boolean),
+    )
+    .pipe(parishIdList),
+});
+
+/** Fusion des favoris d'un visiteur dans son compte à la connexion. */
+export const mergeFavoritesSchema = z.object({ parishIds: parishIdList });
+
 /** Calendrier public : un mois (« AAAA-MM »), le mois courant par défaut. */
 export const calendarQuerySchema = z.object({
   month: z
@@ -118,4 +145,6 @@ export type CalendarQuery = z.infer<typeof calendarQuerySchema>;
 export type CreateParishDto = z.infer<typeof createParishSchema>;
 export type UpdateParishDto = z.infer<typeof updateParishSchema>;
 export type InviteMemberDto = z.infer<typeof inviteMemberSchema>;
+export type ParishIdsQuery = z.infer<typeof parishIdsQuerySchema>;
+export type MergeFavoritesDto = z.infer<typeof mergeFavoritesSchema>;
 export type SearchParishesQuery = z.infer<typeof searchParishesSchema>;

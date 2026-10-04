@@ -10,6 +10,7 @@ import type {
   PublicCelebrationSummary,
   PublicParish,
   PublicParishSearchResult,
+  PublicParishSummary,
   SearchParishesQuery,
   SheetStatus,
 } from '@churchy/shared';
@@ -32,6 +33,17 @@ const PARISH_PUBLIC_SELECT = {
   email: true,
   website: true,
   imageUrl: true,
+  timezone: true,
+} satisfies Prisma.ParishSelect;
+
+/** Champs d'une paroisse dans une liste (résultats de recherche, favoris). */
+const PARISH_SUMMARY_SELECT = {
+  id: true,
+  name: true,
+  city: true,
+  country: true,
+  district: true,
+  mainChurch: true,
   timezone: true,
 } satisfies Prisma.ParishSelect;
 
@@ -109,22 +121,39 @@ export class PublicService {
       this.prisma.parish.count({ where }),
       this.prisma.parish.findMany({
         where,
-        select: {
-          id: true,
-          name: true,
-          city: true,
-          country: true,
-          district: true,
-          mainChurch: true,
-          timezone: true,
-        },
+        select: PARISH_SUMMARY_SELECT,
         orderBy: [{ name: 'asc' }, { id: 'asc' }],
         skip: (query.page - 1) * query.limit,
         take: query.limit,
       }),
     ]);
+    return {
+      items: await this.withNextCelebration(parishes),
+      total,
+      page: query.page,
+      limit: query.limit,
+    };
+  }
 
-    // Prochaine messe de chaque paroisse de la page, en une seule requête (pas de N+1).
+  /**
+   * Résumés des paroisses demandées, dans l'ordre des identifiants reçus (favoris). Les identifiants
+   * inconnus (paroisse supprimée) sont simplement ignorés.
+   */
+  async listParishSummaries(ids: string[]): Promise<PublicParishSummary[]> {
+    if (ids.length === 0) return [];
+    const parishes = await this.prisma.parish.findMany({
+      where: { id: { in: ids } },
+      select: PARISH_SUMMARY_SELECT,
+    });
+    const byId = new Map(parishes.map((p) => [p.id, p]));
+    const ordered = ids.flatMap((id) => byId.get(id) ?? []);
+    return this.withNextCelebration(ordered);
+  }
+
+  /** Prochaine messe de chaque paroisse, en une seule requête (pas de N+1). */
+  private async withNextCelebration(
+    parishes: (Omit<PublicParishSummary, 'nextCelebration'> & { timezone: string })[],
+  ): Promise<PublicParishSummary[]> {
     const upcoming = parishes.length
       ? await this.prisma.celebrationOccurrence.findMany({
           where: {
@@ -142,16 +171,10 @@ export class PublicService {
     const nextByParish = new Map(
       upcoming.map((o) => [o.parishId, toCelebrationSummary(o, timezones.get(o.parishId)!)]),
     );
-
-    return {
-      items: parishes.map(({ timezone: _tz, ...p }) => ({
-        ...p,
-        nextCelebration: nextByParish.get(p.id) ?? null,
-      })),
-      total,
-      page: query.page,
-      limit: query.limit,
-    };
+    return parishes.map(({ timezone: _tz, ...p }) => ({
+      ...p,
+      nextCelebration: nextByParish.get(p.id) ?? null,
+    }));
   }
 
   async getParish(id: string): Promise<PublicParish> {

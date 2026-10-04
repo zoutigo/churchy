@@ -14,6 +14,7 @@ import { AnnouncementsModule } from './modules/announcements/announcements.modul
 import { ActivitiesModule } from './modules/activities/activities.module';
 import { ContactModule } from './modules/contact/contact.module';
 import { PublicModule } from './modules/public/public.module';
+import { FavoritesModule } from './modules/favorites/favorites.module';
 import { HealthModule } from './health/health.module';
 
 @Module({
@@ -31,6 +32,7 @@ import { HealthModule } from './health/health.module';
     ActivitiesModule,
     ContactModule,
     PublicModule,
+    FavoritesModule,
     HealthModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

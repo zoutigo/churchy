@@ -95,6 +95,20 @@ Ces routes n'ont volontairement **pas** de `@ParishAccess` : elles ne renvoient 
   transmettre l'IP du visiteur (`X-Forwarded-For` + `trust proxy`) pour que la limite `THROTTLE_LIMIT` ne
   s'applique pas à l'ensemble des visiteurs.
 
+## Paroisses favorites et aperçu des liens
+- **Favoris** (`MAX_FAVORITE_PARISHES` = 10, `@churchy/shared`). **Visiteur** : ids dans le `localStorage` (`churchy:favorites`, `lib/favorites/storage.ts`),
+  résumés demandés à `GET /api/public/parishes/summaries?ids=a,b,c` (public, ordre conservé, ids inconnus ignorés, 10 max).
+  **Connecté** : table `FavoriteParish` (clé `userId+parishId`, cascade) ; routes `GET /favorites`, `PUT|DELETE /favorites/:parishId`
+  (idempotentes, 409 au-delà de 10, 404 si paroisse inconnue), `POST /favorites/merge` (union sans doublon, surplus écarté).
+  Pas de `@ParishAccess` : un favori n'est qu'un raccourci, il ne donne aucun droit (module `apps/api/src/modules/favorites`).
+- Web : `FavoritesProvider` (dans `app/layout.tsx`, sous `AuthProvider`) + `useFavorites` / `useFavoriteItems`. À la connexion, les favoris de
+  l'appareil sont **fusionnés dans le compte puis effacés de l'appareil** ; à la déconnexion l'appareil ne garde rien. `FavoriteButton`
+  (étoile, sur les cartes de résultat et l'en-tête de paroisse), bloc `FavoritesShelf` sur la landing (rien sans favori), page `/favoris`,
+  lien « Mes favoris » dans l'en-tête public (avec compteur) et dans `Sidebar`/`MobileNav` du tableau de bord.
+- **Aperçu des liens partagés** (WhatsApp, Facebook, X…) : `metadataBase` (`NEXT_PUBLIC_SITE_URL`, défaut `https://churchy.tigilabs.com`), Open Graph +
+  Twitter Card dans `app/layout.tsx`, image 1200×630 générée par `app/opengraph-image.tsx` (et `twitter-image.tsx`), métadonnées par paroisse
+  (`lib/seo.ts` `parishMetadata`). Les réseaux mettent les aperçus en cache : après un changement, tester avec un lien `?v=2` ou le débogueur Facebook.
+
 ## Célébrations : séries, dates et feuilles de préparation
 Trois niveaux (`apps/api/src/modules/celebrations`, schémas dans `@churchy/shared`) :
 - **Série** (`Celebration`) : titre, type, lieu, `description` publique (texte riche), `internalNote` (**interne**), `announced`

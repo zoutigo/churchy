@@ -70,6 +70,7 @@ src/
 ├── components/
 │   ├── ui/           # Composants shadcn + PasswordInput, ErrorNotice (alert : variantes success/warning)
 │   ├── auth/         # AuthProvider, AuthGuard, AuthCard, formulaires, EmailVerificationBanner, VerifyEmail
+│   ├── favorites/    # FavoritesProvider (appareil/compte + fusion), FavoriteButton, FavoritesShelf, FavoritesPage
 │   ├── public/       # PublicHeader/Footer, ParishSearchForm (GET), CelebrationItem, SheetCard, ContactForm…
 │   ├── news/         # Formulaires annonces/activités du tableau de bord, DeleteButton (suppression en 2 temps)
 │   ├── parish/       # ParishCard, CreateParishForm, ParishInfoForm
@@ -158,6 +159,7 @@ Après modification : `npm run build -w @churchy/shared`.
 
 - `/` — Landing publique (recherche de paroisse) ; `/paroisses`, `/paroisses/[id]/…` — voir « Site public » du CLAUDE.md racine
 - `/login` `/register` `/forgot-password` `/reset-password?token=` `/verify-email?token=` — Auth
+- `/favoris` — Mes favoris (visiteur ou connecté) ; voir « Paroisses favorites » du CLAUDE.md racine
 - `/dashboard` — Dashboard (requiert auth)
 - `/dashboard/parishes` — Liste paroisses
 - `/dashboard/parishes/[id]` — Détail paroisse

@@ -146,7 +146,7 @@ test.describe('site public', () => {
           await expect(menuButton).toBeHidden();
           await expect(header.getByRole('link', { name: 'Pour les paroisses' })).toBeVisible();
           await expect(header.getByRole('link', { name: 'Connexion' })).toBeVisible();
-          await expect(header.getByRole('link', { name: 'Créer un compte' })).toBeVisible();
+          await expect(header.getByRole('link', { name: 'Créer un compte' })).toHaveCount(0);
         }
       });
 

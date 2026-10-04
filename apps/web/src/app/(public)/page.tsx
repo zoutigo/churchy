@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { CalendarDays, Check, Church, Megaphone, ScrollText } from 'lucide-react';
+import { FavoritesShelf } from '@/components/favorites/FavoriteParishes';
 import { ParishSearchForm } from '@/components/public/ParishSearchForm';
 import { SheetCard } from '@/components/public/SheetCard';
 
@@ -62,6 +63,9 @@ export default function HomePage() {
           <SheetCard className="hidden rotate-2 justify-self-center lg:block lg:w-full" />
         </div>
       </section>
+
+      {/* Raccourci des favoris (rien tant qu'il n'y en a pas) : plus besoin de relancer la recherche */}
+      <FavoritesShelf />
 
       <section className={`${WRAP} py-14 sm:py-20`} aria-labelledby="features-title">
         <h2 id="features-title" className="font-playfair text-3xl font-bold text-churchy-700">

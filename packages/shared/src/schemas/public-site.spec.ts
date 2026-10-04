@@ -3,9 +3,12 @@ import {
   createParishSchema,
   calendarQuerySchema,
   searchParishesSchema,
+  parishIdsQuerySchema,
+  mergeFavoritesSchema,
   updateParishSchema,
   withCompletePhone,
 } from './parish.schema';
+import { MAX_FAVORITE_PARISHES } from '../constants/business.constants';
 import { createActivitySchema, createAnnouncementSchema } from './announcement.schema';
 import { contactMessageSchema } from './contact.schema';
 import { createCelebrationSchema, updateCelebrationSchema } from './celebration.schema';
@@ -228,5 +231,24 @@ describe('calendarQuerySchema', () => {
     for (const month of ['2026-13', '2026-1', 'octobre', '1999-12', '2101-01']) {
       expect(calendarQuerySchema.safeParse({ month }).success).toBe(false);
     }
+  });
+});
+
+describe('favoris de paroisses', () => {
+  it('découpe, nettoie et dédoublonne la liste d’ids de la requête', () => {
+    expect(parishIdsQuerySchema.parse({ ids: ' a, b ,,a,c ' }).ids).toEqual(['a', 'b', 'c']);
+    expect(parishIdsQuerySchema.parse({ ids: '' }).ids).toEqual([]);
+  });
+
+  it(`refuse plus de ${MAX_FAVORITE_PARISHES} paroisses`, () => {
+    const ids = Array.from({ length: MAX_FAVORITE_PARISHES + 1 }, (_, i) => `p${i}`);
+    expect(parishIdsQuerySchema.safeParse({ ids: ids.join(',') }).success).toBe(false);
+    expect(mergeFavoritesSchema.safeParse({ parishIds: ids }).success).toBe(false);
+    expect(mergeFavoritesSchema.safeParse({ parishIds: ids.slice(0, 10) }).success).toBe(true);
+  });
+
+  it('dédoublonne avant de compter la limite', () => {
+    const ids = Array.from({ length: 15 }, () => 'same');
+    expect(mergeFavoritesSchema.parse({ parishIds: ids }).parishIds).toEqual(['same']);
   });
 });

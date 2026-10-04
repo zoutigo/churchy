@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Church, MapPin } from 'lucide-react';
 import type { PublicParishSummary } from '@churchy/shared';
 import { formatDateShort, formatTime, placeLabel } from '@/lib/format';
+import { FavoriteButton } from '@/components/favorites/FavoriteButton';
 import { SheetStatusBadge } from './SheetStatusBadge';
 
 export function ParishResultCard({ parish }: { parish: PublicParishSummary }) {
@@ -30,13 +31,16 @@ export function ParishResultCard({ parish }: { parish: PublicParishSummary }) {
           </p>
         )}
       </div>
-      <Link
-        href={`/paroisses/${parish.id}`}
-        aria-label={`Voir la paroisse ${parish.name}`}
-        className="inline-flex h-11 shrink-0 items-center justify-center rounded-lg bg-churchy-500 px-5 text-sm font-semibold text-white transition-colors hover:bg-churchy-700"
-      >
-        Voir la paroisse
-      </Link>
+      <div className="flex shrink-0 items-center gap-2">
+        <FavoriteButton parishId={parish.id} parishName={parish.name} variant="icon" />
+        <Link
+          href={`/paroisses/${parish.id}`}
+          aria-label={`Voir la paroisse ${parish.name}`}
+          className="inline-flex h-11 flex-1 items-center justify-center rounded-lg bg-churchy-500 px-5 text-sm font-semibold text-white transition-colors hover:bg-churchy-700 sm:flex-none"
+        >
+          Voir la paroisse
+        </Link>
+      </div>
     </article>
   );
 }

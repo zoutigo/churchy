@@ -5,22 +5,41 @@ import { PublicHeader } from './PublicHeader';
 
 let auth: { user: { firstName: string } | null; initializing: boolean };
 vi.mock('@/hooks/useAuth', () => ({ useAuth: () => auth }));
+let favorites: { ids: string[]; ready: boolean };
+vi.mock('@/components/favorites/FavoritesProvider', () => ({ useFavorites: () => favorites }));
 
 describe('PublicHeader', () => {
   beforeEach(() => {
     auth = { user: null, initializing: false };
+    favorites = { ids: [], ready: true };
   });
 
-  it('visiteur : logo, Pour les paroisses, Connexion, Créer un compte', () => {
+  it('« Mes favoris » est un lien du menu, pour un visiteur comme pour un connecté', () => {
+    const { unmount } = render(<PublicHeader />);
+    expect(screen.getByRole('link', { name: /Mes favoris/ })).toHaveAttribute('href', '/favoris');
+    unmount();
+    auth = { user: { firstName: 'Jean' }, initializing: false };
+    render(<PublicHeader />);
+    expect(screen.getByRole('link', { name: /Mes favoris/ })).toHaveAttribute('href', '/favoris');
+  });
+
+  it('affiche le nombre de favoris, et rien quand il n’y en a pas', () => {
+    const { unmount } = render(<PublicHeader />);
+    expect(screen.queryByLabelText(/favori/)).not.toBeInTheDocument();
+    unmount();
+    favorites = { ids: ['a', 'b'], ready: true };
+    render(<PublicHeader />);
+    expect(screen.getByLabelText('2 favoris')).toHaveTextContent('2');
+  });
+
+  it('visiteur : logo, Pour les paroisses et Connexion seule (pas de « Créer un compte »)', () => {
     render(<PublicHeader />);
     expect(screen.getByRole('link', { name: 'Churchy, accueil' })).toHaveAttribute('href', '/');
     const nav = screen.getByRole('navigation', { name: 'Navigation principale' });
     expect(nav).toHaveTextContent('Pour les paroisses');
     expect(screen.getByRole('link', { name: 'Connexion' })).toHaveAttribute('href', '/login');
-    expect(screen.getByRole('link', { name: 'Créer un compte' })).toHaveAttribute(
-      'href',
-      '/register',
-    );
+    expect(screen.queryByRole('link', { name: 'Créer un compte' })).not.toBeInTheDocument();
+    expect(document.querySelector('a[href="/register"]')).toBeNull();
   });
 
   it('connecté : un lien « Mon espace » remplace connexion et inscription', () => {
@@ -36,6 +55,28 @@ describe('PublicHeader', () => {
     expect(screen.queryByRole('link', { name: 'Connexion' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Mon espace' })).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Pour les paroisses' })).toBeInTheDocument();
+  });
+
+  it('sans cookie de session (hasSession=false), affiche Connexion sans attendre la vérification', () => {
+    auth = { user: null, initializing: true };
+    render(<PublicHeader hasSession={false} />);
+    expect(screen.getByRole('link', { name: 'Connexion' })).toHaveAttribute('href', '/login');
+    expect(screen.queryByRole('link', { name: 'Créer un compte' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Mon espace' })).not.toBeInTheDocument();
+  });
+
+  it('avec un cookie de session (hasSession=true), n’affiche rien tant que la session n’est pas vérifiée', () => {
+    auth = { user: null, initializing: true };
+    render(<PublicHeader hasSession />);
+    expect(screen.queryByRole('link', { name: 'Connexion' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Mon espace' })).not.toBeInTheDocument();
+  });
+
+  it('une session vérifiée l’emporte sur l’indice serveur', () => {
+    auth = { user: { firstName: 'Jean' }, initializing: false };
+    render(<PublicHeader hasSession={false} />);
+    expect(screen.getByRole('link', { name: 'Mon espace' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Connexion' })).not.toBeInTheDocument();
   });
 
   it('mobile : le menu s’ouvre et se ferme avec le bouton, et se referme après un clic sur un lien', async () => {

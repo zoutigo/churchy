@@ -161,11 +161,16 @@ test.describe('sécurité de la session', () => {
 });
 
 test.describe('navigation de la page d’accueil', () => {
-  test('propose connexion et inscription aux visiteurs', async ({ page }) => {
+  test('propose Connexion seule aux visiteurs (l’inscription se fait depuis la page de connexion)', async ({
+    page,
+  }) => {
     await page.goto('/');
     const nav = page.getByRole('navigation', { name: 'Navigation principale' });
     await expect(nav.getByRole('link', { name: 'Connexion' })).toBeVisible();
-    await expect(nav.getByRole('link', { name: 'Créer un compte' })).toBeVisible();
+    await expect(nav.getByRole('link', { name: 'Créer un compte' })).toHaveCount(0);
+    await nav.getByRole('link', { name: 'Connexion' }).click();
+    await page.getByRole('link', { name: "S'inscrire" }).click();
+    await expect(page).toHaveURL(/\/register$/);
   });
 
   test('propose « Mon espace » aux utilisateurs connectés', async ({ page }) => {
