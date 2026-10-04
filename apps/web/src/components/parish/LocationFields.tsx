@@ -2,10 +2,19 @@
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { useFormContext } from 'react-hook-form';
-import { COUNTRIES, DEFAULT_COUNTRY, citiesOf, districtsOf, regionsOf } from '@churchy/shared';
+import {
+  COUNTRIES,
+  DEFAULT_COUNTRY,
+  citiesOf,
+  countryLabel,
+  districtsOf,
+  regionLabel,
+  regionsOf,
+} from '@churchy/shared';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
+import { useAppLocale } from '@/i18n/locale';
 
 /** Champs de localisation partagés par les formulaires de création et de modification. */
 export interface LocationValues {
@@ -42,6 +51,7 @@ export function LocationFields() {
     structured && !!district && !districts.includes(district),
   );
 
+  const locale = useAppLocale();
   const t = useTranslations('location');
   const tc = useTranslations('common');
   const set = (name: keyof LocationValues, value: string) =>
@@ -75,7 +85,7 @@ export function LocationFields() {
               >
                 {COUNTRIES.map((c) => (
                   <option key={c} value={c}>
-                    {c}
+                    {countryLabel(c, locale)}
                   </option>
                 ))}
               </NativeSelect>
@@ -109,7 +119,7 @@ export function LocationFields() {
                     <option value="">{t('chooseRegion')}</option>
                     {regions.map((r) => (
                       <option key={r} value={r}>
-                        {r}
+                        {regionLabel(r, locale)}
                       </option>
                     ))}
                   </NativeSelect>

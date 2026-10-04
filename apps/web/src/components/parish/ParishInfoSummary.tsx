@@ -1,10 +1,12 @@
 import { useTranslations } from 'next-intl';
-import type { Parish } from '@churchy/shared';
+import { countryLabel, type Parish } from '@churchy/shared';
+import { useAppLocale } from '@/i18n/locale';
 
 /** Identité publique d'une paroisse en lecture seule : ce que verront les fidèles. */
 export function ParishInfoSummary({ parish }: { parish: Parish }) {
   const t = useTranslations('parishSummary');
-  const place = [parish.address, parish.district, parish.city, parish.country]
+  const locale = useAppLocale();
+  const place = [parish.address, parish.district, parish.city, countryLabel(parish.country, locale)]
     .filter(Boolean)
     .join(', ');
   const rows: { key: string; label: string; value?: string | null }[] = [

@@ -385,3 +385,53 @@ export const citiesOf = (country: string, region: string): string[] =>
 
 export const districtsOf = (country: string, city: string): string[] =>
   country === DEFAULT_COUNTRY ? [...(CAMEROON_DISTRICTS[city] ?? [])] : [];
+
+/**
+ * Noms anglais des pays et des régions. La valeur enregistrée en base reste le nom français (identité
+ * stable) : seul l'affichage est traduit. Un nom absent de la table (saisie libre) est rendu tel quel.
+ */
+const COUNTRY_NAMES_EN: Record<string, string> = {
+  Cameroun: 'Cameroon',
+  'Afrique du Sud': 'South Africa',
+  Algérie: 'Algeria',
+  Allemagne: 'Germany',
+  Belgique: 'Belgium',
+  Bénin: 'Benin',
+  Brésil: 'Brazil',
+  Centrafrique: 'Central African Republic',
+  "Côte d'Ivoire": 'Ivory Coast',
+  Espagne: 'Spain',
+  'États-Unis': 'United States',
+  Guinée: 'Guinea',
+  'Guinée équatoriale': 'Equatorial Guinea',
+  Italie: 'Italy',
+  Maroc: 'Morocco',
+  'Pays-Bas': 'Netherlands',
+  'République démocratique du Congo': 'Democratic Republic of the Congo',
+  'Royaume-Uni': 'United Kingdom',
+  Sénégal: 'Senegal',
+  Suisse: 'Switzerland',
+  Tchad: 'Chad',
+  Tunisie: 'Tunisia',
+};
+
+const REGION_NAMES_EN: Record<string, string> = {
+  Est: 'East',
+  'Extrême-Nord': 'Far North',
+  Nord: 'North',
+  'Nord-Ouest': 'North-West',
+  Ouest: 'West',
+  Sud: 'South',
+  'Sud-Ouest': 'South-West',
+};
+
+const byLocale = (table: Record<string, string>, name: string, locale: string): string =>
+  locale === 'en' ? (table[name] ?? name) : name;
+
+/** Nom d'un pays dans la langue demandée (`fr` : tel qu'enregistré). */
+export const countryLabel = (country: string, locale: string): string =>
+  byLocale(COUNTRY_NAMES_EN, country, locale);
+
+/** Nom d'une région du Cameroun dans la langue demandée. */
+export const regionLabel = (region: string, locale: string): string =>
+  byLocale(REGION_NAMES_EN, region, locale);

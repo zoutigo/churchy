@@ -108,7 +108,9 @@ Le Cameroun est bilingue. Langues : `fr` (défaut) et `en` (`LOCALES`, `DEFAULT_
   contre `routing.pathnames`). L'email de contact, destiné à l'équipe, reste en français.
 - **Référencement** : `app/sitemap.ts` (pages statiques + 5 pages par paroisse, chacune dans les deux langues avec `hreflang` et `x-default` ; généré à la demande, 4 000 paroisses max ; API injoignable → pages statiques seules) et `app/robots.ts` (exclut `/api/`, `/dashboard`, authentification et favoris dans chaque langue). Logique dans `lib/sitemap.ts`, URL du site dans `lib/site.ts` (`NEXT_PUBLIC_SITE_URL`). Une page publique **nouvelle** s'ajoute à `STATIC_PATHS` ; une page privée à `PRIVATE_PATHS`.
 - **Pages légales** (`LegalDocument`, `components/public`) : conditions, confidentialité et mentions légales sont des tableaux `sections` ({ title, paragraphs?, items?, after? }) dans `messages/*.json`, avec sommaire et ancres `#section-N`. Les faits propres à l'éditeur restent entre crochets `[À compléter : …]` (identité de l'éditeur, directeur de la publication, droit applicable) : bandeau « provisoire » à retirer une fois validés par un juriste.
-- **Reste à faire** : noms de pays/régions (stockés en français, `geo.constants`), paramètres de requête traduits (`mois` → `month`).
+- **Pays et régions** : la valeur enregistrée reste le nom **français** (identité stable) ; l'affichage passe par `countryLabel(nom, locale)` / `regionLabel(nom, locale)` (`@churchy/shared`, `geo.constants`). Un nom absent de la table (saisie libre) est rendu tel quel. Les villes et quartiers sont des noms propres, non traduits.
+- **Domaine** : pour l'instant `churchy.tigilabs.com` ; le domaine définitif sera communiqué par le propriétaire (il suffira de changer `NEXT_PUBLIC_SITE_URL`).
+- **Reste à faire** : paramètres de requête traduits (`mois` → `month`).
 
 ## Site public (sans authentification)
 Pages servies par le web (rendu serveur, `force-dynamic`, URL **par id** de paroisse, pas par slug ; chemins ci-dessous = chemins **internes** en français, voir « Langues » pour les URL visibles `/fr/…` et `/en/…`) :

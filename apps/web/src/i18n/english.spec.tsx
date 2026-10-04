@@ -9,6 +9,7 @@ import { setTestLocale } from '../../vitest.setup';
 import { MonthCalendar } from '@/components/public/MonthCalendar';
 import { CelebrationItem } from '@/components/public/CelebrationItem';
 import { ParishResultCard } from '@/components/public/ParishResultCard';
+import { ParishCard } from '@/components/parish/ParishCard';
 import { ParishTabs } from '@/components/public/ParishTabs';
 import { PublicHeader } from '@/components/public/PublicHeader';
 import userEvent from '@testing-library/user-event';
@@ -107,6 +108,12 @@ describe('site public en anglais', () => {
       />,
     );
     expect(screen.getByText('Cancelled — Retreat')).toBeInTheDocument();
+  });
+
+  it('carte de paroisse : le pays est affiché en anglais', () => {
+    const parish = { id: 'p1', name: 'Saint Peter', city: 'Douala', country: 'Cameroun' };
+    render(<ParishCard parish={parish as never} />);
+    expect(screen.getByText('Douala, Cameroon')).toBeInTheDocument();
   });
 
   it('résultat de recherche : prochaine messe', () => {

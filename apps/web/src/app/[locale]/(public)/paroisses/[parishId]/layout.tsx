@@ -1,6 +1,7 @@
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import type { Metadata } from 'next';
 import { MapPin } from 'lucide-react';
+import { countryLabel } from '@churchy/shared';
 import { FavoriteButton } from '@/components/favorites/FavoriteButton';
 import { ParishInfoPanel } from '@/components/public/ParishInfoPanel';
 import { ParishTabs } from '@/components/public/ParishTabs';
@@ -28,6 +29,7 @@ export async function generateMetadata({ params }: Pick<Props, 'params'>): Promi
 /** Mini-site d'une paroisse : bandeau d'identité, onglets, contenu, et fiche pratique à droite sur desktop. */
 export default async function ParishLayout({ children, params }: Props) {
   const t = await getTranslations('parishLayout');
+  const locale = await getLocale();
   const parish = await orNotFound(publicApi.getParish(params.parishId));
 
   return (
@@ -40,7 +42,8 @@ export default async function ParishLayout({ children, params }: Props) {
                 {parish.name}
               </h1>
               <p className="flex items-center gap-1.5 text-churchy-100">
-                <MapPin size={16} aria-hidden /> {placeLabel(parish)}, {parish.country}
+                <MapPin size={16} aria-hidden /> {placeLabel(parish)},{' '}
+                {countryLabel(parish.country, locale)}
               </p>
               <FavoriteButton parishId={parish.id} parishName={parish.name} className="mt-2" />
             </div>
