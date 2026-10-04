@@ -62,3 +62,13 @@ export async function findJobFor(queue: Queue, jobName: string, email: string) {
 
 export const tokenFromUrl = (url: string): string =>
   new URL(url).searchParams.get('token') as string;
+
+/** Jour « AAAA-MM-JJ » situé dans `days` jours (UTC) : les tests ne doivent pas dépendre du jour de lancement. */
+export const dayFromNow = (days: number): string =>
+  new Date(Date.now() + days * 86_400_000).toISOString().slice(0, 10);
+
+/** Planning de dates ponctuelles, à 10 h locale. */
+export const onDays = (...days: number[]) => ({
+  kind: 'dates' as const,
+  dates: days.map((d) => ({ date: dayFromNow(d), time: '10:00' })),
+});

@@ -1,6 +1,11 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { searchParishesSchema, type SearchParishesQuery } from '@churchy/shared';
+import {
+  calendarQuerySchema,
+  searchParishesSchema,
+  type CalendarQuery,
+  type SearchParishesQuery,
+} from '@churchy/shared';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
 import { PublicService } from './public.service';
 
@@ -26,6 +31,14 @@ export class PublicController {
   @Get('parishes/:id/celebrations')
   listCelebrations(@Param('id') id: string) {
     return this.service.listCelebrations(id);
+  }
+
+  @Get('parishes/:id/calendar')
+  getCalendar(
+    @Param('id') id: string,
+    @Query(new ZodValidationPipe(calendarQuerySchema)) query: CalendarQuery,
+  ) {
+    return this.service.getCalendar(id, query);
   }
 
   @Get('parishes/:id/announcements')

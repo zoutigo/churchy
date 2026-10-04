@@ -9,7 +9,8 @@ const API = 'http://localhost:3211';
 
 export default defineConfig({
   testDir: './e2e',
-  fullyParallel: false,
+  // Les tests sont indépendants (données uniques par test) : le découpage en shards se fait par test.
+  fullyParallel: true,
   workers: 1,
   timeout: 60_000,
   expect: { timeout: 10_000 },

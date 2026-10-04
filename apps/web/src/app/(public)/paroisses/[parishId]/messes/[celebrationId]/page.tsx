@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Clock, MapPin } from 'lucide-react';
+import { RichContent } from '@/components/rich-text/RichContent';
 import { SheetStatusBadge } from '@/components/public/SheetStatusBadge';
 import { orNotFound, publicApi } from '@/lib/api/public.api';
 import { CELEBRATION_TYPE_LABELS, formatDateLong, formatTime } from '@/lib/format';
@@ -24,6 +25,7 @@ export default async function PublicCelebrationPage({ params }: Props) {
   // L'URL doit désigner la paroisse de cette célébration.
   if (c.parish.id !== params.parishId) notFound();
 
+  const tz = { timeZone: c.timezone };
   const inPreparation = c.sheetStatus === 'IN_PREPARATION';
 
   return (
@@ -40,7 +42,7 @@ export default async function PublicCelebrationPage({ params }: Props) {
           <li className="flex items-center gap-2">
             <Clock size={16} className="text-amber-500" aria-hidden />
             <time dateTime={c.date}>
-              {formatDateLong(c.date)} à {formatTime(c.date)}
+              {formatDateLong(c.date, tz)} à {formatTime(c.date, tz)}
             </time>
           </li>
           {c.location && (
@@ -50,10 +52,30 @@ export default async function PublicCelebrationPage({ params }: Props) {
           )}
           <li className="text-sm text-churchy-900/75">{CELEBRATION_TYPE_LABELS[c.type]}</li>
         </ul>
-        <SheetStatusBadge status={c.sheetStatus} />
+        {c.cancelled ? (
+          <p
+            role="status"
+            className="rounded-xl border border-red-200 bg-red-50 p-4 font-medium text-red-700"
+          >
+            Cette célébration est annulée{c.cancelReason ? ` : ${c.cancelReason}` : '.'}
+          </p>
+        ) : (
+          <SheetStatusBadge status={c.sheetStatus} />
+        )}
       </header>
 
-      {inPreparation ? (
+      {(c.description || c.occurrenceDescription) && (
+        <section aria-label="À propos de cette célébration" className="space-y-3">
+          {c.description && <RichContent html={c.description} />}
+          {c.occurrenceDescription && (
+            <div className="rounded-xl border border-amber-300/60 bg-amber-400/10 p-4">
+              <RichContent html={c.occurrenceDescription} />
+            </div>
+          )}
+        </section>
+      )}
+
+      {c.cancelled ? null : inPreparation ? (
         <p className="rounded-xl border border-dashed border-churchy-200 bg-white/60 p-5 text-churchy-900/85">
           La paroisse prépare la feuille de cette célébration. Elle sera visible ici dès sa
           publication.
@@ -72,7 +94,7 @@ export default async function PublicCelebrationPage({ params }: Props) {
               {step.content ? (
                 <>
                   <p className="font-medium">{step.content.title}</p>
-                  <p className="whitespace-pre-wrap text-sm leading-relaxed">{step.content.body}</p>
+                  <RichContent html={step.content.body} />
                 </>
               ) : step.customText ? (
                 <p className="whitespace-pre-wrap text-sm leading-relaxed">{step.customText}</p>

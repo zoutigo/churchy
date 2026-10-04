@@ -1,0 +1,127 @@
+name: Churchy - Checks & Deploy (VPS)
+
+# Les tests complets (unitaires + fonctionnels) tournent sur `dev` (ci.yml) : `main` ne reçoit que
+# du code déjà validé, on y refait seulement les contrôles rapides avant de déployer.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+
+    env:
+      CI: 'true'
+      HUSKY: '0'
+      NEXT_TELEMETRY_DISABLED: '1'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Client Prisma
+        run: npm run prisma:generate -w @churchy/api
+
+      - name: Cohérence CLAUDE.md / AGENTS.md
+        run: node scripts/agent-docs.mjs check
+
+      - name: Lint et formatage
+        run: |
+          npm run lint
+          npm run format:check
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Archive du code
+        run: |
+          tar \
+            --exclude=.git --exclude=node_modules --exclude=.github \
+            --exclude=docker/.env --exclude='apps/*/.env' --exclude=apps/web/.env.local \
+            -czf /tmp/churchy-release.tar.gz .
+          mv /tmp/churchy-release.tar.gz ./churchy-release.tar.gz
+
+      - name: Envoi sur le VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          source: churchy-release.tar.gz
+          target: ~/apps
+
+      - name: Déploiement
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          script_stop: true
+          command_timeout: 25m
+          script: |
+            set -euo pipefail
+            APPS=~/apps
+            APP="$APPS/churchy"
+            STAGING="$APPS/churchy-next"
+            ARCHIVE="$APPS/churchy-release.tar.gz"
+
+            echo "==> Nouveau code (docker/.env et dossiers de données conservés)"
+            test -f "$APP/docker/.env" || { echo "docker/.env absent sur le VPS"; exit 1; }
+            rm -rf "$STAGING" && mkdir -p "$STAGING"
+            tar -xzf "$ARCHIVE" -C "$STAGING"
+            rm -f "$ARCHIVE"
+            rsync -a --delete --exclude=docker/.env "$STAGING/" "$APP/"
+            rm -rf "$STAGING"
+
+            cd "$APP"
+            export NGINX_NETWORK=proxy UPLOADS_ROOT=/home/ubuntu/uploads/churchy
+            C="docker compose -f docker/docker-compose.vps.yml --env-file docker/.env"
+
+            echo "==> Build des images"
+            $C build
+
+            echo "==> Migrations (avant de démarrer le nouveau code)"
+            $C run --rm api npx prisma migrate deploy
+
+            echo "==> Démarrage"
+            $C up -d --remove-orphans
+
+            echo "==> Contrôle de santé"
+            for i in $(seq 1 30); do
+              if curl -fsS https://churchy.tigilabs.com/api/health >/dev/null \
+                 && curl -fsS -o /dev/null https://churchy.tigilabs.com/; then
+                echo "OK"; $C ps; docker image prune -f >/dev/null; exit 0
+              fi
+              sleep 4
+            done
+            echo "Le site ne répond pas après déploiement"; $C ps; $C logs --tail 40 api web; exit 1

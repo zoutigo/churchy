@@ -1,7 +1,13 @@
 'use client';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { updateParishSchema, type Parish, type UpdateParishDto } from '@churchy/shared';
+import {
+  TIMEZONE_CHOICES,
+  updateParishSchema,
+  withCompletePhone,
+  type Parish,
+  type UpdateParishDto,
+} from '@churchy/shared';
 import { parishesApi } from '@/lib/api/parishes.api';
 import { Button } from '@/components/ui/button';
 import {
@@ -13,16 +19,29 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { NativeSelect } from '@/components/ui/native-select';
 import { Textarea } from '@/components/ui/textarea';
+import { LocationFields } from './LocationFields';
+import { PhoneField } from './PhoneField';
+import { handleSubmitError } from '@/lib/forms/submit-error';
+import { notify } from '@/lib/notify';
 
 type Field = keyof UpdateParishDto;
 
 const TEXT_FIELDS: { name: Field; label: string; placeholder?: string; type?: string }[] = [
-  { name: 'district', label: 'Quartier', placeholder: 'Croix-Rousse' },
   { name: 'mainChurch', label: 'Église principale', placeholder: 'Église Saint-Pierre' },
   { name: 'address', label: 'Adresse', placeholder: '1 place de l’Église' },
-  { name: 'phone', label: 'Téléphone', placeholder: '04 00 00 00 00', type: 'tel' },
-  { name: 'email', label: 'Email de la paroisse', type: 'email' },
+  {
+    name: 'addressComplement',
+    label: 'Complément d’adresse',
+    placeholder: 'En face de la poste centrale',
+  },
+  {
+    name: 'email',
+    label: 'Email de la paroisse',
+    placeholder: 'contact@paroisse.org',
+    type: 'email',
+  },
   { name: 'website', label: 'Site web', placeholder: 'https://…', type: 'url' },
   { name: 'imageUrl', label: 'Adresse de la photo', placeholder: 'https://…', type: 'url' },
 ];
@@ -36,16 +55,21 @@ export function ParishInfoForm({
   onSaved?: (p: Parish) => void;
 }) {
   const form = useForm<UpdateParishDto>({
-    resolver: zodResolver(updateParishSchema),
+    resolver: zodResolver(withCompletePhone(updateParishSchema)),
     defaultValues: {
       description: parish.description ?? '',
+      country: parish.country,
+      region: parish.region ?? '',
+      city: parish.city,
       district: parish.district ?? '',
       mainChurch: parish.mainChurch ?? '',
       address: parish.address ?? '',
+      addressComplement: parish.addressComplement ?? '',
       phone: parish.phone ?? '',
       email: parish.email ?? '',
       website: parish.website ?? '',
       imageUrl: parish.imageUrl ?? '',
+      timezone: parish.timezone,
     },
     mode: 'onChange',
   });
@@ -54,11 +78,10 @@ export function ParishInfoForm({
     try {
       const saved = await parishesApi.update(parish.id, data);
       form.clearErrors('root');
+      notify.success('Paroisse mise à jour');
       onSaved?.(saved);
     } catch (err: unknown) {
-      form.setError('root', {
-        message: err instanceof Error ? err.message : 'Erreur lors de l’enregistrement',
-      });
+      handleSubmitError(form, err, 'Erreur lors de l’enregistrement');
     }
   }
 
@@ -83,7 +106,9 @@ export function ParishInfoForm({
             </FormItem>
           )}
         />
+        <LocationFields />
         <div className="grid gap-4 sm:grid-cols-2">
+          <PhoneField />
           {TEXT_FIELDS.map((f) => (
             <FormField
               key={f.name}
@@ -105,6 +130,28 @@ export function ParishInfoForm({
               )}
             />
           ))}
+          <FormField
+            control={form.control}
+            name="timezone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Fuseau horaire</FormLabel>
+                <FormControl>
+                  <NativeSelect {...field} value={field.value ?? parish.timezone}>
+                    {[...new Set([...TIMEZONE_CHOICES, parish.timezone])].sort().map((tz) => (
+                      <option key={tz} value={tz}>
+                        {tz.replace('_', ' ')}
+                      </option>
+                    ))}
+                  </NativeSelect>
+                </FormControl>
+                <p className="text-xs text-muted-foreground">
+                  Les heures des célébrations sont celles de ce fuseau.
+                </p>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
         {form.formState.errors.root && (
           <p className="text-sm text-destructive">{form.formState.errors.root.message}</p>

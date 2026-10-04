@@ -1,7 +1,12 @@
 'use client';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { createParishSchema, type CreateParishDto } from '@churchy/shared';
+import {
+  DEFAULT_COUNTRY,
+  createParishSchema,
+  withCompletePhone,
+  type CreateParishDto,
+} from '@churchy/shared';
 import { parishesApi } from '@/lib/api/parishes.api';
 import {
   Form,
@@ -14,6 +19,10 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { LocationFields } from './LocationFields';
+import { PhoneField } from './PhoneField';
+import { handleSubmitError } from '@/lib/forms/submit-error';
+import { notify } from '@/lib/notify';
 
 interface Props {
   onSuccess?: () => void;
@@ -21,20 +30,29 @@ interface Props {
 
 export function CreateParishForm({ onSuccess }: Props) {
   const form = useForm<CreateParishDto>({
-    resolver: zodResolver(createParishSchema),
-    defaultValues: { name: '', description: '', city: '', country: 'France' },
+    resolver: zodResolver(withCompletePhone(createParishSchema)),
+    defaultValues: {
+      name: '',
+      description: '',
+      country: DEFAULT_COUNTRY,
+      region: '',
+      city: '',
+      district: '',
+      addressComplement: '',
+      phone: '',
+      email: '',
+    },
     mode: 'onChange',
   });
 
   async function onSubmit(data: CreateParishDto) {
     try {
       await parishesApi.create(data);
+      notify.success('Paroisse créée', `« ${data.name} » est prête.`);
       form.reset();
       onSuccess?.();
     } catch (err: unknown) {
-      form.setError('root', {
-        message: err instanceof Error ? err.message : 'Erreur lors de la création',
-      });
+      handleSubmitError(form, err, 'Erreur lors de la création');
     }
   }
 
@@ -48,7 +66,7 @@ export function CreateParishForm({ onSuccess }: Props) {
             <FormItem>
               <FormLabel>Nom de la paroisse</FormLabel>
               <FormControl>
-                <Input placeholder="Saint-Pierre de Montmartre" {...field} />
+                <Input placeholder="Paroisse Saint-Joseph de Mvog-Ada" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -74,28 +92,36 @@ export function CreateParishForm({ onSuccess }: Props) {
             </FormItem>
           )}
         />
-        <div className="grid grid-cols-2 gap-3">
+        <LocationFields />
+        <div className="grid gap-4 sm:grid-cols-2">
           <FormField
             control={form.control}
-            name="city"
+            name="addressComplement"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Ville</FormLabel>
+                <FormLabel>
+                  Complément d’adresse{' '}
+                  <span className="text-muted-foreground text-xs">(optionnel)</span>
+                </FormLabel>
                 <FormControl>
-                  <Input placeholder="Paris" {...field} />
+                  <Input placeholder="En face de la poste centrale" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
+          <PhoneField optionalHint />
           <FormField
             control={form.control}
-            name="country"
+            name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Pays</FormLabel>
+                <FormLabel>
+                  Email de la paroisse{' '}
+                  <span className="text-muted-foreground text-xs">(optionnel)</span>
+                </FormLabel>
                 <FormControl>
-                  <Input placeholder="France" {...field} />
+                  <Input type="email" placeholder="contact@paroisse.org" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -105,7 +131,7 @@ export function CreateParishForm({ onSuccess }: Props) {
         {form.formState.errors.root && (
           <p className="text-sm text-destructive">{form.formState.errors.root.message}</p>
         )}
-        <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+        <Button type="submit" className="w-full sm:w-auto" disabled={form.formState.isSubmitting}>
           {form.formState.isSubmitting ? 'Création...' : 'Créer la paroisse'}
         </Button>
       </form>

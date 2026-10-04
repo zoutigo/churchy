@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import type { CreateActivityDto } from '@churchy/shared';
+import { sanitizeRichText } from '../../common/rich-text';
 import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
@@ -8,7 +9,13 @@ export class ActivitiesService {
 
   create(parishId: string, dto: CreateActivityDto, userId: string) {
     return this.prisma.activity.create({
-      data: { ...dto, startsAt: new Date(dto.startsAt), parishId, createdById: userId },
+      data: {
+        ...dto,
+        description: sanitizeRichText(dto.description),
+        startsAt: new Date(dto.startsAt),
+        parishId,
+        createdById: userId,
+      },
     });
   }
 

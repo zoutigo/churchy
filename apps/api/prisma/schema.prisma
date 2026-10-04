@@ -103,29 +103,36 @@ model AuthToken {
 }
 
 model Parish {
-  id          String   @id @default(cuid())
-  name        String
-  slug        String   @unique
-  description String?
-  city        String
-  country     String
+  id                String   @id @default(cuid())
+  name              String
+  slug              String   @unique
+  description       String?
+  city              String
+  country           String
+  /// Région (Cameroun : liste fermée côté interface).
+  region            String?
   /// Quartier, pour la recherche publique.
-  district    String?
-  address     String?
+  district          String?
+  address           String?
+  /// Indication pour retrouver l'église (« en face de la poste centrale »).
+  addressComplement String?
   /// Nom de l'église principale.
-  mainChurch  String?
-  phone       String?
-  email       String?
-  website     String?
+  mainChurch        String?
+  phone             String?
+  email             String?
+  website           String?
   /// Photo ou identité visuelle (URL).
-  imageUrl    String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  imageUrl          String?
+  /// Fuseau horaire IANA : les heures des célébrations sont des heures locales de ce fuseau.
+  timezone          String   @default("Europe/Paris")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   members              ParishMember[]
   contents             Content[]
   celebrationTemplates CelebrationTemplate[]
   celebrations         Celebration[]
+  occurrences          CelebrationOccurrence[]
   announcements        Announcement[]
   activities           Activity[]
 
@@ -173,9 +180,10 @@ model CelebrationTemplate {
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
 
-  parish       Parish                    @relation(fields: [parishId], references: [id], onDelete: Cascade)
-  steps        CelebrationTemplateStep[]
-  celebrations Celebration[]
+  parish     Parish                    @relation(fields: [parishId], references: [id], onDelete: Cascade)
+  steps      CelebrationTemplateStep[]
+  sheets     PreparationSheet[]
+  defaultFor Celebration[]             @relation("DefaultTemplate")
 }
 
 model CelebrationTemplateStep {
@@ -194,41 +202,95 @@ model CelebrationTemplateStep {
   @@unique([templateId, order])
 }
 
+/// Série de célébrations (ex. « Messe du dimanche ») : informations communes à toutes ses dates.
 model Celebration {
-  id          String            @id @default(cuid())
-  parishId    String
-  templateId  String
-  title       String
-  date        DateTime
-  location    String?
-  status      CelebrationStatus @default(DRAFT)
-  /// Annoncée au public avant la publication de la feuille (« feuille en préparation »).
-  announced   Boolean           @default(false)
-  createdById String
-  publishedAt DateTime?
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
+  id                String          @id @default(cuid())
+  parishId          String
+  title             String
+  type              CelebrationType
+  location          String?
+  /// Description publique (HTML nettoyé).
+  description       String?         @db.Text
+  /// Note interne à l'équipe de préparation : jamais exposée au public.
+  internalNote      String?         @db.Text
+  /// Visible du public (toutes les dates). Les feuilles restent « en préparation » jusqu'à leur publication.
+  announced         Boolean         @default(false)
+  /// Modèle de feuille proposé par défaut pour les dates de la série.
+  defaultTemplateId String?
+  archivedAt        DateTime?
+  createdById       String
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
 
-  parish    Parish              @relation(fields: [parishId], references: [id], onDelete: Cascade)
-  template  CelebrationTemplate @relation(fields: [templateId], references: [id])
-  createdBy User                @relation(fields: [createdById], references: [id])
-  steps     CelebrationStep[]
+  parish          Parish                  @relation(fields: [parishId], references: [id], onDelete: Cascade)
+  defaultTemplate CelebrationTemplate?    @relation("DefaultTemplate", fields: [defaultTemplateId], references: [id], onDelete: SetNull)
+  createdBy       User                    @relation(fields: [createdById], references: [id])
+  occurrences     CelebrationOccurrence[]
 
-  @@index([parishId, date])
+  @@index([parishId, announced])
 }
 
+enum OccurrenceStatus {
+  SCHEDULED
+  CANCELLED
+}
+
+/// Une date d'une série. Le passé est immuable (contrôlé par l'API).
+model CelebrationOccurrence {
+  id            String           @id @default(cuid())
+  celebrationId String
+  /// Dupliqué de la série pour les index et les contrôles d'accès.
+  parishId      String
+  startsAt      DateTime
+  /// Précision publique propre à cette date (ex. « l'évêque sera là »).
+  description   String?          @db.Text
+  /// Note interne propre à cette date (ex. point de vigilance pour la préparation).
+  internalNote  String?          @db.Text
+  status        OccurrenceStatus @default(SCHEDULED)
+  cancelReason  String?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  celebration Celebration       @relation(fields: [celebrationId], references: [id], onDelete: Cascade)
+  parish      Parish            @relation(fields: [parishId], references: [id], onDelete: Cascade)
+  sheet       PreparationSheet?
+
+  @@unique([celebrationId, startsAt])
+  @@index([parishId, startsAt])
+}
+
+/// Feuille de préparation d'une date : créée à la demande, depuis un modèle ou à la volée (sans modèle).
+model PreparationSheet {
+  id           String            @id @default(cuid())
+  occurrenceId String            @unique
+  /// Modèle d'origine (null = feuille construite à la volée).
+  templateId   String?
+  status       CelebrationStatus @default(DRAFT)
+  publishedAt  DateTime?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  occurrence CelebrationOccurrence @relation(fields: [occurrenceId], references: [id], onDelete: Cascade)
+  template   CelebrationTemplate?  @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  steps      CelebrationStep[]
+}
+
+/// Étape d'une feuille. `key` permet de rapprocher les étapes quand on change de modèle.
 model CelebrationStep {
   id             String  @id @default(cuid())
-  celebrationId  String
-  templateStepId String
+  sheetId        String
+  templateStepId String?
+  key            String
   title          String
   order          Int
   contentId      String?
   customText     String? @db.Text
 
-  celebration  Celebration             @relation(fields: [celebrationId], references: [id], onDelete: Cascade)
-  templateStep CelebrationTemplateStep @relation(fields: [templateStepId], references: [id])
-  content      Content?                @relation(fields: [contentId], references: [id])
+  sheet        PreparationSheet         @relation(fields: [sheetId], references: [id], onDelete: Cascade)
+  templateStep CelebrationTemplateStep? @relation(fields: [templateStepId], references: [id], onDelete: SetNull)
+  content      Content?                 @relation(fields: [contentId], references: [id])
+
+  @@unique([sheetId, key])
 }
 
 /// Annonce de la paroisse, publiée dès sa création.

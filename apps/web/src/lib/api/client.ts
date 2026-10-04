@@ -14,6 +14,8 @@ export class ApiError extends Error {
   constructor(
     message: string,
     public readonly status: number,
+    /** Erreurs de validation de l'API par champ (schéma Zod côté serveur). */
+    public readonly fieldErrors: Record<string, string[]> = {},
   ) {
     super(message);
     this.name = 'ApiError';
@@ -38,6 +40,19 @@ function extractMessage(body: { message?: unknown }): string {
     if (first) return first;
   }
   return 'Erreur inconnue';
+}
+
+/** Erreurs par champ renvoyées par la validation Zod de l'API (`flatten()`), sinon un objet vide. */
+function extractFieldErrors(body: { message?: unknown }): Record<string, string[]> {
+  const m = body?.message;
+  if (!m || typeof m !== 'object') return {};
+  const { fieldErrors } = m as { fieldErrors?: Record<string, unknown> };
+  if (!fieldErrors || typeof fieldErrors !== 'object') return {};
+  return Object.fromEntries(
+    Object.entries(fieldErrors).filter(
+      (e): e is [string, string[]] => Array.isArray(e[1]) && e[1].length > 0,
+    ),
+  );
 }
 
 /** Routes pour lesquelles un 401 est une réponse normale : inutile (ou impossible) de rafraîchir. */
@@ -65,15 +80,20 @@ function refreshSession(): Promise<boolean> {
 }
 
 async function request<T>(path: string, options?: RequestInit, canRetry = true): Promise<T> {
-  const res = await fetch(`${apiUrl()}${path}`, {
-    // Rendu serveur (pages publiques) : Next met les `fetch` en cache par défaut ; une annonce supprimée
-    // doit disparaître immédiatement, donc jamais de copie en cache.
-    ...(typeof window === 'undefined' ? { cache: 'no-store' as const } : {}),
-    ...options,
-    // Les jetons sont dans des cookies httpOnly : le navigateur les joint, le JavaScript ne les voit pas.
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${apiUrl()}${path}`, {
+      // Rendu serveur (pages publiques) : Next met les `fetch` en cache par défaut ; une annonce supprimée
+      // doit disparaître immédiatement, donc jamais de copie en cache.
+      ...(typeof window === 'undefined' ? { cache: 'no-store' as const } : {}),
+      ...options,
+      // Les jetons sont dans des cookies httpOnly : le navigateur les joint, le JavaScript ne les voit pas.
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json', ...options?.headers },
+    });
+  } catch {
+    throw new ApiError('Impossible de joindre le serveur. Vérifiez votre connexion.', 0);
+  }
 
   if (res.status === 401 && canRetry && !NO_REFRESH.has(path) && typeof window !== 'undefined') {
     if (await refreshSession()) return request<T>(path, options, false);
@@ -82,10 +102,12 @@ async function request<T>(path: string, options?: RequestInit, canRetry = true):
 
   if (!res.ok) {
     const error = await res.json().catch(() => ({ message: 'Erreur réseau' }));
-    throw new ApiError(extractMessage(error), res.status);
+    throw new ApiError(extractMessage(error), res.status, extractFieldErrors(error));
   }
 
-  return res.json() as Promise<T>;
+  // Une suppression réussie peut répondre sans corps : ne pas échouer sur un JSON vide.
+  const text = await res.text();
+  return (text ? JSON.parse(text) : undefined) as T;
 }
 
 export const api = {

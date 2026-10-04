@@ -43,6 +43,10 @@ describe('ParishResultCard', () => {
           ...parish,
           nextCelebration: {
             id: 'c1',
+            celebrationId: 's1',
+            cancelled: false,
+            cancelReason: null,
+            timezone: 'Europe/Paris',
             title: 'Messe',
             date: '2026-10-04T12:00:00.000Z',
             location: null,

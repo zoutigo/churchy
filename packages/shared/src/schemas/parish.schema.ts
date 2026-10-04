@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import { ParishRole } from '../enums/parish-role.enum';
+import { isCompletePhone } from '../constants/phone.constants';
+import { isValidMonth, isValidTimezone } from '../schedule';
 
 /** Texte facultatif : une chaîne vide (champ de formulaire non rempli) équivaut à « non renseigné ». */
 const optional = (schema: z.ZodType<string>) =>
@@ -27,6 +29,7 @@ const httpUrl = z
   .url('Adresse web invalide')
   .refine((v) => /^https?:\/\//i.test(v), 'Adresse web invalide (http ou https)');
 
+const timezone = z.string().trim().refine(isValidTimezone, 'Fuseau horaire invalide');
 const email = z.string().trim().max(200).email('Email invalide');
 const text = (max: number) => z.string().trim().max(max, `${max} caractères maximum`);
 
@@ -34,8 +37,9 @@ const text = (max: number) => z.string().trim().max(max, `${max} caractères max
 const publicFields = {
   district: text(100),
   address: text(200),
+  addressComplement: text(200),
   mainChurch: text(150),
-  phone: text(40),
+  phone: text(40).regex(/^[\d\s+().-]+$/, 'Numéro de téléphone invalide'),
   email,
   website: httpUrl,
   imageUrl: httpUrl,
@@ -46,13 +50,17 @@ export const createParishSchema = z.object({
   description: optional(text(2000)),
   city: z.string().trim().min(1, 'Ville requise').max(100),
   country: z.string().trim().min(1, 'Pays requis').max(100),
+  region: optional(text(100)),
   district: optional(publicFields.district),
   address: optional(publicFields.address),
+  addressComplement: optional(publicFields.addressComplement),
   mainChurch: optional(publicFields.mainChurch),
   phone: optional(publicFields.phone),
   email: optional(publicFields.email),
   website: optional(publicFields.website),
   imageUrl: optional(publicFields.imageUrl),
+  /** Fuseau horaire (IANA) ; par défaut celui du pays. */
+  timezone: timezone.optional(),
 });
 
 /** Modification : tout est facultatif ; les champs d'information vidés repassent à `null`. */
@@ -61,14 +69,29 @@ export const updateParishSchema = z.object({
   city: z.string().trim().min(1, 'Ville requise').max(100).optional(),
   country: z.string().trim().min(1, 'Pays requis').max(100).optional(),
   description: clearable(text(2000)),
+  region: clearable(text(100)),
   district: clearable(publicFields.district),
   address: clearable(publicFields.address),
+  addressComplement: clearable(publicFields.addressComplement),
   mainChurch: clearable(publicFields.mainChurch),
   phone: clearable(publicFields.phone),
   email: clearable(publicFields.email),
   website: clearable(publicFields.website),
   imageUrl: clearable(publicFields.imageUrl),
+  timezone: timezone.optional(),
 });
+
+/**
+ * Contrôle de formulaire : le numéro doit être complet pour le pays choisi (le serveur, lui, accepte tout
+ * numéro bien formé, pour ne pas rejeter d'anciennes saisies ni les pays sans format connu).
+ */
+export const withCompletePhone = <T extends z.ZodTypeAny>(schema: T) =>
+  schema.superRefine((data, ctx) => {
+    const { phone, country } = data as { phone?: string | null; country?: string };
+    if (phone && country && !isCompletePhone(country, phone)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['phone'], message: 'Numéro incomplet' });
+    }
+  });
 
 export const inviteMemberSchema = z.object({
   email: z.string().email('Email invalide'),
@@ -82,6 +105,16 @@ export const searchParishesSchema = z.object({
   limit: z.coerce.number().int().min(1).max(50).default(12),
 });
 
+/** Calendrier public : un mois (« AAAA-MM »), le mois courant par défaut. */
+export const calendarQuerySchema = z.object({
+  month: z
+    .string()
+    .refine(isValidMonth, 'Mois invalide (format AAAA-MM)')
+    .refine((m) => m >= '2020-01' && m <= '2100-12', 'Mois hors limites')
+    .optional(),
+});
+
+export type CalendarQuery = z.infer<typeof calendarQuerySchema>;
 export type CreateParishDto = z.infer<typeof createParishSchema>;
 export type UpdateParishDto = z.infer<typeof updateParishSchema>;
 export type InviteMemberDto = z.infer<typeof inviteMemberSchema>;

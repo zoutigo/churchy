@@ -5,6 +5,10 @@ import { CelebrationItem } from './CelebrationItem';
 
 const celebration: PublicCelebrationSummary = {
   id: 'c1',
+  celebrationId: 's1',
+  cancelled: false,
+  cancelReason: null,
+  timezone: 'Europe/Paris',
   title: 'Messe dominicale',
   date: '2026-10-04T12:00:00.000Z',
   location: 'Église Saint-Pierre',
@@ -35,6 +39,27 @@ describe('CelebrationItem', () => {
     );
     expect(screen.getByText('Feuille en préparation')).toBeInTheDocument();
     expect(screen.queryByText('Feuille disponible')).not.toBeInTheDocument();
+  });
+
+  it('affiche l’heure dans le fuseau de la paroisse (12:00 UTC = 14:00 à Paris, 13:00 à Douala)', () => {
+    const { rerender } = render(<CelebrationItem celebration={celebration} parishId="p1" />);
+    expect(screen.getByText('14:00')).toBeInTheDocument();
+    rerender(
+      <CelebrationItem celebration={{ ...celebration, timezone: 'Africa/Douala' }} parishId="p1" />,
+    );
+    expect(screen.getByText('13:00')).toBeInTheDocument();
+  });
+
+  it('une date annulée est marquée comme telle, avec son motif, à la place de l’état de la feuille', () => {
+    render(
+      <CelebrationItem
+        celebration={{ ...celebration, cancelled: true, cancelReason: 'Pèlerinage' }}
+        parishId="p1"
+      />,
+    );
+    expect(screen.getByText('Annulée — Pèlerinage')).toBeInTheDocument();
+    expect(screen.queryByText('Feuille disponible')).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Messe dominicale' })).toHaveClass('line-through');
   });
 
   it('sans lieu, n’affiche pas de ligne de lieu', () => {

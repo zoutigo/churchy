@@ -7,19 +7,12 @@ interface Props {
   footer?: React.ReactNode;
 }
 
-/** Cadre commun des pages d'authentification (connexion, inscription, mot de passe…). */
+/** Carte des pages d'authentification (connexion, inscription, mot de passe…) ; le cadre (en-tête, logo) vient du layout `(auth)`. */
 export function AuthCard({ title, subtitle, children, footer }: Props) {
   return (
-    <main className="min-h-screen flex items-center justify-center bg-churchy-50 px-4 py-10">
+    <div className="flex items-center justify-center px-4 py-10 sm:py-16">
       <div className="w-full max-w-sm space-y-6">
-        <div className="text-center space-y-1">
-          <Link href="/" className="flex items-center justify-center gap-2 mb-3">
-            <span className="text-churchy-300 text-2xl">✦</span>
-            <span className="font-playfair text-2xl font-bold text-churchy-700 tracking-wider">
-              Churchy
-            </span>
-            <span className="text-churchy-300 text-2xl">✦</span>
-          </Link>
+        <div className="space-y-1 text-center">
           <h1 className="font-playfair text-2xl font-bold text-churchy-700">{title}</h1>
           {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
         </div>
@@ -29,7 +22,7 @@ export function AuthCard({ title, subtitle, children, footer }: Props) {
           {footer && <div className="text-center text-sm text-muted-foreground">{footer}</div>}
         </div>
       </div>
-    </main>
+    </div>
   );
 }
 

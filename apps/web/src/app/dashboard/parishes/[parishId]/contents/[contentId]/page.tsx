@@ -1,0 +1,137 @@
+'use client';
+import { useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft } from 'lucide-react';
+import { contentsApi } from '@/lib/api/contents.api';
+import { ContentForm } from '@/components/content/ContentForm';
+import { CONTENT_TYPE_LABELS } from '@/components/content/content-labels';
+import { DeleteButton } from '@/components/news/DeleteButton';
+import { FormView } from '@/components/layout/FormView';
+import { RichContent } from '@/components/rich-text/RichContent';
+import { Button } from '@/components/ui/button';
+import { ErrorNotice } from '@/components/ui/error-notice';
+import { useAuth } from '@/hooks/useAuth';
+import { errorMessage } from '@/lib/forms/submit-error';
+import { notify } from '@/lib/notify';
+import { formatDateLong } from '@/lib/format';
+import type { Content } from '@churchy/shared';
+
+interface Props {
+  params: { parishId: string; contentId: string };
+}
+
+export default function ContentDetailPage({ params }: Props) {
+  const { parishId, contentId } = params;
+  const router = useRouter();
+  const { user } = useAuth();
+  const [content, setContent] = useState<Content | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
+  const listUrl = `/dashboard/parishes/${parishId}/contents`;
+
+  const load = useCallback(() => {
+    contentsApi
+      .findById(contentId)
+      .then(setContent)
+      .catch((err: unknown) => setError(errorMessage(err, 'Impossible de charger le contenu')));
+  }, [contentId]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  if (error) {
+    return (
+      <div className="mx-auto w-full max-w-5xl space-y-4">
+        <ErrorNotice message={error} />
+        <Button asChild variant="outline">
+          <Link href={listUrl}>Retour à la bibliothèque</Link>
+        </Button>
+      </div>
+    );
+  }
+  if (!content) return <p className="text-muted-foreground">Chargement...</p>;
+
+  // L'API réserve la modification et la suppression à l'auteur du contenu.
+  const canManage = user?.id === content.createdById;
+
+  if (editing) {
+    return (
+      <FormView
+        title="Modifier le contenu"
+        description={`« ${content.title} »`}
+        onBack={() => setEditing(false)}
+      >
+        <ContentForm
+          parishId={parishId}
+          content={content}
+          onSuccess={(saved) => {
+            setContent({ ...content, ...saved });
+            setEditing(false);
+          }}
+        />
+      </FormView>
+    );
+  }
+
+  return (
+    <div className="mx-auto w-full max-w-5xl space-y-4 sm:space-y-6">
+      <Button
+        asChild
+        variant="ghost"
+        size="sm"
+        className="-ml-3 h-10 gap-2 text-muted-foreground sm:h-9"
+      >
+        <Link href={listUrl}>
+          <ArrowLeft size={16} aria-hidden /> Bibliothèque
+        </Link>
+      </Button>
+
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0 space-y-2">
+          <h1 className="break-words text-2xl font-bold">{content.title}</h1>
+          <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+            <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground">
+              {CONTENT_TYPE_LABELS[content.type]}
+            </span>
+            <span>Ajouté le {formatDateLong(String(content.createdAt))}</span>
+            {content.createdBy && (
+              <span>
+                par {content.createdBy.firstName} {content.createdBy.lastName}
+              </span>
+            )}
+          </p>
+        </div>
+        {canManage && (
+          <div className="flex shrink-0 items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+              Modifier
+            </Button>
+            <DeleteButton
+              label={content.title}
+              onConfirm={async () => {
+                try {
+                  await contentsApi.delete(content.id);
+                  notify.success('Contenu supprimé', `« ${content.title} »`);
+                  router.push(listUrl);
+                } catch (err: unknown) {
+                  notify.error('Suppression impossible', errorMessage(err, 'Réessayez plus tard.'));
+                }
+              }}
+            />
+          </div>
+        )}
+      </div>
+
+      <article className="rounded-lg border bg-card p-4 sm:p-6 lg:p-8">
+        <RichContent html={content.body} />
+      </article>
+      {!canManage && (
+        <p className="text-sm text-muted-foreground">
+          Seul l’auteur de ce contenu peut le modifier ou le supprimer.
+        </p>
+      )}
+    </div>
+  );
+}

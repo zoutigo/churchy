@@ -16,6 +16,7 @@ const parish: PublicParish = {
   website: 'https://paroisse.fr',
   description: null,
   imageUrl: null,
+  timezone: 'Europe/Paris',
 };
 
 describe('ParishInfoPanel', () => {

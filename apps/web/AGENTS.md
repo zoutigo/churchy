@@ -56,6 +56,7 @@ const form = useForm<MyDto>({
 - `<FormMessage />` → affiche l'erreur Zod sous le champ en couleur destructive
 - Toujours utiliser les composants shadcn existants (jamais recréer)
 - Erreurs globales → `form.setError('root', { message })` + afficher avec `form.formState.errors.root`
+- **Retour d'information (obligatoire, voir « Toasts et erreurs » ci-dessous)** : toast de succès après chaque action réussie, `handleSubmitError` dans chaque `catch`.
 
 ## Architecture
 
@@ -72,10 +73,13 @@ src/
 │   ├── public/       # PublicHeader/Footer, ParishSearchForm (GET), CelebrationItem, SheetCard, ContactForm…
 │   ├── news/         # Formulaires annonces/activités du tableau de bord, DeleteButton (suppression en 2 temps)
 │   ├── parish/       # ParishCard, CreateParishForm, ParishInfoForm
-│   ├── content/      # CreateContentForm, ContentCard
-│   ├── celebration/  # CelebrationCard, CreateCelebrationForm
-│   └── layout/       # Sidebar (≥ md), MobileNav (< md), Header (menu utilisateur)
+│   ├── rich-text/    # RichTextEditor (Tiptap, champ de formulaire), RichContent (rendu public)
+│   ├── content/      # ContentForm (création + modification), filter (recherche/type), content-labels
+│   ├── celebration/  # CelebrationCard/Form, ScheduleFields (dates / récurrence + aperçu), OccurrenceItem, SheetPanel, StepCard, TemplateChangeDialog, TemplateForm, EndingSoonDialog
+│   └── layout/       # Sidebar (≥ md), MobileNav (< md), Header (menu utilisateur), PageHeader, FormView
 ├── lib/api/          # Clients API typés ; client.ts gère cookies + refresh silencieux
+├── lib/notify.ts     # notify.success / notify.error : les toasts de toute l'application
+├── lib/forms/        # submit-error.ts : handleSubmitError (erreurs API → champs / message général + toast)
 ├── lib/auth/         # session.ts : indicateur de session (cookie lisible) + safeNextPath
 └── hooks/            # useAuth (contexte AuthProvider), useParish
 ```
@@ -99,6 +103,46 @@ Aucun jeton n'est manipulé par le JavaScript : ils sont dans des cookies httpOn
 - Champs mot de passe : `PasswordInput` (bouton afficher/masquer). Les `Input` invalides prennent une
   bordure rouge via `aria-invalid` (posé par `FormControl`).
 
+## Pages d'erreur et cadre commun
+- `components/errors` : `ErrorPage` (gabarit unique), `NotFoundPage` (404, liens de sortie paramétrables), `ServerErrorPage` (500, « Réessayer », erreur seulement en console, jamais affichée). Utilisés par `app/not-found.tsx`, `app/error.tsx`, `app/global-error.tsx`, `(public)/error.tsx`, les `not-found.tsx` de `paroisses`, `dashboard/not-found.tsx`, `dashboard/error.tsx`.
+- `dashboard/[...slug]/page.tsx` appelle `notFound()` : une adresse inconnue sous `/dashboard` affiche le 404 **dans** le tableau de bord. Un `not-found.tsx` de segment ne sert que si une page appelle `notFound()` ; une URL sans route tombe sur `app/not-found.tsx`.
+- `PublicShell` (en-tête avec logo cliquable → accueil, pied de page) enveloppe `(public)` **et** `(auth)` : connexion/inscription ont le même cadre que le site. `AuthCard` ne porte plus que titre + carte.
+
+## Tableau de bord : formulaires
+- Les formulaires ne sont **jamais ouverts par défaut** : la page affiche les données, et un bouton (« + Nouveau… »,
+  « Modifier ») ouvre le formulaire dans un `FormView` qui **remplace** la liste (mobile, tablette et desktop) avec un
+  bouton « Retour ». `FormView` est centré (`max-w-5xl`) ; les champs courts se rangent en colonnes dès `sm`/`md`,
+  l'éditeur de texte riche prend toute la largeur (hauteur mini 14/22/26 rem). `PageHeader` porte titre + action.
+- Les couleurs de `tailwind.config.ts` doivent couvrir tous les jetons utilisés (`bg-popover` manquant rendait les
+  listes déroulantes transparentes) ; test : `components/ui/popover-theme.spec.tsx`, e2e `dashboard-forms.spec.ts`.
+
+## Toasts et erreurs (obligatoire, partout)
+- **Toute action de l'utilisateur** (création, modification, suppression, publication, envoi) annonce son résultat
+  par un toast via `notify` (`lib/notify.ts`) : `notify.success('Titre court', 'détail facultatif')` après un succès,
+  `notify.error(…)` après un échec. Ne jamais appeler `toast()` directement, ni laisser une action réussir en silence.
+  Succès : vert, 4 s ; erreur : rouge, 7 s. Le `Toaster` est monté une fois dans `app/layout.tsx`.
+- **Tout `catch` d'un envoi de formulaire appelle `handleSubmitError(form, err, 'Texte de repli')`** (`lib/forms/submit-error.ts`) :
+  les erreurs de validation Zod renvoyées par l'API (`ApiError.fieldErrors`) s'affichent sous les champs concernés,
+  toute autre erreur (403, 404, 500, réseau) devient le message général du formulaire (`root`), et un toast d'erreur
+  est émis. Pour une action hors formulaire (ex. suppression) : `notify.error(titre, errorMessage(err, 'repli'))`.
+  Ne pas remplacer toute la page par une `ErrorNotice` sur un échec d'action : elle est réservée aux erreurs de chargement.
+- `lib/api/client.ts` : `ApiError` porte `status` et `fieldErrors` ; un serveur injoignable donne `ApiError` (status 0,
+  « Impossible de joindre le serveur ») ; une réponse sans corps (suppression) n'est pas une erreur.
+- Un écran qui confirme déjà par lui-même (ex. page « Message envoyé » du contact) garde sa confirmation, avec un toast
+  de titre différent pour ne pas dupliquer le texte.
+- Tests : unitaire du formulaire (succès → `notify.success`, erreur API → message + `notify.error`, validation Zod),
+  et e2e avec `page.route` pour simuler 400 (`fieldErrors`), 500 et panne réseau (voir `e2e/contents-library.spec.ts` ;
+  localiser un toast avec `ol > li[data-state="open"]` : le `<li>` Radix n'a pas de rôle et son relais pour lecteurs d'écran a `role="status"`).
+
+## Bibliothèque de contenus
+`/dashboard/parishes/[id]/contents` : liste avec recherche (titre + texte, sans casse ni accents) et filtre par type
+(`components/content/filter.ts`), pagination « Afficher plus » par 24 ; chaque carte mène à `/contents/[contentId]`
+(lecture, **Modifier** → `ContentForm` prérempli, **Supprimer** en deux temps). L'API réserve modification et
+suppression à l'**auteur** du contenu : les boutons ne sont affichés qu'à lui. Données de démonstration (réalistes : chants et prières universelles complets, psaumes, évangiles et lectures
+résumés, 20 annonces publiques, 18 activités à venir) : `npm run seed:contents -w @churchy/api -- "<fragment du nom de paroisse>" [--reset]`
+(données dans `apps/api/scripts/seed/`, contenus marqués du tag `demo`, idempotent, base de dev ; ce que l'utilisateur a saisi n'est jamais
+modifié ; garde-fous : `apps/api/src/seed-data.spec.ts`). Les textes sont des originaux ou des résumés, pas des textes liturgiques officiels.
+
 ## Ajouter un composant shadcn
 
 ```bash
@@ -119,7 +163,8 @@ Après modification : `npm run build -w @churchy/shared`.
 - `/dashboard/parishes/[id]` — Détail paroisse
 - `/dashboard/parishes/[id]/contents` — Bibliothèque
 - `/dashboard/parishes/[id]/templates` — Modèles
-- `/dashboard/parishes/[id]/celebrations` — Célébrations
+- `/dashboard/parishes/[id]/celebrations` — Séries ; `/new`, `/[celebrationId]`, `/[celebrationId]/dates/[occurrenceId]` (préparation)
+- `/paroisses/[id]/calendrier?mois=AAAA-MM` — Calendrier public
 - `/p/[slug]` — Page publique paroisse
 - `/p/[slug]/celebrations/[id]` — Célébration publique
 

@@ -28,7 +28,7 @@ src/
 │   ├── parish-members/ # Invitation et gestion des membres
 │   ├── contents/    # Bibliothèque de contenus liturgiques
 │   ├── celebration-templates/ # Modèles de célébration + étapes
-│   ├── celebrations/ # Célébrations + publication
+│   ├── celebrations/ # Séries, dates (occurrences), feuilles de préparation (voir CLAUDE.md racine)
 │   ├── announcements/ activities/ # annonces et activités (écriture EDITORS)
 │   ├── contact/     # POST /contact → file BullMQ
 │   └── public/      # Lecture publique sans auth (PublicService : vues publiques uniquement)
@@ -58,7 +58,7 @@ Voir la section « Authentification » du `CLAUDE.md` racine (refresh rotatif, c
 @ParishAccess(EDITORS, 'celebration')             // :id est une célébration → paroisse retrouvée via elle
 @ParishAccess(EDITORS, 'template', 'templateId')  // autre nom de paramètre
 ```
-Types de ressources : `parish` (défaut), `template`, `templateStep`, `content`, `celebration`. Groupes de rôles :
+Types de ressources : `parish` (défaut), `template`, `templateStep`, `content`, `celebration`, `occurrence`, `sheet`. Groupes de rôles :
 `ALL_MEMBERS` (lecture), `EDITORS` (écriture/publication), `ADMINS` (membres). Un identifiant d'une autre
 paroisse ne doit jamais contourner le contrôle : les services vérifient aussi l'appartenance à la paroisse
 (ex. modèle ou contenu d'une autre paroisse refusé). Toute nouvelle route doit avoir des tests d'autorisation

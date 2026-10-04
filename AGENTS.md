@@ -74,20 +74,80 @@ insensible à la casse mais **pas aux accents**), `/public/parishes/:id` (+ `/ce
 `/activities`), `/public/celebrations/:id` et `POST /api/contact` (limité comme l'auth, piège à robots `website`).
 Ces routes n'ont volontairement **pas** de `@ParishAccess` : elles ne renvoient que des vues publiques
 (`PublicService`, liste blanche de champs, types `Public*` de `@churchy/shared`), jamais les entités Prisma.
-- Une célébration est visible si elle est **publiée** (« feuille disponible ») ou **brouillon annoncé**
-  (`announced`, « feuille en préparation », sans déroulement). Brouillons non annoncés et archivées : 404.
-- « À venir » = depuis 3 h avant l'heure de début. Les dates sont formatées dans le fuseau du serveur web
-  (le fuseau d'une paroisse n'est pas modélisé).
+- Une **date** (occurrence) est visible si sa série est **annoncée** et non archivée : « feuille disponible » si la feuille
+  de cette date est publiée, sinon « feuille en préparation » (sans déroulement). Une date **annulée** reste affichée comme
+  telle (motif public, pas de déroulement). Séries non annoncées et archivées : 404. L'URL publique `/messes/[id]` porte l'id
+  de la **date**.
+- « À venir » = depuis 3 h avant l'heure de début. Les heures sont affichées dans le **fuseau de la paroisse** (`Parish.timezone`).
+- **Calendrier public** : `GET /api/public/parishes/:id/calendar?month=AAAA-MM` (mois courant par défaut ; dates passées et
+  annulées comprises) et page `/paroisses/[id]/calendrier?mois=` : grille dès `md`, liste des jours à célébration sur mobile.
+- `description` (série) et `occurrenceDescription` (date) sont **publiques** (HTML nettoyé). Les **notes internes** ne sortent
+  jamais : `PublicService` ne les sélectionne même pas (test de non-fuite dans les tests unitaires et e2e).
 - Les paroisses sont toutes publiques pour l'instant (pas de drapeau de visibilité).
+- Contact (facultatif) : `phone` et `email` de la paroisse. Le téléphone suit le format du pays (`PHONE_FORMATS` dans
+  `@churchy/shared` : indicatif, regroupement, exemple) ; le champ web (`PhoneField`) affiche l'indicatif, un placeholder
+  d'exemple et masque la saisie, et enregistre le numéro international (« +237 6 77 12 34 56 »). Pays sans format :
+  saisie libre. Le contrôle « numéro complet » est côté formulaire (`withCompletePhone`) ; l'API n'exige que des
+  caractères de numéro. Sur la page publique, téléphone et email sont des liens `tel:` / `mailto:`.
 - Gestion : `PATCH /parishes/:id` (identité publique, ADMINS), `announcements` et `activities` (`/parishes/:parishId/…`,
   lecture ALL_MEMBERS, écriture/suppression EDITORS), `PATCH /celebrations/:id/announced`.
 - Les pages sont rendues par le serveur web : toutes les requêtes publiques partent de **la même IP**. En production,
   transmettre l'IP du visiteur (`X-Forwarded-For` + `trust proxy`) pour que la limite `THROTTLE_LIMIT` ne
   s'applique pas à l'ensemble des visiteurs.
 
+## Célébrations : séries, dates et feuilles de préparation
+Trois niveaux (`apps/api/src/modules/celebrations`, schémas dans `@churchy/shared`) :
+- **Série** (`Celebration`) : titre, type, lieu, `description` publique (texte riche), `internalNote` (**interne**), `announced`
+  (visible du public : **toutes** ses dates), `defaultTemplateId` (modèle proposé), `archivedAt`.
+- **Date** (`CelebrationOccurrence`, `startsAt` en UTC) : `description` (précision publique, ex. « l'évêque sera là »),
+  `internalNote`, `status` `SCHEDULED`/`CANCELLED` + motif. Une date est créée par la série : dates ponctuelles ou
+  **récurrence hebdomadaire** (début, fin, jours, heure) **dépliée en vraies dates** à la création.
+- **Feuille** (`PreparationSheet`, 1 par date, **créée à la demande**) : depuis un modèle (par défaut celui de la série, ou un
+  autre) ou **à la volée** (vide, étapes libres). Étapes (`CelebrationStep`) rapprochées par `key`.
+Règles (toutes testées, unitaire + e2e) :
+- **Le passé est immuable** : une date dont `startsAt <= maintenant` ne peut plus être modifiée, annulée, rétablie ni préparée
+  (409) ; une série dont toutes les dates sont passées n'est plus modifiable. Création/prolongation : dates **à venir** et dans
+  l'**horizon d'un an** (`scheduleHorizon`), sinon 400 avec l'erreur sous le champ `schedule`.
+- **Heures locales** : le planning est saisi en date + heure locales et converti avec `Parish.timezone` (défaut selon le pays,
+  `timezoneForCountry`) ; « chaque dimanche à 10 h » reste à 10 h au changement d'heure (`@churchy/shared` `schedule.ts`,
+  partagé API + web pour l'aperçu).
+- **Notes internes** : `canSeeInternalNotes` (ADMIN, PREPARER, SUPER_ADMIN) ; `ParishRolesGuard` pose `request.parishRole`
+  (décorateur `@CurrentParishRole()`), les lecteurs/spectateurs ne reçoivent **pas la clé** `internalNote`.
+- **Changer de modèle** (`PATCH /sheets/:id/template`, `dryRun` pour l'aperçu) : étapes rapprochées par `key` (contenu conservé),
+  étapes manquantes ajoutées vides, étapes **vides** sans équivalent retirées, étapes **remplies** sans équivalent gardées comme
+  étapes libres : rien n'est perdu en silence. `null` = détacher (à la volée).
+- **Rappel de fin de série** : `endingSoon` (dernière date dans les 30 jours, `SERIES_END_REMINDER_DAYS`) → message box
+  (`EndingSoonDialog`, une fois par session) et alerte sur la série ; `POST /celebrations/:id/occurrences` prolonge.
+- Routes : `/parishes/:id/celebrations` (POST, GET), `/celebrations/:id` (GET, PATCH, `archive`, `unarchive`, `occurrences`),
+  `/occurrences/:id` (GET, PATCH, `cancel`, `reinstate`, `sheet`), `/sheets/:id` (GET, `template`, `steps`, `steps/order`,
+  `steps/:stepId`, `publish`, `unpublish`). Gardes : `@ParishAccess(…, 'celebration' | 'occurrence' | 'sheet')`.
+- **Modèles** : `PATCH /templates/:id` (nom, type, description et liste **complète** des étapes dans l'ordre : une étape avec `id` garde sa clé, sans `id` elle est créée, absente elle est retirée ; les feuilles déjà créées gardent leurs étapes, qui deviennent libres) et `DELETE /templates/:id` (feuilles et séries détachées). Page web `/templates` : cartes repliées (titre + sous-titre), bouton pour déplier, Modifier, Supprimer en deux temps. **Publier une feuille ramène à la série.**
+- Web : `/dashboard/parishes/[id]/celebrations` (liste + rappel), `/new`, `/[celebrationId]` (série et ses dates),
+  `/[celebrationId]/dates/[occurrenceId]` (préparation : feuille + infos de la date), `/templates` (création de modèles).
+
+## Retour d'information : toasts et erreurs (obligatoire)
+Toute action de l'utilisateur annonce son résultat par un **toast** (`notify.success` / `notify.error`, `apps/web/src/lib/notify.ts`),
+et tout échec d'envoi de formulaire passe par `handleSubmitError` (erreurs Zod de l'API sous les champs, autres erreurs en message
+général + toast). Détails et tests à écrire : `apps/web/CLAUDE.md`, « Toasts et erreurs ». Une nouvelle action sans toast de
+succès ni gestion d'erreur testée est incomplète.
+
+## Texte riche (éditeur)
+`RichTextEditor` (`apps/web/src/components/rich-text`, Tiptap) sert pour le contenu des chants/psaumes/lectures
+(`Content.body`), des annonces (`body`) et des activités (`description`) ; `allowImages` (activités) ajoute les images
+inline (bouton, collage, glisser-déposer : redimensionnées ≤ 1280 px, JPEG, **base64 dans le texte** — pas de stockage
+de fichiers pour l'instant). Le texte est stocké en **HTML** dans les mêmes colonnes ; un ancien texte brut reste valide
+(`isRichHtml`/`toRichHtml` dans `@churchy/shared`, affiché par `RichContent` sans être interprété).
+- Le HTML est **nettoyé par l'API à l'écriture** (`sanitizeRichText`, liste blanche sanitize-html : pas de script, styles
+  limités à couleur/surlignage/alignement, images `data:image` ou http(s) seulement) : le site public l'affiche tel quel.
+  Toute nouvelle route qui accepte du texte riche doit passer par `sanitizeRichText`.
+- Limites : `RICH_TEXT_MAX_LENGTH` (1,5 M caractères) ; corps JSON de l'API à 2 Mo ; nginx `client_max_body_size 5m`.
+- Responsive : barre d'outils essentielle sur mobile (bouton « Plus d'options » pour le reste), ruban complet + compteur
+  de mots dès `md`. Pour l'utiliser dans un autre champ : `<RichTextEditor value onChange … />` dans un `FormField`.
+- Tests : jsdom n'a pas la géométrie utilisée par ProseMirror, d'où des polyfills dans `apps/web/vitest.setup.ts`.
+
 ## Files de jobs (BullMQ)
 Les noms de files et payloads sont dans `@churchy/contracts`. L'API est le **producteur** :
-`NotificationsService` enfile `celebration.published` (publication d'une célébration),
+`NotificationsService` enfile `celebration.published` (publication de la **feuille d'une date** ; `jobId` par date),
 `auth.email-verification-requested` et `auth.password-reset-requested` (liens à usage unique : jobs sans
 rétention une fois traités) et `contact.message-received` (page Contact : le worker l'envoie à `CONTACT_EMAIL`,
 avec `Reply-To` = visiteur ; données personnelles, supprimées une fois traitées).
@@ -137,6 +197,12 @@ toucher à leurs conf nginx / conteneurs**. Modèle repris de scolive/tigilabs :
 
 ## Règles de travail (obligatoires)
 
+### 0. Branche de travail : `dev`
+Tous les travaux (code, tests, documentation) se font **toujours dans la branche `dev`**, jamais directement
+sur `main`. Vérifier la branche courante (`git branch --show-current`) avant de modifier quoi que ce soit ;
+si on n'est pas sur `dev`, basculer dessus (`git switch dev`, ou la créer depuis `main` si elle n'existe pas).
+`main` ne reçoit que des fusions de `dev`.
+
 ### 1. Tout changement de code est consolidé par des tests
 Toute modification ou tout ajout de code (fonctionnalité, correction, refactoring) doit être accompagné de tests
 qui le consolident, dans le même commit :
@@ -178,6 +244,25 @@ exécute dans cet ordre, et bloque le commit au moindre échec :
   Puis on relance le précommit jusqu'à ce qu'il soit entièrement vert.
 - Ne jamais contourner le hook (`--no-verify`) : corriger la cause.
 - Les fichiers indexés sont reformatés/corrigés par le hook : les relire avant de valider le commit.
+
+### 2 bis. Fin de travail : précommit complet, commit, push, suivi du CI
+À la fin de **chaque** travail, sans qu'on ait à le demander :
+1. lancer le **précommit complet** (`npm run precommit`) et corriger tout problème (règle 2) ;
+2. **commiter** dans `dev` (le hook rejoue le précommit) puis **pousser** (`git push origin dev`) ;
+3. **suivre le CI de la branche `dev`** (GitHub Actions, `gh run list --branch dev` / `gh run watch`) jusqu'à
+   sa fin (workflow `ci.yml`, voir « CI » ci-dessous) ;
+4. **si le CI échoue** : lire les logs (`gh run view --log-failed`), corriger la cause dans le code (jamais en
+   supprimant ni en affaiblissant un test, jamais de `--no-verify`), recommiter, repousser et suivre à nouveau
+   le CI, jusqu'à ce qu'il soit vert. Le travail n'est terminé que lorsque le CI de `dev` est vert.
+
+#### CI (GitHub Actions, `.github/workflows`)
+- `ci.yml` (push sur `dev`, PR vers `dev`/`main`) : **tous** les contrôles et tests — cohérence CLAUDE.md/AGENTS.md,
+  lint, format, typecheck, build, tests unitaires, tests fonctionnels API et web. Jobs **en parallèle** : `quality`,
+  `unit`, `e2e-api`, et `e2e-web` **découpé en shards dont le nombre suit la taille de la suite** (job `e2e-web-plan` :
+  `apps/web/scripts/e2e-shards.mjs`, 20 tests par shard, 8 shards max, `fullyParallel` → découpage par test ; les tests
+  Playwright doivent donc rester **indépendants**, avec des données uniques). Postgres + Redis en services pour les e2e. Ne déploie rien.
+- `deploy-vps.yml` (push et PR sur `main`) : contrôles **basiques** seulement (docs, lint, format, typecheck, build), puis, sur
+  push uniquement, **déploiement** sur le VPS. `main` ne reçoit que des fusions de `dev` déjà vert.
 
 ### 3. CLAUDE.md et AGENTS.md
 Ces deux fichiers contiennent exactement le même contenu (chaque dossier qui a un `CLAUDE.md` a un `AGENTS.md`

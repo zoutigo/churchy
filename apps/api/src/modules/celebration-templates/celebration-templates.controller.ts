@@ -1,4 +1,14 @@
-import { Controller, Post, Get, Param, Body, Delete, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Param,
+  Body,
+  Delete,
+  Patch,
+  HttpCode,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { CelebrationTemplatesService } from './celebration-templates.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -6,6 +16,8 @@ import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
 import {
   createCelebrationTemplateSchema,
   createTemplateStepSchema,
+  updateCelebrationTemplateSchema,
+  type UpdateCelebrationTemplateDto,
   type CreateCelebrationTemplateDto,
   type CreateTemplateStepDto,
 } from '@churchy/shared';
@@ -38,6 +50,22 @@ export class CelebrationTemplatesController {
   @ParishAccess(ALL_MEMBERS, 'template')
   findOne(@Param('id') id: string) {
     return this.service.findById(id);
+  }
+
+  @Patch('templates/:id')
+  @ParishAccess(EDITORS, 'template')
+  update(
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(updateCelebrationTemplateSchema)) dto: UpdateCelebrationTemplateDto,
+  ) {
+    return this.service.update(id, dto);
+  }
+
+  @Delete('templates/:id')
+  @HttpCode(204)
+  @ParishAccess(EDITORS, 'template')
+  remove(@Param('id') id: string) {
+    return this.service.remove(id);
   }
 
   @Post('templates/:templateId/steps')

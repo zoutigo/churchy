@@ -30,7 +30,7 @@ describe('CreateAnnouncementForm', () => {
     await waitFor(() => expect(onSuccess).toHaveBeenCalled());
     expect(createAnnouncement).toHaveBeenCalledWith(
       'p1',
-      expect.objectContaining({ title: 'Horaires', body: 'Nouveaux horaires' }),
+      expect.objectContaining({ title: 'Horaires', body: '<p>Nouveaux horaires</p>' }),
     );
   });
 

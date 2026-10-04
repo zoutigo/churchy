@@ -3,8 +3,12 @@ import { useCallback, useEffect, useState } from 'react';
 import { announcementsApi, type Announcement } from '@/lib/api/announcements.api';
 import { CreateAnnouncementForm } from '@/components/news/CreateAnnouncementForm';
 import { DeleteButton } from '@/components/news/DeleteButton';
+import { FormView } from '@/components/layout/FormView';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
 import { ErrorNotice } from '@/components/ui/error-notice';
+import { errorMessage } from '@/lib/forms/submit-error';
+import { notify } from '@/lib/notify';
 import { formatDateLong } from '@/lib/format';
 
 interface Props {
@@ -33,32 +37,31 @@ export default function Page({ params }: Props) {
     void load();
   }, [load]);
 
+  if (showForm) {
+    return (
+      <FormView
+        title="Nouvelle annonce"
+        description="Visible sur la page publique de la paroisse"
+        onBack={() => setShowForm(false)}
+      >
+        <CreateAnnouncementForm
+          parishId={parishId}
+          onSuccess={() => {
+            setShowForm(false);
+            void load();
+          }}
+        />
+      </FormView>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Annonces</h1>
-          <p className="text-muted-foreground">
-            Informations publiées sur la page publique de la paroisse
-          </p>
-        </div>
-        <Button onClick={() => setShowForm(!showForm)}>
-          {showForm ? 'Annuler' : '+ Nouvelle annonce'}
-        </Button>
-      </div>
-
-      {showForm && (
-        <div className="rounded-lg border bg-card p-4 sm:p-6 max-w-2xl">
-          <h2 className="font-semibold mb-4">Nouvelle annonce</h2>
-          <CreateAnnouncementForm
-            parishId={parishId}
-            onSuccess={() => {
-              setShowForm(false);
-              void load();
-            }}
-          />
-        </div>
-      )}
+      <PageHeader
+        title="Annonces"
+        description="Informations publiées sur la page publique de la paroisse"
+        action={<Button onClick={() => setShowForm(true)}>+ Nouvelle annonce</Button>}
+      />
 
       {error ? (
         <ErrorNotice message={error} />
@@ -67,7 +70,7 @@ export default function Page({ params }: Props) {
       ) : items.length === 0 ? (
         <p className="text-center py-12 text-muted-foreground">Aucune annonce pour l’instant.</p>
       ) : (
-        <ul className="space-y-3">
+        <ul className="grid gap-3 lg:grid-cols-2">
           {items.map((item) => (
             <li
               key={item.id}
@@ -82,9 +85,13 @@ export default function Page({ params }: Props) {
                 onConfirm={async () => {
                   try {
                     await announcementsApi.remove(parishId, item.id);
+                    notify.success('Annonce supprimée', `« ${item.title} »`);
                     await load();
                   } catch (err: unknown) {
-                    setError(err instanceof Error ? err.message : 'Suppression impossible');
+                    notify.error(
+                      'Suppression impossible',
+                      errorMessage(err, 'Réessayez plus tard.'),
+                    );
                   }
                 }}
               />

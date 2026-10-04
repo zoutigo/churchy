@@ -13,7 +13,9 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { RichTextEditor } from '@/components/rich-text/RichTextEditor';
+import { handleSubmitError } from '@/lib/forms/submit-error';
+import { notify } from '@/lib/notify';
 
 const optionalHint = <span className="text-muted-foreground text-xs">(optionnel)</span>;
 
@@ -33,12 +35,11 @@ export function CreateAnnouncementForm({
   async function onSubmit(data: CreateAnnouncementDto) {
     try {
       await announcementsApi.create(parishId, data);
+      notify.success('Annonce publiée');
       form.reset();
       onSuccess?.();
     } catch (err: unknown) {
-      form.setError('root', {
-        message: err instanceof Error ? err.message : 'Erreur lors de la publication',
-      });
+      handleSubmitError(form, err, 'Erreur lors de la publication');
     }
   }
 
@@ -78,7 +79,13 @@ export function CreateAnnouncementForm({
             <FormItem>
               <FormLabel>Contenu</FormLabel>
               <FormControl>
-                <Textarea rows={5} {...field} />
+                <RichTextEditor
+                  aria-label="Contenu"
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  invalid={!!form.formState.errors.body}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

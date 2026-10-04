@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { sanitizeRichText } from '../../common/rich-text';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { CreateContentDto, UpdateContentDto } from '@churchy/shared';
 
@@ -8,7 +9,7 @@ export class ContentsService {
 
   async create(parishId: string, dto: CreateContentDto, userId: string) {
     return this.prisma.content.create({
-      data: { ...dto, parishId, createdById: userId },
+      data: { ...dto, body: sanitizeRichText(dto.body), parishId, createdById: userId },
     });
   }
 
@@ -34,7 +35,10 @@ export class ContentsService {
     if (content.createdById !== userId) {
       throw new ForbiddenException('Seul le créateur peut modifier ce contenu');
     }
-    return this.prisma.content.update({ where: { id }, data: dto });
+    return this.prisma.content.update({
+      where: { id },
+      data: { ...dto, ...(dto.body !== undefined && { body: sanitizeRichText(dto.body) }) },
+    });
   }
 
   async remove(id: string, userId: string) {

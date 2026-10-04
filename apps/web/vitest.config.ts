@@ -9,7 +9,10 @@ export default defineConfig({
     environment: 'jsdom',
     globals: false,
     setupFiles: ['./vitest.setup.ts'],
-    include: ['src/**/*.spec.{ts,tsx}'],
+    include: ['src/**/*.spec.{ts,tsx}', 'scripts/**/*.spec.ts'],
     css: false,
+    // Les tests de formulaires saisissent beaucoup de texte dans jsdom : marge pour les machines chargées
+    // (précommit et CI lancent tous les workspaces en parallèle).
+    testTimeout: 30_000,
   },
 });

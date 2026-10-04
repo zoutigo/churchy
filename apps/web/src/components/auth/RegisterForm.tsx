@@ -15,6 +15,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/ui/password-input';
 import { Button } from '@/components/ui/button';
+import { handleSubmitError } from '@/lib/forms/submit-error';
 
 export function RegisterForm() {
   const router = useRouter();
@@ -32,9 +33,7 @@ export function RegisterForm() {
       router.push('/dashboard');
       router.refresh();
     } catch (err: unknown) {
-      form.setError('root', {
-        message: err instanceof Error ? err.message : "Erreur lors de l'inscription",
-      });
+      handleSubmitError(form, err, "Erreur lors de l'inscription");
     }
   }
 

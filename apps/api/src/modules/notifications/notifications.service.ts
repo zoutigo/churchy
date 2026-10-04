@@ -17,7 +17,7 @@ export class NotificationsService {
   celebrationPublished(payload: CelebrationPublishedPayload) {
     return this.queue.add(NotificationJob.CELEBRATION_PUBLISHED, payload, {
       // BullMQ interdit ':' dans un jobId ; l'id rend l'enfilage idempotent
-      jobId: `celebration-published-${payload.celebrationId}`,
+      jobId: `celebration-published-${payload.occurrenceId}`,
     });
   }
 

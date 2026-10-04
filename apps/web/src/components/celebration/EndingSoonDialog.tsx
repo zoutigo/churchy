@@ -1,0 +1,99 @@
+'use client';
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import type { CelebrationListItem } from '@churchy/shared';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { formatDateLong } from '@/lib/format';
+
+interface Props {
+  parishId: string;
+  timezone: string;
+  celebrations: CelebrationListItem[];
+}
+
+const storageKey = (parishId: string) => `churchy:ending-soon:${parishId}`;
+
+/** Rappel déjà vu pour cet ensemble de séries pendant cette session : on ne le répète pas à chaque page. */
+function signature(items: CelebrationListItem[]) {
+  return items
+    .map((c) => `${c.id}@${c.lastOccurrenceAt}`)
+    .sort()
+    .join('|');
+}
+
+/**
+ * Message box de rappel : une série dont la dernière date approche (moins d'un mois) doit être prolongée.
+ * Affichée une fois par session et par état de séries ; « Plus tard » la ferme sans rien modifier.
+ */
+export function EndingSoonDialog({ parishId, timezone, celebrations }: Props) {
+  const ending = celebrations.filter((c) => c.endingSoon);
+  const [open, setOpen] = useState(false);
+  const sig = signature(ending);
+
+  useEffect(() => {
+    if (ending.length === 0) return;
+    try {
+      if (window.sessionStorage.getItem(storageKey(parishId)) === sig) return;
+    } catch {
+      // stockage indisponible (navigation privée) : on affiche le rappel
+    }
+    setOpen(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sig, parishId]);
+
+  const close = () => {
+    try {
+      window.sessionStorage.setItem(storageKey(parishId), sig);
+    } catch {
+      // sans importance
+    }
+    setOpen(false);
+  };
+
+  if (ending.length === 0) return null;
+  return (
+    <Dialog open={open} onOpenChange={(o) => (o ? setOpen(true) : close())}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto" data-testid="ending-soon-dialog">
+        <DialogHeader>
+          <DialogTitle>
+            {ending.length === 1
+              ? 'Une série se termine bientôt'
+              : `${ending.length} séries se terminent bientôt`}
+          </DialogTitle>
+          <DialogDescription>
+            Les fidèles ne verront plus de messe après la dernière date. Pensez à prolonger
+            {ending.length === 1 ? ' cette série' : ' ces séries'} (jusqu’à un an à l’avance).
+          </DialogDescription>
+        </DialogHeader>
+        <ul className="space-y-2">
+          {ending.map((c) => (
+            <li key={c.id} className="rounded-md border p-3">
+              <p className="font-medium">{c.title}</p>
+              <p className="text-sm text-muted-foreground">
+                Dernière date : {formatDateLong(c.lastOccurrenceAt!, { timeZone: timezone })}
+              </p>
+              <Button asChild size="sm" className="mt-2" onClick={close}>
+                <Link href={`/dashboard/parishes/${parishId}/celebrations/${c.id}?prolonger=1`}>
+                  Prolonger la série
+                </Link>
+              </Button>
+            </li>
+          ))}
+        </ul>
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={close}>
+            Plus tard
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

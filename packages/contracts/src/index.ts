@@ -13,8 +13,10 @@ export const NotificationJob = {
   CONTACT_MESSAGE_RECEIVED: 'contact.message-received',
 } as const;
 
+/** Publication de la feuille de préparation d'une date (et non de toute la série). */
 export const celebrationPublishedPayloadSchema = z.object({
   celebrationId: z.string(),
+  occurrenceId: z.string(),
   parishId: z.string(),
   title: z.string(),
   date: z.string().datetime(),

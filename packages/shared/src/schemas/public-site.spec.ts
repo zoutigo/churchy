@@ -1,8 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { createParishSchema, searchParishesSchema, updateParishSchema } from './parish.schema';
+import {
+  createParishSchema,
+  calendarQuerySchema,
+  searchParishesSchema,
+  updateParishSchema,
+  withCompletePhone,
+} from './parish.schema';
 import { createActivitySchema, createAnnouncementSchema } from './announcement.schema';
 import { contactMessageSchema } from './contact.schema';
-import { createCelebrationSchema, setCelebrationAnnouncedSchema } from './celebration.schema';
+import { createCelebrationSchema, updateCelebrationSchema } from './celebration.schema';
 
 describe('createParishSchema — informations publiques', () => {
   const base = { name: 'Saint Pierre', city: 'Lyon', country: 'France' };
@@ -147,10 +153,80 @@ describe('contactMessageSchema', () => {
 
 describe('célébrations — annonce publique', () => {
   it('accepte `announced` à la création et exige un booléen pour le modifier', () => {
-    const base = { templateId: 't1', title: 'Messe', date: '2026-10-04T09:00:00.000Z' };
+    const base = {
+      title: 'Messe',
+      type: 'SUNDAY_MASS',
+      schedule: { kind: 'dates', dates: [{ date: '2026-10-04', time: '10:00' }] },
+    } as const;
     expect(createCelebrationSchema.parse({ ...base, announced: true }).announced).toBe(true);
     expect(createCelebrationSchema.parse(base).announced).toBeUndefined();
-    expect(setCelebrationAnnouncedSchema.safeParse({ announced: 'oui' }).success).toBe(false);
-    expect(setCelebrationAnnouncedSchema.safeParse({ announced: false }).success).toBe(true);
+    expect(updateCelebrationSchema.safeParse({ announced: 'oui' }).success).toBe(false);
+    expect(updateCelebrationSchema.safeParse({ announced: false }).success).toBe(true);
+  });
+});
+
+describe('région et complément d’adresse', () => {
+  it('sont facultatifs à la création ; une chaîne vide équivaut à non renseigné', () => {
+    const res = createParishSchema.parse({
+      name: 'Saint Joseph',
+      city: 'Yaoundé',
+      country: 'Cameroun',
+      region: '',
+      addressComplement: '',
+    });
+    expect(res.region).toBeUndefined();
+    expect(res.addressComplement).toBeUndefined();
+  });
+
+  it('sont conservés, et le complément est limité à 200 caractères', () => {
+    const base = { name: 'Saint Joseph', city: 'Yaoundé', country: 'Cameroun' };
+    expect(
+      createParishSchema.parse({
+        ...base,
+        region: 'Centre',
+        addressComplement: 'En face de la poste',
+      }),
+    ).toMatchObject({ region: 'Centre', addressComplement: 'En face de la poste' });
+    expect(
+      createParishSchema.safeParse({ ...base, addressComplement: 'x'.repeat(201) }).success,
+    ).toBe(false);
+  });
+
+  it('à la modification, une chaîne vide efface la valeur (null)', () => {
+    expect(updateParishSchema.parse({ region: '', addressComplement: '' })).toEqual({
+      region: null,
+      addressComplement: null,
+    });
+  });
+});
+
+describe('téléphone d’une paroisse', () => {
+  const base = { name: 'Saint Pierre', city: 'Yaoundé', country: 'Cameroun' };
+
+  it('refuse des caractères qui ne sont pas ceux d’un numéro', () => {
+    expect(createParishSchema.safeParse({ ...base, phone: 'appelez-moi' }).success).toBe(false);
+    expect(createParishSchema.safeParse({ ...base, phone: '+237 6 77 12 34 56' }).success).toBe(
+      true,
+    );
+  });
+
+  it('withCompletePhone exige un numéro complet pour le pays, mais pas de numéro du tout', () => {
+    const schema = withCompletePhone(createParishSchema);
+    expect(schema.safeParse({ ...base, phone: '+237 6 77' }).success).toBe(false);
+    expect(schema.safeParse({ ...base, phone: '+237 6 77 12 34 56' }).success).toBe(true);
+    expect(schema.safeParse(base).success).toBe(true);
+  });
+});
+
+describe('calendarQuerySchema', () => {
+  it('le mois est facultatif', () => {
+    expect(calendarQuerySchema.parse({})).toEqual({});
+    expect(calendarQuerySchema.parse({ month: '2026-10' })).toEqual({ month: '2026-10' });
+  });
+
+  it('refuse un mois mal formé ou hors limites', () => {
+    for (const month of ['2026-13', '2026-1', 'octobre', '1999-12', '2101-01']) {
+      expect(calendarQuerySchema.safeParse({ month }).success).toBe(false);
+    }
   });
 });

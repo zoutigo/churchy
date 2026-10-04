@@ -29,7 +29,10 @@ export class ParishRolesGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
     if (!user) throw new ForbiddenException('Accès refusé');
-    if (user.role === 'SUPER_ADMIN') return true;
+    if (user.role === 'SUPER_ADMIN') {
+      request.parishRole = 'SUPER_ADMIN';
+      return true;
+    }
 
     const scope = this.reflector.getAllAndOverride<ParishScopeOptions>(PARISH_SCOPE_KEY, targets);
     const parishId = await this.resolveParishId(request.params ?? {}, scope);
@@ -40,6 +43,8 @@ export class ParishRolesGuard implements CanActivate {
     if (!member || !requiredRoles.includes(member.role as ParishRole)) {
       throw new ForbiddenException('Accès refusé pour cette paroisse');
     }
+    // Les services s'en servent pour masquer ce que certains rôles ne doivent pas voir (notes internes).
+    request.parishRole = member.role;
     return true;
   }
 
@@ -82,6 +87,22 @@ export class ParishRolesGuard implements CanActivate {
         parishId = (
           await this.prisma.celebration.findUnique({ where: { id }, select: { parishId: true } })
         )?.parishId;
+        break;
+      case 'occurrence':
+        parishId = (
+          await this.prisma.celebrationOccurrence.findUnique({
+            where: { id },
+            select: { parishId: true },
+          })
+        )?.parishId;
+        break;
+      case 'sheet':
+        parishId = (
+          await this.prisma.preparationSheet.findUnique({
+            where: { id },
+            select: { occurrence: { select: { parishId: true } } },
+          })
+        )?.occurrence.parishId;
         break;
     }
     if (!parishId) throw notFound;

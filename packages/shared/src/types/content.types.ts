@@ -9,6 +9,8 @@ export interface Content {
   language: string;
   tags: string[];
   createdById: string;
+  /** Auteur (présent dans les réponses de lecture de l'API). */
+  createdBy?: { id: string; firstName: string; lastName: string };
   createdAt: Date;
   updatedAt: Date;
 }

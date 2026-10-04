@@ -1,11 +1,14 @@
 'use client';
-import { useState, useEffect } from 'react';
-import type { CelebrationTemplate, CelebrationTemplateStep } from '@churchy/shared';
-import { api } from '@/lib/api/client';
+import { useCallback, useEffect, useState } from 'react';
+import { templatesApi, type TemplateWithSteps } from '@/lib/api/celebrations.api';
+import { errorMessage } from '@/lib/forms/submit-error';
+import { notify } from '@/lib/notify';
+import { TemplateCard } from '@/components/celebration/TemplateCard';
+import { TemplateForm } from '@/components/celebration/TemplateForm';
+import { FormView } from '@/components/layout/FormView';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
 import { ErrorNotice } from '@/components/ui/error-notice';
-
-type TemplateWithSteps = CelebrationTemplate & { steps?: CelebrationTemplateStep[] };
 
 interface Props {
   params: { parishId: string };
@@ -16,42 +19,80 @@ export default function TemplatesPage({ params }: Props) {
   const [templates, setTemplates] = useState<TemplateWithSteps[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [editing, setEditing] = useState<TemplateWithSteps | null>(null);
 
-  useEffect(() => {
-    api
-      .get<TemplateWithSteps[]>(`/parishes/${parishId}/templates`)
+  const load = useCallback(() => {
+    templatesApi
+      .findByParish(parishId)
       .then(setTemplates)
-      .catch((err: unknown) =>
-        setError(err instanceof Error ? err.message : 'Impossible de charger les données'),
-      )
+      .catch((err: unknown) => setError(errorMessage(err, 'Impossible de charger les données')))
       .finally(() => setLoading(false));
   }, [parishId]);
 
+  useEffect(load, [load]);
+
+  if (creating || editing) {
+    const close = () => {
+      setCreating(false);
+      setEditing(null);
+    };
+    return (
+      <FormView
+        title={editing ? `Modifier « ${editing.name} »` : 'Nouveau modèle'}
+        description={
+          editing
+            ? 'Les feuilles déjà préparées gardent leurs étapes'
+            : 'Les étapes de la feuille de préparation, dans l’ordre'
+        }
+        onBack={close}
+      >
+        <TemplateForm
+          parishId={parishId}
+          template={editing ?? undefined}
+          onCancel={close}
+          onDone={() => {
+            close();
+            load();
+          }}
+        />
+      </FormView>
+    );
+  }
+
+  async function remove(t: TemplateWithSteps) {
+    try {
+      await templatesApi.remove(t.id);
+      setTemplates((list) => list.filter((x) => x.id !== t.id));
+      notify.success('Modèle supprimé', t.name);
+    } catch (err) {
+      notify.error('Erreur lors de la suppression', errorMessage(err, 'Suppression impossible'));
+    }
+  }
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Modèles de célébration</h1>
-          <p className="text-muted-foreground">Définissez le déroulement de vos célébrations</p>
-        </div>
-        <Button>+ Nouveau modèle</Button>
-      </div>
+      <PageHeader
+        title="Modèles de feuille"
+        description="Définissez le déroulement de vos célébrations"
+        action={<Button onClick={() => setCreating(true)}>+ Nouveau modèle</Button>}
+      />
 
       {error ? (
         <ErrorNotice message={error} />
       ) : loading ? (
         <p className="text-muted-foreground">Chargement...</p>
       ) : templates.length === 0 ? (
-        <p className="text-center py-12 text-muted-foreground">Aucun modèle pour l&apos;instant.</p>
+        <p className="py-12 text-center text-muted-foreground">Aucun modèle pour l&apos;instant.</p>
       ) : (
-        <div className="space-y-3">
+        <div className="grid items-start gap-3 md:grid-cols-2 xl:grid-cols-3">
           {templates.map((t) => (
-            <div key={t.id} className="rounded-lg border bg-card p-4">
-              <p className="font-medium">{t.name}</p>
-              <p className="text-xs text-muted-foreground">
-                {t.type} — {t.steps?.length ?? 0} étapes
-              </p>
-            </div>
+            <TemplateCard
+              key={t.id}
+              template={t}
+              onEdit={() => setEditing(t)}
+              onDelete={() => remove(t)}
+            />
           ))}
         </div>
       )}

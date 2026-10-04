@@ -10,6 +10,7 @@ export function ParishTabs({ parishId }: { parishId: string }) {
   const tabs = [
     { href: base, label: 'Accueil', exact: true },
     { href: `${base}/messes`, label: 'Messes' },
+    { href: `${base}/calendrier`, label: 'Calendrier' },
     { href: `${base}/annonces`, label: 'Annonces' },
     { href: `${base}/activites`, label: 'Activités' },
   ];

@@ -41,5 +41,5 @@ export function useParish(id: string) {
       .finally(() => setLoading(false));
   }, [id]);
 
-  return { parish, loading, error };
+  return { parish, loading, error, setParish };
 }

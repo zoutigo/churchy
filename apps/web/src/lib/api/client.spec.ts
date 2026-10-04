@@ -196,4 +196,59 @@ describe('api client', () => {
       await expect(api.get('/x')).rejects.toThrow('Erreur réseau');
     });
   });
+
+  describe('erreurs', () => {
+    it('erreur de validation Zod de l’API : message lisible ET erreurs par champ', async () => {
+      fetchMock.mockResolvedValue(
+        jsonResponse(
+          {
+            statusCode: 400,
+            message: {
+              formErrors: [],
+              fieldErrors: { title: ['Titre requis'], body: ['Contenu requis'], ok: [] },
+            },
+          },
+          400,
+        ),
+      );
+      const err = await api.post<never>('/x', {}).catch((e: unknown) => e as ApiError);
+      expect(err).toBeInstanceOf(ApiError);
+      expect(err.status).toBe(400);
+      expect(err.message).toBe('Titre requis');
+      expect(err.fieldErrors).toEqual({ title: ['Titre requis'], body: ['Contenu requis'] });
+    });
+
+    it('erreur HttpException (403) : message du serveur, pas d’erreurs par champ', async () => {
+      fetchMock.mockResolvedValue(
+        jsonResponse(
+          { statusCode: 403, message: 'Seul le créateur peut modifier ce contenu' },
+          403,
+        ),
+      );
+      const err = await api.patch<never>('/contents/1', {}).catch((e: unknown) => e as ApiError);
+      expect(err.message).toBe('Seul le créateur peut modifier ce contenu');
+      expect(err.fieldErrors).toEqual({});
+    });
+
+    it('erreur 500 sans JSON : message par défaut', async () => {
+      fetchMock.mockResolvedValue(new Response('<html>oups</html>', { status: 500 }));
+      const err = await api.get<never>('/x').catch((e: unknown) => e as ApiError);
+      expect(err).toBeInstanceOf(ApiError);
+      expect(err.status).toBe(500);
+      expect(err.message).toBe('Erreur réseau');
+    });
+
+    it('serveur injoignable : ApiError explicite (status 0), pas une TypeError brute', async () => {
+      fetchMock.mockRejectedValue(new TypeError('Failed to fetch'));
+      const err = await api.get<never>('/x').catch((e: unknown) => e as ApiError);
+      expect(err).toBeInstanceOf(ApiError);
+      expect(err.status).toBe(0);
+      expect(err.message).toMatch(/joindre le serveur/);
+    });
+
+    it('non-régression : une suppression réussie sans corps ne lève pas d’erreur', async () => {
+      fetchMock.mockResolvedValue(new Response('', { status: 200 }));
+      await expect(api.delete('/contents/1')).resolves.toBeUndefined();
+    });
+  });
 });

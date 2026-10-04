@@ -3,6 +3,9 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { ExternalLink } from 'lucide-react';
 import { useParish } from '@/hooks/useParish';
+import { ParishInfoSummary } from '@/components/parish/ParishInfoSummary';
+import { FormView } from '@/components/layout/FormView';
+import { Button } from '@/components/ui/button';
 import { ParishInfoForm } from '@/components/parish/ParishInfoForm';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ErrorNotice } from '@/components/ui/error-notice';
@@ -21,8 +24,28 @@ const sections = [
 
 export default function ParishDetailPage({ params }: Props) {
   const { parishId } = params;
-  const { parish, error } = useParish(parishId);
+  const { parish, error, setParish } = useParish(parishId);
   const [saved, setSaved] = useState(false);
+  const [editing, setEditing] = useState(false);
+
+  if (editing && parish) {
+    return (
+      <FormView
+        title="Modifier les informations publiques"
+        description="Affichées sur la page de la paroisse et dans les résultats de recherche."
+        onBack={() => setEditing(false)}
+      >
+        <ParishInfoForm
+          parish={parish}
+          onSaved={(saved) => {
+            setParish(saved);
+            setSaved(true);
+            setEditing(false);
+          }}
+        />
+      </FormView>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -51,16 +74,31 @@ export default function ParishDetailPage({ params }: Props) {
       </div>
 
       <section
-        className="rounded-lg border bg-card p-4 sm:p-6 max-w-3xl space-y-4"
+        className="rounded-lg border bg-card p-4 sm:p-6 space-y-4"
         aria-labelledby="public-info"
       >
-        <div>
-          <h2 id="public-info" className="font-semibold">
-            Informations publiques
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Affichées sur la page de la paroisse et dans les résultats de recherche.
-          </p>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h2 id="public-info" className="font-semibold">
+              Informations publiques
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Affichées sur la page de la paroisse et dans les résultats de recherche.
+            </p>
+          </div>
+          {parish && (
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={() => {
+                setSaved(false);
+                setEditing(true);
+              }}
+            >
+              Modifier
+            </Button>
+          )}
         </div>
         {error ? (
           <ErrorNotice message={error} />
@@ -71,7 +109,7 @@ export default function ParishDetailPage({ params }: Props) {
                 <AlertDescription>Informations enregistrées.</AlertDescription>
               </Alert>
             )}
-            <ParishInfoForm parish={parish} onSaved={() => setSaved(true)} />
+            <ParishInfoSummary parish={parish} />
           </>
         ) : (
           <p className="text-muted-foreground">Chargement...</p>

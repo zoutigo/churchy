@@ -7,6 +7,8 @@ const inDays = (days: number) => {
   const pad = (n: number) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T18:00`;
 };
+/** Format du champ date : « AAAA-MM-JJ ». */
+const dayInDays = (days: number) => inDays(days).slice(0, 10);
 
 test.describe('gestion du contenu public d’une paroisse (tableau de bord → site public)', () => {
   test('complète l’identité, publie et supprime une annonce et une activité', async ({ page }) => {
@@ -18,21 +20,27 @@ test.describe('gestion du contenu public d’une paroisse (tableau de bord → s
     await page.goto('/dashboard/parishes');
     await page.getByRole('button', { name: '+ Nouvelle paroisse' }).click();
     await page.getByLabel('Nom de la paroisse').fill(name);
-    await page.getByLabel('Ville').fill('Nantes');
+    await page.getByLabel('Pays', { exact: true }).selectOption('France');
+    await page.getByLabel('Ville', { exact: true }).fill('Nantes');
     await page.getByRole('button', { name: 'Créer la paroisse' }).click();
     await page.getByRole('link', { name: new RegExp(name) }).click();
     await page.waitForURL(/\/dashboard\/parishes\/[^/]+$/);
     await expect(page.getByRole('heading', { name })).toBeVisible();
     const parishId = page.url().split('/').pop() as string;
 
-    // Identité publique.
+    // Identité publique : affichée en lecture seule, le formulaire s'ouvre avec « Modifier ».
+    await expect(page.getByLabel('Adresse', { exact: true })).toHaveCount(0);
+    await page.getByRole('button', { name: 'Modifier' }).click();
     await page.getByLabel('Adresse', { exact: true }).fill('3 rue de la Paix');
-    await page.getByLabel('Quartier').fill('Centre');
+    await page.getByLabel('Quartier', { exact: false }).fill('Centre');
+    await page.getByLabel(/Complément d’adresse/).fill('Face à la mairie');
     await page.getByLabel('Site web').fill('javascript:alert(1)');
     await expect(page.getByText('Adresse web invalide (http ou https)')).toBeVisible();
     await page.getByLabel('Site web').fill('https://paroisse-nantes.example');
     await page.getByRole('button', { name: 'Enregistrer' }).click();
     await expect(page.getByText('Informations enregistrées.')).toBeVisible();
+    await expect(page.getByText(/3 rue de la Paix/)).toBeVisible();
+    await expect(page.getByLabel('Adresse', { exact: true })).toHaveCount(0);
 
     // Annonce.
     await page.goto(`/dashboard/parishes/${parishId}/announcements`);
@@ -89,21 +97,17 @@ test.describe('gestion du contenu public d’une paroisse (tableau de bord → s
         data: { name: `Paroisse ${token}`, city: 'Brest', country: 'France' },
       })
     ).json();
-    const template = await (
-      await page.request.post(`http://localhost:3211/api/parishes/${parish.id}/templates`, {
-        data: { name: 'Messe', type: 'SUNDAY_MASS' },
-      })
-    ).json();
 
     await page.goto(`/dashboard/parishes/${parish.id}/celebrations/new`);
-    await page.getByLabel('ID du modèle').fill(template.id);
     await page.getByLabel('Titre').fill('Messe annoncée par le formulaire');
-    // Non-régression : une saisie datetime-local (sans fuseau) était rejetée par la validation.
-    await page.getByLabel('Date et heure').fill(inDays(5));
-    await page.getByLabel('Annoncer au public').check();
+    await page.getByLabel('Date', { exact: true }).fill(dayInDays(5));
+    await page.getByLabel('Heure', { exact: true }).fill('18:00');
+    await page.getByLabel('Publier la série au public').check();
     await page.getByRole('button', { name: 'Créer la célébration' }).click();
-    await expect(page).toHaveURL(new RegExp(`/dashboard/parishes/${parish.id}/celebrations$`));
-    await expect(page.getByText('Annoncée au public')).toBeVisible();
+    await expect(page).toHaveURL(
+      new RegExp(`/dashboard/parishes/${parish.id}/celebrations/[^/]+$`),
+    );
+    await expect(page.getByTestId('series-status')).toContainText('Publiée au public');
 
     await page.goto(`/paroisses/${parish.id}/messes`);
     await expect(page.getByText('Messe annoncée par le formulaire')).toBeVisible();
