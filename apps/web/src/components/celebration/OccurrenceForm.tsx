@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import {
   INTERNAL_NOTE_MAX_LENGTH,
@@ -23,6 +24,9 @@ interface Props {
 
 /** Ce qui est propre à cette date : horaire, précision publique, note interne. */
 export function OccurrenceForm({ occurrence, onSaved }: Props) {
+  const t = useTranslations('occurrenceForm');
+  const ts = useTranslations('schedule');
+  const tc = useTranslations('common');
   const local = utcToZoned(new Date(occurrence.startsAt), occurrence.timezone);
   const bounds = dateBounds(occurrence.timezone);
   const [date, setDate] = useState(local.date);
@@ -43,12 +47,12 @@ export function OccurrenceForm({ occurrence, onSaved }: Props) {
         description,
         internalNote: note,
       });
-      notify.success('Date enregistrée', moved ? 'Horaire modifié' : undefined);
+      notify.success(t('saved'), moved ? t('timeChanged') : undefined);
       onSaved(saved);
     } catch (err) {
-      const message = errorMessage(err, 'Erreur lors de l’enregistrement');
+      const message = errorMessage(err, t('saveError'));
       setError(message);
-      notify.error('Erreur lors de l’enregistrement', message);
+      notify.error(t('saveError'), message);
     } finally {
       setBusy(false);
     }
@@ -58,7 +62,7 @@ export function OccurrenceForm({ occurrence, onSaved }: Props) {
     <form onSubmit={submit} className="space-y-4" data-testid="occurrence-form">
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
-          <Label htmlFor="occ-date">Date</Label>
+          <Label htmlFor="occ-date">{ts('date')}</Label>
           <Input
             id="occ-date"
             type="date"
@@ -69,35 +73,31 @@ export function OccurrenceForm({ occurrence, onSaved }: Props) {
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="occ-time">Heure</Label>
+          <Label htmlFor="occ-time">{ts('time')}</Label>
           <Input id="occ-time" type="time" value={time} onChange={(e) => setTime(e.target.value)} />
         </div>
       </div>
       <div className="space-y-1.5">
-        <Label>Précision publique pour cette date</Label>
+        <Label>{t('publicNote')}</Label>
         <RichTextEditor
           minHeight="8rem"
-          aria-label="Précision publique"
+          aria-label={t('publicNoteAria')}
           value={description}
           onChange={setDescription}
         />
-        <p className="text-xs text-muted-foreground">
-          S’ajoute à la description de la série (ex. « l’évêque de Yaoundé sera des nôtres »).
-        </p>
+        <p className="text-xs text-muted-foreground">{t('publicNoteHint')}</p>
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="occ-note">Note interne pour cette date</Label>
+        <Label htmlFor="occ-note">{t('internalNote')}</Label>
         <Textarea
           id="occ-note"
           rows={3}
           maxLength={INTERNAL_NOTE_MAX_LENGTH}
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          placeholder="Point de vigilance pour celui qui prépare…"
+          placeholder={t('internalNotePlaceholder')}
         />
-        <p className="text-xs text-muted-foreground">
-          Réservée à l’équipe : jamais visible du public.
-        </p>
+        <p className="text-xs text-muted-foreground">{t('internalNoteHint')}</p>
       </div>
       {error && (
         <p role="alert" className="text-sm text-destructive">
@@ -105,7 +105,7 @@ export function OccurrenceForm({ occurrence, onSaved }: Props) {
         </p>
       )}
       <Button type="submit" disabled={busy} className="w-full sm:w-auto">
-        {busy ? 'Enregistrement…' : 'Enregistrer'}
+        {busy ? t('saving') : tc('save')}
       </Button>
     </form>
   );

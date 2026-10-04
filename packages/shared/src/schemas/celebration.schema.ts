@@ -3,9 +3,10 @@ import { CelebrationType } from '../enums/celebration-type.enum';
 import { ContentType } from '../enums/content-type.enum';
 import { hasRichContent } from '../rich-text';
 import { MAX_OCCURRENCES_PER_REQUEST, isValidDateString, isValidTimeString } from '../schedule';
+import { ERR } from '../constants/error-codes.constants';
 
 export const createCelebrationTemplateSchema = z.object({
-  name: z.string().min(1, 'Nom requis'),
+  name: z.string().min(1, ERR.nameRequired),
   type: z.nativeEnum(CelebrationType),
   description: z.string().optional(),
 });
@@ -16,31 +17,31 @@ export const createCelebrationTemplateSchema = z.object({
  * une étape sans `id` est créée ; une étape absente de la liste est retirée.
  */
 export const updateCelebrationTemplateSchema = z.object({
-  name: z.string().trim().min(1, 'Nom requis').max(100).optional(),
+  name: z.string().trim().min(1, ERR.nameRequired).max(100).optional(),
   type: z.nativeEnum(CelebrationType).optional(),
   description: z.string().nullable().optional(),
   steps: z
     .array(
       z.object({
         id: z.string().min(1).optional(),
-        title: z.string().trim().min(1, 'Titre requis').max(100),
+        title: z.string().trim().min(1, ERR.titleRequired).max(100),
       }),
     )
-    .min(1, 'Ajoutez au moins une étape')
+    .min(1, ERR.stepsRequired)
     .max(100)
     .optional(),
 });
 
 export const createTemplateStepSchema = z.object({
-  title: z.string().min(1, 'Titre requis'),
-  key: z.string().min(1, 'Clé requise'),
+  title: z.string().min(1, ERR.titleRequired),
+  key: z.string().min(1, ERR.keyRequired),
   order: z.number().int().positive(),
   expectedContentType: z.nativeEnum(ContentType).optional(),
   isRequired: z.boolean().default(true),
 });
 
-const localDate = z.string().refine(isValidDateString, 'Date invalide (format AAAA-MM-JJ)');
-const localTime = z.string().refine(isValidTimeString, 'Heure invalide (format HH:mm)');
+const localDate = z.string().refine(isValidDateString, ERR.dateInvalid);
+const localTime = z.string().refine(isValidTimeString, ERR.timeInvalid);
 
 /** Planning d'une série : dates ponctuelles ou récurrence hebdomadaire (heure locale de la paroisse). */
 const scheduleBaseSchema = z.discriminatedUnion('kind', [
@@ -48,7 +49,7 @@ const scheduleBaseSchema = z.discriminatedUnion('kind', [
     kind: z.literal('dates'),
     dates: z
       .array(z.object({ date: localDate, time: localTime }))
-      .min(1, 'Au moins une date')
+      .min(1, ERR.datesRequired)
       .max(MAX_OCCURRENCES_PER_REQUEST, `${MAX_OCCURRENCES_PER_REQUEST} dates maximum`),
   }),
   z.object({
@@ -56,7 +57,7 @@ const scheduleBaseSchema = z.discriminatedUnion('kind', [
     startDate: localDate,
     endDate: localDate,
     time: localTime,
-    weekdays: z.array(z.number().int().min(0).max(6)).min(1, 'Choisissez au moins un jour').max(7),
+    weekdays: z.array(z.number().int().min(0).max(6)).min(1, ERR.weekdaysRequired).max(7),
   }),
 ]);
 
@@ -66,7 +67,7 @@ export const scheduleSchema = scheduleBaseSchema.superRefine((v, ctx) => {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ['endDate'],
-      message: 'La fin doit être après le début',
+      message: ERR.endBeforeStart,
     });
   }
 });
@@ -95,18 +96,18 @@ const clearableString = (max: number) =>
 /** Description publique (HTML de l'éditeur, nettoyé par l'API). */
 const optionalDescription = z
   .string()
-  .max(CELEBRATION_DESCRIPTION_MAX_LENGTH, 'Description trop longue')
+  .max(CELEBRATION_DESCRIPTION_MAX_LENGTH, ERR.descriptionTooLong)
   .optional()
   .transform((v) => (v && hasRichContent(v) ? v : undefined));
 const clearableDescription = z
   .string()
-  .max(CELEBRATION_DESCRIPTION_MAX_LENGTH, 'Description trop longue')
+  .max(CELEBRATION_DESCRIPTION_MAX_LENGTH, ERR.descriptionTooLong)
   .nullish()
   .transform((v) => (v === undefined ? undefined : v && hasRichContent(v) ? v : null));
 
 /** Création d'une série de célébrations (une ou plusieurs dates). */
 export const createCelebrationSchema = z.object({
-  title: z.string().trim().min(1, 'Titre requis').max(150, '150 caractères maximum'),
+  title: z.string().trim().min(1, ERR.titleRequired).max(150, ERR.titleMax150),
   type: z.nativeEnum(CelebrationType),
   location: optionalString(150),
   /** Visible du public (toutes les dates), feuille « en préparation » jusqu'à sa publication. */
@@ -120,7 +121,7 @@ export const createCelebrationSchema = z.object({
 });
 
 export const updateCelebrationSchema = z.object({
-  title: z.string().trim().min(1, 'Titre requis').max(150, '150 caractères maximum').optional(),
+  title: z.string().trim().min(1, ERR.titleRequired).max(150, ERR.titleMax150).optional(),
   type: z.nativeEnum(CelebrationType).optional(),
   location: clearableString(150),
   announced: z.boolean().optional(),
@@ -153,7 +154,7 @@ export const changeSheetTemplateSchema = z.object({
 });
 
 export const addSheetStepSchema = z.object({
-  title: z.string().trim().min(1, 'Titre requis').max(100),
+  title: z.string().trim().min(1, ERR.titleRequired).max(100),
   expectedContentType: z.nativeEnum(ContentType).optional(),
 });
 

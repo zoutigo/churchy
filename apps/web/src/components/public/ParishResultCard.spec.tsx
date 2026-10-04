@@ -1,7 +1,12 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { CelebrationType, type PublicParishSummary } from '@churchy/shared';
 import { ParishResultCard } from './ParishResultCard';
+
+const toggle = vi.fn();
+vi.mock('@/components/favorites/FavoritesProvider', () => ({
+  useFavorites: () => ({ isFavorite: () => false, toggle, ready: true }),
+}));
 
 const parish: PublicParishSummary = {
   id: 'p1',
@@ -14,6 +19,13 @@ const parish: PublicParishSummary = {
 };
 
 describe('ParishResultCard', () => {
+  it('propose d’ajouter la paroisse aux favoris', async () => {
+    const user = (await import('@testing-library/user-event')).default.setup();
+    render(<ParishResultCard parish={parish} />);
+    await user.click(screen.getByRole('button', { name: 'Ajouter aux favoris : Saint-Pierre' }));
+    expect(toggle).toHaveBeenCalledWith({ id: 'p1', name: 'Saint-Pierre' });
+  });
+
   it('affiche nom, quartier et ville, église principale', () => {
     render(<ParishResultCard parish={parish} />);
     expect(screen.getByRole('heading', { name: 'Saint-Pierre' })).toBeInTheDocument();
@@ -25,7 +37,7 @@ describe('ParishResultCard', () => {
     render(<ParishResultCard parish={parish} />);
     expect(screen.getByRole('link', { name: 'Voir la paroisse Saint-Pierre' })).toHaveAttribute(
       'href',
-      '/paroisses/p1',
+      '/fr/paroisses/p1',
     );
     expect(screen.getByText('Voir la paroisse')).toBeInTheDocument();
   });
@@ -57,6 +69,29 @@ describe('ParishResultCard', () => {
       />,
     );
     expect(screen.getByText(/Prochaine messe :/)).toBeInTheDocument();
-    expect(screen.getByText('Feuille en préparation')).toBeInTheDocument();
+    expect(screen.queryByText(/préparation/)).not.toBeInTheDocument();
+  });
+
+  it('affiche « Feuille disponible » quand la feuille de la prochaine messe est publiée', () => {
+    render(
+      <ParishResultCard
+        parish={{
+          ...parish,
+          nextCelebration: {
+            id: 'c1',
+            celebrationId: 's1',
+            cancelled: false,
+            cancelReason: null,
+            timezone: 'Europe/Paris',
+            title: 'Messe',
+            date: '2026-10-04T12:00:00.000Z',
+            location: null,
+            type: CelebrationType.SUNDAY_MASS,
+            sheetStatus: 'AVAILABLE',
+          },
+        }}
+      />,
+    );
+    expect(screen.getByText('Feuille disponible')).toBeInTheDocument();
   });
 });

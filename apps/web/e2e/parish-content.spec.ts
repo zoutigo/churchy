@@ -62,7 +62,7 @@ test.describe('gestion du contenu public d’une paroisse (tableau de bord → s
     await expect(page.getByText('Pèlerinage')).toBeVisible();
 
     // Visible publiquement, avec l'adresse saisie.
-    await page.goto(`/paroisses/${parishId}`);
+    await page.goto(`/fr/paroisses/${parishId}`);
     await expect(page.getByRole('heading', { name })).toBeVisible();
     await expect(page.getByText(/3 rue de la Paix, Centre, Nantes/).first()).toBeAttached();
     await expect(page.getByRole('heading', { name: 'Collecte de printemps' })).toBeVisible();
@@ -81,13 +81,13 @@ test.describe('gestion du contenu public d’une paroisse (tableau de bord → s
     await page.getByRole('button', { name: 'Confirmer la suppression de Pèlerinage' }).click();
     await expect(page.getByText('Aucune activité pour l’instant.')).toBeVisible();
 
-    await page.goto(`/paroisses/${parishId}/annonces`);
+    await page.goto(`/fr/paroisses/${parishId}/annonces`);
     await expect(page.getByText('Aucune annonce pour l’instant')).toBeVisible();
-    await page.goto(`/paroisses/${parishId}/activites`);
+    await page.goto(`/fr/paroisses/${parishId}/activites`);
     await expect(page.getByText('Aucune activité à venir')).toBeVisible();
   });
 
-  test('crée une célébration annoncée depuis l’interface : elle apparaît « feuille en préparation »', async ({
+  test('crée une célébration annoncée depuis l’interface : elle apparaît sans mention de feuille', async ({
     page,
   }) => {
     const token = `Zc${Date.now()}${Math.floor(Math.random() * 1000)}`;
@@ -109,9 +109,9 @@ test.describe('gestion du contenu public d’une paroisse (tableau de bord → s
     );
     await expect(page.getByTestId('series-status')).toContainText('Publiée au public');
 
-    await page.goto(`/paroisses/${parish.id}/messes`);
+    await page.goto(`/fr/paroisses/${parish.id}/messes`);
     await expect(page.getByText('Messe annoncée par le formulaire')).toBeVisible();
-    await expect(page.getByText('Feuille en préparation')).toBeVisible();
+    await expect(page.getByText('Feuille en préparation')).toHaveCount(0);
   });
 
   for (const [device, viewport] of Object.entries(VIEWPORTS)) {

@@ -31,6 +31,8 @@ export const authLinkEmailPayloadSchema = z.object({
   firstName: z.string(),
   /** Lien complet et déjà signé ; le worker ne fait que l'envoyer. */
   url: z.string().url(),
+  /** Langue du compte : celle de l'email (français si absente, ex. ancien job encore en file). */
+  locale: z.enum(['fr', 'en']).default('fr'),
   expiresAt: z.string().datetime(),
 });
 

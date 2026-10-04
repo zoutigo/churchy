@@ -1,4 +1,5 @@
-import Link from 'next/link';
+import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/link';
 import { ErrorPage, errorButtonClass, errorSecondaryButtonClass } from './ErrorPage';
 
 interface Props {
@@ -11,17 +12,19 @@ interface Props {
 }
 
 /** « Page introuvable » : même rendu partout, seuls les liens de sortie changent selon l'endroit. */
-export function NotFoundPage({
-  title = 'Page introuvable',
-  message = 'Cette page n’existe pas ou n’est plus disponible. Le lien est peut-être erroné ou a été déplacé.',
-  size,
-  primary = { href: '/', label: 'Retour à l’accueil' },
-  secondary,
-}: Props) {
+export function NotFoundPage({ title, message, size, primary, secondary }: Props) {
+  const t = useTranslations('errors');
+  const main = primary ?? { href: '/', label: t('backHome') };
   return (
-    <ErrorPage kind="not-found" code="404" title={title} message={message} size={size}>
-      <Link href={primary.href} className={errorButtonClass}>
-        {primary.label}
+    <ErrorPage
+      kind="not-found"
+      code="404"
+      title={title ?? t('notFound.title')}
+      message={message ?? t('notFound.message')}
+      size={size}
+    >
+      <Link href={main.href} className={errorButtonClass}>
+        {main.label}
       </Link>
       {secondary && (
         <Link href={secondary.href} className={errorSecondaryButtonClass}>

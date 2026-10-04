@@ -1,11 +1,12 @@
 'use client';
+import { useTranslations } from 'next-intl';
+import { useLabels } from '@/i18n/labels';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CheckCircle2 } from 'lucide-react';
 import {
   CONTACT_TOPICS,
-  CONTACT_TOPIC_LABELS,
   contactMessageSchema,
   type ContactMessageDto,
   type ContactTopic,
@@ -33,6 +34,8 @@ import { handleSubmitError } from '@/lib/forms/submit-error';
 import { notify } from '@/lib/notify';
 
 export function ContactForm({ defaultTopic = 'QUESTION' }: { defaultTopic?: ContactTopic }) {
+  const t = useTranslations('contact');
+  const labels = useLabels();
   const [sent, setSent] = useState(false);
   const form = useForm<ContactMessageDto>({
     resolver: zodResolver(contactMessageSchema),
@@ -43,11 +46,11 @@ export function ContactForm({ defaultTopic = 'QUESTION' }: { defaultTopic?: Cont
   async function onSubmit(data: ContactMessageDto) {
     try {
       await publicApi.sendContact(data);
-      notify.success('Message transmis');
+      notify.success(t('toastSent'));
       form.reset();
       setSent(true);
     } catch (err: unknown) {
-      handleSubmitError(form, err, 'Le message n’a pas pu être envoyé. Réessayez.');
+      handleSubmitError(form, err, t('errorFallback'));
     }
   }
 
@@ -59,14 +62,14 @@ export function ContactForm({ defaultTopic = 'QUESTION' }: { defaultTopic?: Cont
       >
         <CheckCircle2 className="mt-0.5 shrink-0" size={20} aria-hidden />
         <div>
-          <p className="font-semibold">Message envoyé</p>
-          <p className="text-sm">Merci ! Nous vous répondrons par email dès que possible.</p>
+          <p className="font-semibold">{t('sentTitle')}</p>
+          <p className="text-sm">{t('sentText')}</p>
           <button
             type="button"
             className="mt-3 text-sm font-medium underline"
             onClick={() => setSent(false)}
           >
-            Envoyer un autre message
+            {t('another')}
           </button>
         </div>
       </div>
@@ -82,7 +85,7 @@ export function ContactForm({ defaultTopic = 'QUESTION' }: { defaultTopic?: Cont
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Nom</FormLabel>
+                <FormLabel>{t('name')}</FormLabel>
                 <FormControl>
                   <Input autoComplete="name" {...field} />
                 </FormControl>
@@ -95,7 +98,7 @@ export function ContactForm({ defaultTopic = 'QUESTION' }: { defaultTopic?: Cont
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email</FormLabel>
+                <FormLabel>{t('email')}</FormLabel>
                 <FormControl>
                   <Input type="email" autoComplete="email" {...field} />
                 </FormControl>
@@ -109,7 +112,7 @@ export function ContactForm({ defaultTopic = 'QUESTION' }: { defaultTopic?: Cont
           name="topic"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Sujet</FormLabel>
+              <FormLabel>{t('topic')}</FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
@@ -117,9 +120,9 @@ export function ContactForm({ defaultTopic = 'QUESTION' }: { defaultTopic?: Cont
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {CONTACT_TOPICS.map((t) => (
-                    <SelectItem key={t} value={t}>
-                      {CONTACT_TOPIC_LABELS[t]}
+                  {CONTACT_TOPICS.map((topic) => (
+                    <SelectItem key={topic} value={topic}>
+                      {labels.contactTopic(topic)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -133,7 +136,7 @@ export function ContactForm({ defaultTopic = 'QUESTION' }: { defaultTopic?: Cont
           name="message"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Message</FormLabel>
+              <FormLabel>{t('message')}</FormLabel>
               <FormControl>
                 <Textarea rows={6} className="resize-y" {...field} />
               </FormControl>
@@ -144,7 +147,7 @@ export function ContactForm({ defaultTopic = 'QUESTION' }: { defaultTopic?: Cont
 
         {/* Piège à robots : invisible et inaccessible pour une personne, rempli par les scripts. */}
         <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
-          <label htmlFor="contact-website">Ne pas remplir</label>
+          <label htmlFor="contact-website">{t('honeypot')}</label>
           <input
             id="contact-website"
             type="text"
@@ -165,7 +168,7 @@ export function ContactForm({ defaultTopic = 'QUESTION' }: { defaultTopic?: Cont
           className="w-full sm:w-auto"
           disabled={form.formState.isSubmitting}
         >
-          {form.formState.isSubmitting ? 'Envoi…' : 'Envoyer le message'}
+          {form.formState.isSubmitting ? t('sending') : t('submit')}
         </Button>
       </form>
     </Form>

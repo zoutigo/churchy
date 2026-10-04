@@ -1,11 +1,12 @@
 import { z } from 'zod';
 import { richTextSchema } from '../rich-text';
 import { ContentType } from '../enums/content-type.enum';
+import { ERR } from '../constants/error-codes.constants';
 
 export const createContentSchema = z.object({
-  title: z.string().min(1, 'Titre requis'),
+  title: z.string().min(1, ERR.titleRequired),
   type: z.nativeEnum(ContentType),
-  body: richTextSchema('Contenu requis'),
+  body: richTextSchema(ERR.contentRequired),
   language: z.string().default('fr'),
   tags: z.array(z.string()).default([]),
 });

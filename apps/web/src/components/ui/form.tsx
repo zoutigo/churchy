@@ -14,6 +14,7 @@ import {
 
 import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
+import { useErrorText } from '@/i18n/error-text';
 
 const Form = FormProvider;
 
@@ -142,7 +143,8 @@ const FormMessage = React.forwardRef<
   React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, children, ...props }, ref) => {
   const { error, formMessageId } = useFormField();
-  const body = error ? String(error?.message ?? '') : children;
+  const errorText = useErrorText();
+  const body = error ? errorText(String(error?.message ?? '')) : children;
 
   if (!body) {
     return null;

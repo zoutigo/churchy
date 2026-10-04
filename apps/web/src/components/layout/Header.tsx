@@ -1,7 +1,9 @@
 'use client';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/link';
+import { useRouter } from '@/i18n/link';
 import { ChevronDown, Church, LogOut } from 'lucide-react';
+import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 import { useAuth } from '@/hooks/useAuth';
 import {
   DropdownMenu,
@@ -16,6 +18,7 @@ const initials = (firstName: string, lastName: string) =>
   `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
 
 export function Header() {
+  const t = useTranslations('layout');
   const router = useRouter();
   const { user, logout } = useAuth();
 
@@ -26,11 +29,12 @@ export function Header() {
   }
 
   return (
-    <header className="h-14 border-b border-churchy-200 bg-white flex items-center justify-end px-6 shrink-0 shadow-sm">
+    <header className="h-14 border-b border-churchy-200 bg-white flex items-center justify-end gap-3 px-4 sm:px-6 shrink-0 shadow-sm">
+      <LanguageSwitcher />
       {user && (
         <DropdownMenu>
           <DropdownMenuTrigger
-            aria-label="Menu utilisateur"
+            aria-label={t('userMenu')}
             className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-churchy-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <span
@@ -51,19 +55,19 @@ export function Header() {
               </p>
               <p className="text-xs font-normal text-muted-foreground">{user.email}</p>
               {!user.emailVerified && (
-                <p className="text-xs font-normal text-amber-600">Email non confirmé</p>
+                <p className="text-xs font-normal text-amber-600">{t('emailUnverified')}</p>
               )}
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <Link href="/dashboard/parishes" className="cursor-pointer">
                 <Church size={15} className="mr-2" />
-                Mes paroisses
+                {t('myParishes')}
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={handleLogout} className="cursor-pointer">
               <LogOut size={15} className="mr-2" />
-              Se déconnecter
+              {t('logout')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

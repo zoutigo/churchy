@@ -26,7 +26,7 @@ test.describe('paroisses', () => {
     await page.getByRole('link', { name: new RegExp(parishName) }).click();
     await page.waitForURL(/\/dashboard\/parishes\/[^/]+$/);
     const parishId = page.url().split('/').pop();
-    await page.goto(`/paroisses/${parishId}`);
+    await page.goto(`/fr/paroisses/${parishId}`);
     await expect(page.getByRole('heading', { level: 1, name: parishName })).toBeVisible();
   });
 });

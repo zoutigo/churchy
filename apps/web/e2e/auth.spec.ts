@@ -17,7 +17,7 @@ test.describe('protection des pages privées', () => {
     await logoutViaUi(page);
 
     await page.goto('/dashboard/parishes');
-    await expect(page).toHaveURL(/\/login\?next=%2Fdashboard%2Fparishes$/);
+    await expect(page).toHaveURL(/\/fr\/connexion\?next=%2Fdashboard%2Fparishes$/);
 
     await page.getByLabel('Email').fill(email);
     await page.getByLabel('Mot de passe', { exact: true }).fill(PASSWORD);
@@ -29,7 +29,7 @@ test.describe('protection des pages privées', () => {
 
   test('un utilisateur connecté qui ouvre /login est renvoyé vers son espace', async ({ page }) => {
     await registerViaUi(page, uniqueEmail('already'));
-    await page.goto('/login');
+    await page.goto('/fr/connexion');
     await expect(page).toHaveURL(/\/dashboard$/);
   });
 
@@ -48,11 +48,11 @@ test.describe('connexion et déconnexion', () => {
   test('une connexion refusée affiche un message lisible', async ({ page }) => {
     await loginViaUi(page, 'inconnu@e2e.test', 'mauvais-mot-de-passe');
     await expect(page.getByRole('main').getByText('Identifiants invalides')).toBeVisible();
-    await expect(page).toHaveURL(/\/login$/);
+    await expect(page).toHaveURL(/\/fr\/connexion$/);
   });
 
   test('un formulaire vide signale chaque champ invalide (bordure rouge)', async ({ page }) => {
-    await page.goto('/login');
+    await page.goto('/fr/connexion');
     await page.getByRole('button', { name: 'Se connecter' }).click();
     await expect(page.getByLabel('Email')).toHaveAttribute('aria-invalid', 'true');
     await expect(page.getByLabel('Mot de passe', { exact: true })).toHaveAttribute(
@@ -62,7 +62,7 @@ test.describe('connexion et déconnexion', () => {
   });
 
   test('permet d’afficher le mot de passe saisi', async ({ page }) => {
-    await page.goto('/login');
+    await page.goto('/fr/connexion');
     const input = page.getByLabel('Mot de passe', { exact: true });
     await expect(input).toHaveAttribute('type', 'password');
     await page.getByRole('button', { name: 'Afficher le mot de passe' }).click();
@@ -76,7 +76,7 @@ test.describe('connexion et déconnexion', () => {
     await logoutViaUi(page);
 
     await page.goto('/dashboard');
-    await expect(page).toHaveURL(/\/login\?next=%2Fdashboard$/);
+    await expect(page).toHaveURL(/\/fr\/connexion\?next=%2Fdashboard$/);
   });
 
   test('la session survit à un rechargement de page', async ({ page }) => {
@@ -140,7 +140,7 @@ test.describe('sécurité de la session', () => {
 
     await page.getByRole('link', { name: 'Paroisses', exact: true }).click();
 
-    await expect(page).toHaveURL(/\/login\?expired=1&next=%2Fdashboard%2Fparishes$/);
+    await expect(page).toHaveURL(/\/fr\/connexion\?expired=1&next=%2Fdashboard%2Fparishes$/);
     await expect(page.getByText('Votre session a expiré')).toBeVisible();
 
     // On peut se reconnecter et on retrouve la page demandée.
@@ -151,7 +151,7 @@ test.describe('sécurité de la session', () => {
   });
 
   test('envoie des en-têtes de sécurité sur les pages du site', async ({ page }) => {
-    const response = await page.goto('/login');
+    const response = await page.goto('/fr/connexion');
     const headers = response?.headers() ?? {};
     expect(headers['x-frame-options']).toBe('DENY');
     expect(headers['x-content-type-options']).toBe('nosniff');
@@ -161,11 +161,16 @@ test.describe('sécurité de la session', () => {
 });
 
 test.describe('navigation de la page d’accueil', () => {
-  test('propose connexion et inscription aux visiteurs', async ({ page }) => {
+  test('propose Connexion seule aux visiteurs (l’inscription se fait depuis la page de connexion)', async ({
+    page,
+  }) => {
     await page.goto('/');
     const nav = page.getByRole('navigation', { name: 'Navigation principale' });
     await expect(nav.getByRole('link', { name: 'Connexion' })).toBeVisible();
-    await expect(nav.getByRole('link', { name: 'Créer un compte' })).toBeVisible();
+    await expect(nav.getByRole('link', { name: 'Créer un compte' })).toHaveCount(0);
+    await nav.getByRole('link', { name: 'Connexion' }).click();
+    await page.getByRole('link', { name: "S'inscrire" }).click();
+    await expect(page).toHaveURL(/\/fr\/inscription$/);
   });
 
   test('propose « Mon espace » aux utilisateurs connectés', async ({ page }) => {
@@ -213,7 +218,7 @@ test.describe('vérification de l’email', () => {
   });
 
   test('un lien sans jeton affiche une erreur claire', async ({ page }) => {
-    await page.goto('/verify-email');
+    await page.goto('/fr/verification-email');
     await expect(page.getByText('Lien invalide : le jeton est manquant.')).toBeVisible();
   });
 });
@@ -227,7 +232,7 @@ test.describe('mot de passe oublié', () => {
     await logoutViaUi(page);
 
     await page.getByRole('link', { name: 'Mot de passe oublié ?' }).click();
-    await expect(page).toHaveURL(/\/forgot-password$/);
+    await expect(page).toHaveURL(/\/fr\/mot-de-passe-oublie$/);
     await page.getByLabel('Email').fill(email);
     await page.getByRole('button', { name: 'Envoyer le lien' }).click();
     await expect(page.getByText('Vérifiez votre boîte mail')).toBeVisible();
@@ -243,7 +248,7 @@ test.describe('mot de passe oublié', () => {
     await page.getByLabel('Confirmer le mot de passe').fill('nouveaumdp1');
     await page.getByRole('button', { name: 'Modifier le mot de passe' }).click();
 
-    await expect(page).toHaveURL(/\/login\?reset=1$/);
+    await expect(page).toHaveURL(/\/fr\/connexion\?reset=1$/);
     await expect(page.getByText('Mot de passe modifié')).toBeVisible();
 
     await loginViaUi(page, email, PASSWORD);
@@ -254,7 +259,7 @@ test.describe('mot de passe oublié', () => {
   });
 
   test('ne révèle pas si une adresse a un compte', async ({ page }) => {
-    await page.goto('/forgot-password');
+    await page.goto('/fr/mot-de-passe-oublie');
     await page.getByLabel('Email').fill(uniqueEmail('personne'));
     await page.getByRole('button', { name: 'Envoyer le lien' }).click();
     await expect(page.getByText('Vérifiez votre boîte mail')).toBeVisible();
@@ -262,13 +267,13 @@ test.describe('mot de passe oublié', () => {
   });
 
   test('un lien de réinitialisation invalide propose d’en redemander un', async ({ page }) => {
-    await page.goto('/reset-password?token=jeton-invente');
+    await page.goto('/fr/reinitialisation?token=jeton-invente');
     await page.getByLabel('Nouveau mot de passe').fill('nouveaumdp1');
     await page.getByLabel('Confirmer le mot de passe').fill('nouveaumdp1');
     await page.getByRole('button', { name: 'Modifier le mot de passe' }).click();
 
     await expect(page.getByRole('main').getByText('Lien invalide ou expiré')).toBeVisible();
     await page.getByRole('link', { name: 'Demander un nouveau lien' }).click();
-    await expect(page).toHaveURL(/\/forgot-password$/);
+    await expect(page).toHaveURL(/\/fr\/mot-de-passe-oublie$/);
   });
 });

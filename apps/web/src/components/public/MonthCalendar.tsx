@@ -1,6 +1,8 @@
-import Link from 'next/link';
+import { useTranslations } from 'next-intl';
+import { useAppLocale } from '@/i18n/locale';
+import { Link } from '@/i18n/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { shiftMonth, utcToZoned, type PublicCalendar } from '@churchy/shared';
+import { shiftMonth, utcToZoned, type Locale, type PublicCalendar } from '@churchy/shared';
 import { buildMonthGrid, groupByDay } from '@/lib/calendar';
 import { formatDateLong, formatTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
@@ -12,10 +14,10 @@ interface Props {
   today: string;
 }
 
-const WEEKDAYS = ['lun.', 'mar.', 'mer.', 'jeu.', 'ven.', 'sam.', 'dim.'];
+const WEEKDAYS = [1, 2, 3, 4, 5, 6, 0] as const;
 
-const monthTitle = (month: string) =>
-  new Date(`${month}-15T12:00:00Z`).toLocaleDateString('fr-FR', {
+const monthTitle = (month: string, locale: Locale) =>
+  new Date(`${month}-15T12:00:00Z`).toLocaleDateString(locale === 'en' ? 'en-GB' : 'fr-FR', {
     month: 'long',
     year: 'numeric',
     timeZone: 'UTC',
@@ -26,10 +28,13 @@ const monthTitle = (month: string) =>
  * Mobile : liste des seuls jours qui ont une célébration (une grille de 7 colonnes y serait illisible).
  */
 export function MonthCalendar({ calendar, parishId, today }: Props) {
+  const t = useTranslations('calendar');
+  const tc = useTranslations('celebration');
+  const locale = useAppLocale();
   const { month, timezone, items } = calendar;
   const days = groupByDay(items, timezone);
   const base = `/paroisses/${parishId}/calendrier`;
-  const tz = { timeZone: timezone };
+  const tz = { timeZone: timezone, locale };
 
   const entry = (c: (typeof items)[number]) => (
     <Link
@@ -45,7 +50,7 @@ export function MonthCalendar({ calendar, parishId, today }: Props) {
       )}
     >
       <span className="font-semibold">{formatTime(c.date, tz)}</span> {c.title}
-      {c.cancelled && <span className="sr-only"> (annulée)</span>}
+      {c.cancelled && <span className="sr-only">{tc('cancelledSr')}</span>}
     </Link>
   );
 
@@ -54,7 +59,7 @@ export function MonthCalendar({ calendar, parishId, today }: Props) {
       <div className="flex items-center justify-between gap-2">
         <Link
           href={`${base}?mois=${shiftMonth(month, -1)}`}
-          aria-label="Mois précédent"
+          aria-label={t('previous')}
           className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-churchy-200 bg-white text-churchy-700 hover:bg-churchy-100"
         >
           <ChevronLeft size={18} aria-hidden />
@@ -63,11 +68,11 @@ export function MonthCalendar({ calendar, parishId, today }: Props) {
           id="calendar-title"
           className="text-center font-playfair text-xl font-bold capitalize text-churchy-700 sm:text-2xl"
         >
-          {monthTitle(month)}
+          {monthTitle(month, locale)}
         </h2>
         <Link
           href={`${base}?mois=${shiftMonth(month, 1)}`}
-          aria-label="Mois suivant"
+          aria-label={t('next')}
           className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-churchy-200 bg-white text-churchy-700 hover:bg-churchy-100"
         >
           <ChevronRight size={18} aria-hidden />
@@ -78,7 +83,7 @@ export function MonthCalendar({ calendar, parishId, today }: Props) {
       <div className="md:hidden" data-testid="calendar-list">
         {days.size === 0 ? (
           <p className="rounded-xl border border-dashed border-churchy-200 bg-white/60 p-6 text-center text-churchy-900/75">
-            Aucune célébration annoncée ce mois-ci.
+            {t('empty')}
           </p>
         ) : (
           <ul className="space-y-3">
@@ -91,7 +96,7 @@ export function MonthCalendar({ calendar, parishId, today }: Props) {
                   )}
                 >
                   {formatDateLong(list[0].date, tz)}
-                  {day === today && ' — aujourd’hui'}
+                  {day === today && t('today')}
                 </p>
                 <div className="space-y-1.5">{list.map(entry)}</div>
               </li>
@@ -108,7 +113,7 @@ export function MonthCalendar({ calendar, parishId, today }: Props) {
         <div className="grid grid-cols-7 border-b border-churchy-100 bg-churchy-100/50 text-center text-xs font-semibold uppercase text-churchy-700">
           {WEEKDAYS.map((d) => (
             <div key={d} className="py-2">
-              {d}
+              {t(`weekdays.${d}`)}
             </div>
           ))}
         </div>
@@ -139,9 +144,11 @@ export function MonthCalendar({ calendar, parishId, today }: Props) {
       </div>
 
       <p className="text-xs text-churchy-900/70">
-        Heures de la paroisse. <span className="font-medium text-churchy-700">Vert</span> : feuille
-        disponible · <span className="font-medium text-amber-700">ambre</span> : feuille en
-        préparation · <span className="font-medium text-red-700">rouge</span> : annulée.
+        {t.rich('legend', {
+          green: (chunks) => <span className="font-medium text-churchy-700">{chunks}</span>,
+          amber: (chunks) => <span className="font-medium text-amber-700">{chunks}</span>,
+          red: (chunks) => <span className="font-medium text-red-700">{chunks}</span>,
+        })}
       </p>
     </section>
   );

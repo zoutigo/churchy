@@ -1,6 +1,7 @@
 'use client';
+import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
+import { Link } from '@/i18n/link';
 import { DEFAULT_TIMEZONE, type CelebrationListItem } from '@churchy/shared';
 import { celebrationsApi } from '@/lib/api/celebrations.api';
 import { useParish } from '@/hooks/useParish';
@@ -15,6 +16,9 @@ interface Props {
 }
 
 export default function CelebrationsPage({ params }: Props) {
+  const t = useTranslations('dashCelebrations');
+  const td = useTranslations('dashboard');
+  const tc = useTranslations('common');
   const { parishId } = params;
   const { parish } = useParish(parishId);
   const timezone = parish?.timezone ?? DEFAULT_TIMEZONE;
@@ -26,11 +30,9 @@ export default function CelebrationsPage({ params }: Props) {
     celebrationsApi
       .findByParish(parishId)
       .then(setCelebrations)
-      .catch((err: unknown) =>
-        setError(err instanceof Error ? err.message : 'Impossible de charger les données'),
-      )
+      .catch((err: unknown) => setError(err instanceof Error ? err.message : td('loadError')))
       .finally(() => setLoading(false));
-  }, [parishId]);
+  }, [parishId, td]);
 
   const active = celebrations.filter((c) => !c.archivedAt);
   const archived = celebrations.filter((c) => c.archivedAt);
@@ -38,13 +40,11 @@ export default function CelebrationsPage({ params }: Props) {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Célébrations"
-        description="Séries de célébrations, leurs dates et leurs feuilles de préparation"
+        title={t('title')}
+        description={t('desc')}
         action={
           <Button asChild>
-            <Link href={`/dashboard/parishes/${parishId}/celebrations/new`}>
-              + Nouvelle célébration
-            </Link>
+            <Link href={`/dashboard/parishes/${parishId}/celebrations/new`}>{t('new')}</Link>
           </Button>
         }
       />
@@ -52,11 +52,9 @@ export default function CelebrationsPage({ params }: Props) {
       {error ? (
         <ErrorNotice message={error} />
       ) : loading ? (
-        <p className="text-muted-foreground">Chargement...</p>
+        <p className="text-muted-foreground">{tc('loading')}</p>
       ) : celebrations.length === 0 ? (
-        <p className="py-12 text-center text-muted-foreground">
-          Aucune célébration pour l&apos;instant.
-        </p>
+        <p className="py-12 text-center text-muted-foreground">{t('empty')}</p>
       ) : (
         <>
           <EndingSoonDialog parishId={parishId} timezone={timezone} celebrations={active} />
@@ -68,7 +66,7 @@ export default function CelebrationsPage({ params }: Props) {
           {archived.length > 0 && (
             <details className="space-y-3">
               <summary className="cursor-pointer text-sm font-medium text-muted-foreground">
-                Archivées ({archived.length})
+                {t('archived', { count: archived.length })}
               </summary>
               <div className="mt-3 grid gap-3 lg:grid-cols-2">
                 {archived.map((c) => (

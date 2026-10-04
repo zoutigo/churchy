@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
 import { templatesApi, type TemplateWithSteps } from '@/lib/api/celebrations.api';
 import { errorMessage } from '@/lib/forms/submit-error';
@@ -15,6 +16,9 @@ interface Props {
 }
 
 export default function TemplatesPage({ params }: Props) {
+  const t = useTranslations('dashTemplates');
+  const td = useTranslations('dashboard');
+  const tc = useTranslations('common');
   const { parishId } = params;
   const [templates, setTemplates] = useState<TemplateWithSteps[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,9 +30,9 @@ export default function TemplatesPage({ params }: Props) {
     templatesApi
       .findByParish(parishId)
       .then(setTemplates)
-      .catch((err: unknown) => setError(errorMessage(err, 'Impossible de charger les données')))
+      .catch((err: unknown) => setError(errorMessage(err, td('loadError'))))
       .finally(() => setLoading(false));
-  }, [parishId]);
+  }, [parishId, td]);
 
   useEffect(load, [load]);
 
@@ -39,12 +43,8 @@ export default function TemplatesPage({ params }: Props) {
     };
     return (
       <FormView
-        title={editing ? `Modifier « ${editing.name} »` : 'Nouveau modèle'}
-        description={
-          editing
-            ? 'Les feuilles déjà préparées gardent leurs étapes'
-            : 'Les étapes de la feuille de préparation, dans l’ordre'
-        }
+        title={editing ? t('editTitle', { name: editing.name }) : t('newTitle')}
+        description={editing ? t('editDesc') : t('newDesc')}
         onBack={close}
       >
         <TemplateForm
@@ -60,38 +60,38 @@ export default function TemplatesPage({ params }: Props) {
     );
   }
 
-  async function remove(t: TemplateWithSteps) {
+  async function remove(tpl: TemplateWithSteps) {
     try {
-      await templatesApi.remove(t.id);
-      setTemplates((list) => list.filter((x) => x.id !== t.id));
-      notify.success('Modèle supprimé', t.name);
+      await templatesApi.remove(tpl.id);
+      setTemplates((list) => list.filter((x) => x.id !== tpl.id));
+      notify.success(t('removed'), tpl.name);
     } catch (err) {
-      notify.error('Erreur lors de la suppression', errorMessage(err, 'Suppression impossible'));
+      notify.error(t('removeError'), errorMessage(err, t('removeFailed')));
     }
   }
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Modèles de feuille"
-        description="Définissez le déroulement de vos célébrations"
-        action={<Button onClick={() => setCreating(true)}>+ Nouveau modèle</Button>}
+        title={t('title')}
+        description={t('desc')}
+        action={<Button onClick={() => setCreating(true)}>{t('add')}</Button>}
       />
 
       {error ? (
         <ErrorNotice message={error} />
       ) : loading ? (
-        <p className="text-muted-foreground">Chargement...</p>
+        <p className="text-muted-foreground">{tc('loading')}</p>
       ) : templates.length === 0 ? (
-        <p className="py-12 text-center text-muted-foreground">Aucun modèle pour l&apos;instant.</p>
+        <p className="py-12 text-center text-muted-foreground">{t('empty')}</p>
       ) : (
         <div className="grid items-start gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {templates.map((t) => (
+          {templates.map((tpl) => (
             <TemplateCard
-              key={t.id}
-              template={t}
-              onEdit={() => setEditing(t)}
-              onDelete={() => remove(t)}
+              key={tpl.id}
+              template={tpl}
+              onEdit={() => setEditing(tpl)}
+              onDelete={() => remove(tpl)}
             />
           ))}
         </div>

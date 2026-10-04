@@ -1,6 +1,10 @@
 import type { FieldValues, Path, UseFormReturn } from 'react-hook-form';
+import { ERR, errorText } from '@churchy/shared';
 import { ApiError } from '@/lib/api/client';
 import { notify } from '@/lib/notify';
+
+const currentLanguage = () =>
+  typeof document === 'undefined' ? undefined : document.documentElement.lang;
 
 /** Message lisible pour n'importe quelle erreur levée par un appel d'API. */
 export function errorMessage(err: unknown, fallback: string): string {
@@ -26,7 +30,7 @@ export function handleSubmitError<T extends FieldValues>(
     for (const [name, messages] of mapped) {
       form.setError(name as Path<T>, { type: 'server', message: messages[0] });
     }
-    notify.error(fallback, 'Corrigez les champs signalés en rouge.');
+    notify.error(fallback, errorText(ERR.fixFields, currentLanguage()));
     return;
   }
   const message = errorMessage(err, fallback);

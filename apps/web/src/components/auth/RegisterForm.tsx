@@ -1,8 +1,10 @@
 'use client';
+import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
+import { useLocale } from 'next-intl';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useRouter } from 'next/navigation';
-import { registerSchema, type RegisterDto } from '@churchy/shared';
+import { useRouter } from '@/i18n/link';
+import { isLocale, registerSchema, type RegisterDto } from '@churchy/shared';
 import { useAuth } from '@/hooks/useAuth';
 import {
   Form,
@@ -18,8 +20,10 @@ import { Button } from '@/components/ui/button';
 import { handleSubmitError } from '@/lib/forms/submit-error';
 
 export function RegisterForm() {
+  const t = useTranslations('auth');
   const router = useRouter();
   const { register, loading } = useAuth();
+  const locale = useLocale();
 
   const form = useForm<RegisterDto>({
     resolver: zodResolver(registerSchema),
@@ -29,11 +33,12 @@ export function RegisterForm() {
 
   async function onSubmit(data: RegisterDto) {
     try {
-      await register(data);
+      // La langue de l'interface devient la langue du compte.
+      await register({ ...data, ...(isLocale(locale) ? { locale } : {}) });
       router.push('/dashboard');
       router.refresh();
     } catch (err: unknown) {
-      handleSubmitError(form, err, "Erreur lors de l'inscription");
+      handleSubmitError(form, err, t('register.errorFallback'));
     }
   }
 
@@ -46,9 +51,13 @@ export function RegisterForm() {
             name="firstName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Prénom</FormLabel>
+                <FormLabel>{t('register.firstName')}</FormLabel>
                 <FormControl>
-                  <Input placeholder="Jean" autoComplete="given-name" {...field} />
+                  <Input
+                    placeholder={t('register.firstNamePlaceholder')}
+                    autoComplete="given-name"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -59,9 +68,13 @@ export function RegisterForm() {
             name="lastName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Nom</FormLabel>
+                <FormLabel>{t('register.lastName')}</FormLabel>
                 <FormControl>
-                  <Input placeholder="Dupont" autoComplete="family-name" {...field} />
+                  <Input
+                    placeholder={t('register.lastNamePlaceholder')}
+                    autoComplete="family-name"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -73,11 +86,11 @@ export function RegisterForm() {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel>{t('email')}</FormLabel>
               <FormControl>
                 <Input
                   type="email"
-                  placeholder="vous@paroisse.fr"
+                  placeholder={t('emailPlaceholder')}
                   autoComplete="email"
                   {...field}
                 />
@@ -91,10 +104,10 @@ export function RegisterForm() {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Mot de passe</FormLabel>
+              <FormLabel>{t('password')}</FormLabel>
               <FormControl>
                 <PasswordInput
-                  placeholder="8 caractères minimum"
+                  placeholder={t('passwordHint')}
                   autoComplete="new-password"
                   {...field}
                 />
@@ -107,7 +120,7 @@ export function RegisterForm() {
           <p className="text-sm text-destructive">{form.formState.errors.root.message}</p>
         )}
         <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? 'Inscription...' : 'Créer mon compte'}
+          {loading ? t('register.submitting') : t('register.submit')}
         </Button>
       </form>
     </Form>

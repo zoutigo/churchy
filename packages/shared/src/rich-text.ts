@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { ERR } from './constants/error-codes.constants';
 
 /** Taille maximale d'un texte riche (HTML), images en base64 comprises. */
 export const RICH_TEXT_MAX_LENGTH = 1_500_000;
@@ -50,7 +51,4 @@ export function hasRichContent(value: string): boolean {
 
 /** Champ texte riche obligatoire (HTML de l'éditeur ou texte brut). */
 export const richTextSchema = (emptyMessage: string) =>
-  z
-    .string()
-    .max(RICH_TEXT_MAX_LENGTH, 'Contenu trop volumineux (images trop lourdes ?)')
-    .refine(hasRichContent, emptyMessage);
+  z.string().max(RICH_TEXT_MAX_LENGTH, ERR.contentTooLarge).refine(hasRichContent, emptyMessage);

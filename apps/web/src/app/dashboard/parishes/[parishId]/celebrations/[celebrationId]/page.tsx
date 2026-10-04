@@ -1,11 +1,14 @@
 'use client';
+import { useTranslations } from 'next-intl';
+import { useLabels } from '@/i18n/labels';
+import { useAppLocale } from '@/i18n/locale';
 import { useCallback, useEffect, useState } from 'react';
-import Link from 'next/link';
+import { Link } from '@/i18n/link';
 import { useSearchParams } from 'next/navigation';
 import { ArrowLeft, StickyNote } from 'lucide-react';
 import type { CelebrationDetail } from '@churchy/shared';
 import { celebrationsApi } from '@/lib/api/celebrations.api';
-import { CELEBRATION_TYPE_LABELS, formatDateLong } from '@/lib/format';
+import { formatDateLong } from '@/lib/format';
 import { errorMessage } from '@/lib/forms/submit-error';
 import { notify } from '@/lib/notify';
 import { CelebrationForm } from '@/components/celebration/CelebrationForm';
@@ -24,6 +27,13 @@ interface Props {
 type View = 'overview' | 'edit' | 'extend';
 
 export default function CelebrationPage({ params }: Props) {
+  const t = useTranslations('celebrationPage');
+  const td = useTranslations('dashboard');
+  const tc = useTranslations('common');
+  const tf = useTranslations('celebrationForm');
+  const te = useTranslations('endingSoon');
+  const labels = useLabels();
+  const locale = useAppLocale();
   const { parishId, celebrationId } = params;
   const search = useSearchParams();
   const [celebration, setCelebration] = useState<CelebrationDetail | null>(null);
@@ -35,8 +45,8 @@ export default function CelebrationPage({ params }: Props) {
     celebrationsApi
       .findById(celebrationId)
       .then(setCelebration)
-      .catch((err: unknown) => setError(errorMessage(err, 'Impossible de charger les données')));
-  }, [celebrationId]);
+      .catch((err: unknown) => setError(errorMessage(err, td('loadError'))));
+  }, [celebrationId, td]);
 
   useEffect(load, [load]);
 
@@ -66,7 +76,7 @@ export default function CelebrationPage({ params }: Props) {
   }
 
   if (error) return <ErrorNotice message={error} />;
-  if (!celebration) return <p className="text-muted-foreground">Chargement…</p>;
+  if (!celebration) return <p className="text-muted-foreground">{tc('loadingShort')}</p>;
 
   const done = (c: CelebrationDetail) => {
     setCelebration(c);
@@ -75,7 +85,7 @@ export default function CelebrationPage({ params }: Props) {
 
   if (view === 'edit') {
     return (
-      <FormView title="Modifier la célébration" onBack={() => setView('overview')}>
+      <FormView title={t('editTitle')} onBack={() => setView('overview')}>
         <CelebrationForm
           parishId={parishId}
           timezone={celebration.timezone}
@@ -89,8 +99,8 @@ export default function CelebrationPage({ params }: Props) {
   if (view === 'extend') {
     return (
       <FormView
-        title="Prolonger la série"
-        description={`Ajouter des dates à « ${celebration.title} »`}
+        title={t('extendTitle')}
+        description={t('extendDesc', { title: celebration.title })}
         onBack={() => setView('overview')}
       >
         <ExtendSeriesForm
@@ -102,7 +112,7 @@ export default function CelebrationPage({ params }: Props) {
     );
   }
 
-  const tz = { timeZone: celebration.timezone };
+  const tz = { timeZone: celebration.timezone, locale };
   const upcoming = celebration.occurrences.filter((o) => !o.isPast);
   const past = celebration.occurrences.filter((o) => o.isPast).reverse();
   const archived = !!celebration.archivedAt;
@@ -118,7 +128,7 @@ export default function CelebrationPage({ params }: Props) {
           className="-ml-3 h-10 gap-2 text-muted-foreground sm:h-9"
         >
           <Link href={base}>
-            <ArrowLeft size={16} aria-hidden /> Retour
+            <ArrowLeft size={16} aria-hidden /> {tc('back')}
           </Link>
         </Button>
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -127,24 +137,22 @@ export default function CelebrationPage({ params }: Props) {
               {celebration.title}
             </h1>
             <p className="text-muted-foreground">
-              {CELEBRATION_TYPE_LABELS[celebration.type]}
+              {labels.celebrationType(celebration.type)}
               {celebration.location ? ` — ${celebration.location}` : ''}
             </p>
             <p className="text-sm" data-testid="series-status">
               {archived ? (
-                <span className="font-medium text-gray-500">Archivée — retirée du site public</span>
+                <span className="font-medium text-gray-500">{t('archivedStatus')}</span>
               ) : celebration.announced ? (
-                <span className="font-medium text-churchy-600">
-                  Publiée au public (toutes les dates)
-                </span>
+                <span className="font-medium text-churchy-600">{t('publishedStatus')}</span>
               ) : (
-                <span className="font-medium text-amber-700">Brouillon — invisible du public</span>
+                <span className="font-medium text-amber-700">{t('draftStatus')}</span>
               )}
             </p>
           </div>
           <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap lg:justify-end">
             <Button type="button" variant="outline" onClick={() => setView('edit')}>
-              Modifier
+              {tc('edit')}
             </Button>
             <Button
               type="button"
@@ -152,7 +160,7 @@ export default function CelebrationPage({ params }: Props) {
               disabled={archived}
               onClick={() => setView('extend')}
             >
-              Prolonger
+              {t('extend')}
             </Button>
             {!archived && (
               <Button
@@ -163,14 +171,12 @@ export default function CelebrationPage({ params }: Props) {
                   act(
                     () =>
                       celebrationsApi.update(celebration.id, { announced: !celebration.announced }),
-                    celebration.announced
-                      ? 'Série retirée du site public'
-                      : 'Série publiée au public',
-                    'Erreur lors de la modification',
+                    celebration.announced ? t('unannounced') : t('announced'),
+                    t('updateError'),
                   )
                 }
               >
-                {celebration.announced ? 'Retirer du public' : 'Publier au public'}
+                {celebration.announced ? t('withdraw') : t('publishToPublic')}
               </Button>
             )}
             <Button
@@ -183,12 +189,12 @@ export default function CelebrationPage({ params }: Props) {
                     archived
                       ? celebrationsApi.unarchive(celebration.id)
                       : celebrationsApi.archive(celebration.id),
-                  archived ? 'Série désarchivée' : 'Série archivée',
-                  'Erreur lors de l’archivage',
+                  archived ? t('unarchived') : t('archivedToast'),
+                  t('archiveError'),
                 )
               }
             >
-              {archived ? 'Désarchiver' : 'Archiver'}
+              {archived ? t('unarchive') : t('archive')}
             </Button>
           </div>
         </div>
@@ -196,14 +202,11 @@ export default function CelebrationPage({ params }: Props) {
 
       {celebration.endingSoon && !archived && (
         <Alert variant="warning">
-          <AlertTitle>Cette série se termine bientôt</AlertTitle>
+          <AlertTitle>{t('endingTitle')}</AlertTitle>
           <AlertDescription className="space-y-2">
-            <p>
-              Dernière date : {formatDateLong(celebration.lastOccurrenceAt!, tz)}. Prolongez-la pour
-              que les fidèles voient les prochaines messes.
-            </p>
+            <p>{t('endingText', { date: formatDateLong(celebration.lastOccurrenceAt!, tz) })}</p>
             <Button type="button" size="sm" onClick={() => setView('extend')}>
-              Prolonger la série
+              {te('extend')}
             </Button>
           </AlertDescription>
         </Alert>
@@ -214,7 +217,7 @@ export default function CelebrationPage({ params }: Props) {
           {celebration.description && (
             <section className="rounded-lg border bg-white p-4">
               <h2 className="mb-2 text-sm font-semibold text-muted-foreground">
-                Description publique
+                {tf('publicDescription')}
               </h2>
               <RichContent html={celebration.description} />
             </section>
@@ -222,7 +225,7 @@ export default function CelebrationPage({ params }: Props) {
           {celebration.internalNote && (
             <section className="rounded-lg border border-amber-200 bg-amber-50 p-4">
               <h2 className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-amber-900">
-                <StickyNote size={14} aria-hidden /> Note interne — réservée à l’équipe
+                <StickyNote size={14} aria-hidden /> {t('internalNoteTitle')}
               </h2>
               <p className="whitespace-pre-wrap text-sm text-amber-900">
                 {celebration.internalNote}
@@ -234,11 +237,11 @@ export default function CelebrationPage({ params }: Props) {
 
       <section className="space-y-3" aria-labelledby="dates-title">
         <h2 id="dates-title" className="text-lg font-semibold">
-          Dates à venir ({upcoming.length})
+          {t('upcomingDates', { count: upcoming.length })}
         </h2>
         {upcoming.length === 0 ? (
           <p className="rounded-lg border border-dashed p-6 text-center text-muted-foreground">
-            Aucune date à venir. Prolongez la série pour en ajouter.
+            {t('noUpcoming')}
           </p>
         ) : (
           <ul className="space-y-2">
@@ -251,15 +254,15 @@ export default function CelebrationPage({ params }: Props) {
                 onCancel={(reason) =>
                   onDate(
                     () => celebrationsApi.cancelOccurrence(o.id, { reason }),
-                    'Date annulée',
-                    'Erreur lors de l’annulation',
+                    t('cancelled'),
+                    t('cancelError'),
                   )
                 }
                 onReinstate={() =>
                   onDate(
                     () => celebrationsApi.reinstateOccurrence(o.id),
-                    'Date rétablie',
-                    'Erreur lors du rétablissement',
+                    t('reinstated'),
+                    t('reinstateError'),
                   )
                 }
               />
@@ -271,7 +274,7 @@ export default function CelebrationPage({ params }: Props) {
       {past.length > 0 && (
         <details>
           <summary className="cursor-pointer text-sm font-medium text-muted-foreground">
-            Dates passées ({past.length}) — consultation seule
+            {t('pastDates', { count: past.length })}
           </summary>
           <ul className="mt-3 space-y-2">
             {past.map((o) => (

@@ -2,7 +2,12 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import slugify from 'slugify';
 import { randomBytes } from 'node:crypto';
 import { PrismaService } from '../../prisma/prisma.service';
-import { timezoneForCountry, type CreateParishDto, type UpdateParishDto } from '@churchy/shared';
+import {
+  timezoneForCountry,
+  type CreateParishDto,
+  type UpdateParishDto,
+  ERR,
+} from '@churchy/shared';
 
 @Injectable()
 export class ParishesService {
@@ -34,7 +39,7 @@ export class ParishesService {
 
   async findById(id: string) {
     const parish = await this.prisma.parish.findUnique({ where: { id } });
-    if (!parish) throw new NotFoundException('Paroisse introuvable');
+    if (!parish) throw new NotFoundException(ERR.parishNotFound);
     return parish;
   }
 

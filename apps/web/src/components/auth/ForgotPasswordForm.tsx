@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -19,6 +20,7 @@ import { Button } from '@/components/ui/button';
 import { handleSubmitError } from '@/lib/forms/submit-error';
 
 export function ForgotPasswordForm() {
+  const t = useTranslations('auth');
   const [sentTo, setSentTo] = useState<string | null>(null);
 
   const form = useForm<ForgotPasswordDto>({
@@ -32,7 +34,7 @@ export function ForgotPasswordForm() {
       await authApi.forgotPassword(data);
       setSentTo(data.email);
     } catch (err: unknown) {
-      handleSubmitError(form, err, "Impossible d'envoyer le lien");
+      handleSubmitError(form, err, t('forgot.errorFallback'));
     }
   }
 
@@ -41,15 +43,16 @@ export function ForgotPasswordForm() {
       <div className="space-y-4">
         <Alert variant="success">
           <MailCheck size={16} />
-          <AlertTitle>Vérifiez votre boîte mail</AlertTitle>
+          <AlertTitle>{t('forgot.checkTitle')}</AlertTitle>
           <AlertDescription>
-            Si un compte existe pour <strong>{sentTo}</strong>, un lien de réinitialisation vient
-            d&apos;être envoyé. Il est valable 1 heure. Pensez à regarder dans vos courriers
-            indésirables.
+            {t.rich('forgot.sent', {
+              email: sentTo,
+              strong: (chunks) => <strong>{chunks}</strong>,
+            })}
           </AlertDescription>
         </Alert>
         <Button type="button" variant="outline" className="w-full" onClick={() => setSentTo(null)}>
-          Utiliser une autre adresse
+          {t('forgot.another')}
         </Button>
       </div>
     );
@@ -63,11 +66,11 @@ export function ForgotPasswordForm() {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel>{t('email')}</FormLabel>
               <FormControl>
                 <Input
                   type="email"
-                  placeholder="vous@paroisse.fr"
+                  placeholder={t('emailPlaceholder')}
                   autoComplete="email"
                   {...field}
                 />
@@ -82,7 +85,7 @@ export function ForgotPasswordForm() {
           </p>
         )}
         <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-          {form.formState.isSubmitting ? 'Envoi...' : 'Envoyer le lien'}
+          {form.formState.isSubmitting ? t('forgot.submitting') : t('forgot.submit')}
         </Button>
       </form>
     </Form>

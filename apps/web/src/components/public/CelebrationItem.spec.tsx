@@ -19,7 +19,7 @@ const celebration: PublicCelebrationSummary = {
 describe('CelebrationItem', () => {
   it('mène à la page publique de la messe (URL par id de paroisse)', () => {
     render(<CelebrationItem celebration={celebration} parishId="p1" />);
-    expect(screen.getByRole('link')).toHaveAttribute('href', '/paroisses/p1/messes/c1');
+    expect(screen.getByRole('link')).toHaveAttribute('href', '/fr/paroisses/p1/messes/c1');
   });
 
   it('affiche titre, type, lieu et l’état de la feuille', () => {
@@ -30,14 +30,14 @@ describe('CelebrationItem', () => {
     expect(screen.getByText('Feuille disponible')).toBeInTheDocument();
   });
 
-  it('feuille en préparation', () => {
+  it('ne mentionne pas une feuille en préparation', () => {
     render(
       <CelebrationItem
         celebration={{ ...celebration, sheetStatus: 'IN_PREPARATION' }}
         parishId="p1"
       />,
     );
-    expect(screen.getByText('Feuille en préparation')).toBeInTheDocument();
+    expect(screen.queryByText(/préparation/)).not.toBeInTheDocument();
     expect(screen.queryByText('Feuille disponible')).not.toBeInTheDocument();
   });
 

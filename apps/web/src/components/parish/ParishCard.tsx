@@ -1,5 +1,6 @@
-import Link from 'next/link';
-import type { Parish } from '@churchy/shared';
+import { Link } from '@/i18n/link';
+import { countryLabel, type Parish } from '@churchy/shared';
+import { useAppLocale } from '@/i18n/locale';
 
 interface Props {
   parish: Parish & { role?: string };
@@ -7,6 +8,7 @@ interface Props {
 }
 
 export function ParishCard({ parish, href }: Props) {
+  const locale = useAppLocale();
   const target = href ?? `/dashboard/parishes/${parish.id}`;
   return (
     <Link href={target} className="block group">
@@ -23,7 +25,7 @@ export function ParishCard({ parish, href }: Props) {
         </div>
         <p className="text-sm text-muted-foreground flex items-center gap-1">
           <span className="text-amber-500">✦</span>
-          {parish.city}, {parish.country}
+          {parish.city}, {countryLabel(parish.country, locale)}
         </p>
         {parish.description && (
           <p className="text-sm text-muted-foreground line-clamp-2">{parish.description}</p>

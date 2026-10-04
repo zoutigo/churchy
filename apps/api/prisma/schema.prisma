@@ -53,12 +53,15 @@ model User {
   lastName        String
   role            UserRole  @default(USER)
   emailVerifiedAt DateTime?
+  /// Langue préférée (`fr` | `en`) : interface et emails.
+  locale          String    @default("fr")
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
   refreshTokens        RefreshToken[]
   authTokens           AuthToken[]
   parishMembers        ParishMember[]
+  favoriteParishes     FavoriteParish[]
   createdContents      Content[]
   createdCelebrations  Celebration[]
   createdAnnouncements Announcement[]
@@ -129,6 +132,7 @@ model Parish {
   updatedAt         DateTime @updatedAt
 
   members              ParishMember[]
+  favoritedBy          FavoriteParish[]
   contents             Content[]
   celebrationTemplates CelebrationTemplate[]
   celebrations         Celebration[]
@@ -329,4 +333,17 @@ model Activity {
   createdBy User   @relation(fields: [createdById], references: [id])
 
   @@index([parishId, startsAt])
+}
+
+/// Paroisse mise en favori par un utilisateur connecté (aucun droit : simple raccourci).
+model FavoriteParish {
+  userId    String
+  parishId  String
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parish Parish @relation(fields: [parishId], references: [id], onDelete: Cascade)
+
+  @@id([userId, parishId])
+  @@index([userId, createdAt])
 }

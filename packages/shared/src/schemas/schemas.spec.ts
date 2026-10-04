@@ -4,6 +4,7 @@ import {
   loginSchema,
   registerSchema,
   resetPasswordSchema,
+  updateLocaleSchema,
   verifyEmailSchema,
 } from './auth.schema';
 import { createParishSchema } from './parish.schema';
@@ -23,6 +24,27 @@ import { ContentType } from '../enums/content-type.enum';
 
 // Les ids générés par Prisma (@default(cuid())) ne sont PAS des uuid.
 const CUID = 'cmuof7vdf00017mflrizmhgll';
+
+describe('langue', () => {
+  it('registerSchema : la langue est facultative, fr ou en seulement', () => {
+    const base = {
+      email: 'a@b.fr',
+      password: 'password123',
+      firstName: 'Jean',
+      lastName: 'Dupont',
+    };
+    expect(registerSchema.safeParse(base).success).toBe(true);
+    expect(registerSchema.safeParse({ ...base, locale: 'en' }).success).toBe(true);
+    expect(registerSchema.safeParse({ ...base, locale: 'de' }).success).toBe(false);
+  });
+
+  it('updateLocaleSchema : exige fr ou en', () => {
+    expect(updateLocaleSchema.safeParse({ locale: 'fr' }).success).toBe(true);
+    expect(updateLocaleSchema.safeParse({ locale: 'en' }).success).toBe(true);
+    expect(updateLocaleSchema.safeParse({ locale: 'es' }).success).toBe(false);
+    expect(updateLocaleSchema.safeParse({}).success).toBe(false);
+  });
+});
 
 describe('registerSchema', () => {
   const valid = { email: 'a@b.fr', password: 'password123', firstName: 'Jean', lastName: 'Dupont' };

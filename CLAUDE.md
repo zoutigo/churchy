@@ -64,8 +64,57 @@ contenu d'une autre paroisse refusé). Toute nouvelle route qui touche une resso
 `churchy:session-expired` si c'est impossible. Pages : `/login`, `/register`, `/forgot-password`,
 `/reset-password?token=`, `/verify-email?token=`. Le `next` n'est jamais mémorisé après une déconnexion volontaire.
 
+## Langues : français / anglais (i18n)
+Le Cameroun est bilingue. Langues : `fr` (défaut) et `en` (`LOCALES`, `DEFAULT_LOCALE`, `isLocale` dans `@churchy/shared`).
+- **URL** : le site public et l'authentification sont **préfixés** (`/fr/paroisses/12/messes`, `/en/parishes/12/masses`), avec
+  des segments **traduits** (`apps/web/src/i18n/routing.ts`, `pathnames`). Les dossiers de `app/[locale]` gardent les chemins
+  **internes** (`/paroisses/[parishId]/messes`, `/login`) ; `i18n/paths.ts` convertit interne ⇄ visible (fonctions pures, utilisées
+  par le middleware). Le **tableau de bord (`/dashboard`) n'a pas de préfixe** : sa langue vient du compte (cookie). L'API est
+  inchangée (`/api/…`) ; nginx n'a rien à savoir des langues.
+- **Liens et navigation** : toujours `Link`, `useRouter`, `usePathname` de `@/i18n/link` (jamais `next/link` ni `next/navigation` pour
+  ça) et écrire des chemins **internes** ; la langue courante est ajoutée (`localizeHref`). `/dashboard`, URL externes et ancres sont intacts.
+  Hors composant client (action d'un `<form>`, métadonnées) : `localizeHref(locale, '/paroisses')` / `toLocalizedPath` de `i18n/paths.ts`.
+- **Choix de la langue** : `/` et les anciennes URL sans préfixe → langue du cookie `NEXT_LOCALE` (1 an), sinon **français** ;
+  `Accept-Language` n'est volontairement pas lu. Le middleware (`middleware.ts`) redirige (307 pour `/`, 308 pour les anciennes URL).
+  Le visiteur change de langue avec `LanguageSwitcher` (FR | EN, en-tête public et tableau de bord) : vrais liens `hreflang`, cookie.
+- **Compte** : `User.locale` (`fr` par défaut) fait foi. `POST /auth/register` accepte `locale` (langue de l'interface),
+  `PATCH /auth/me/locale` la change ; `AuthUserDto.locale`. `LocaleSync` aligne le cookie sur le compte dès qu'il est connu et recharge
+  le tableau de bord si besoin ; il ne redirige **jamais** le site public (une URL partagée reste explicite). Un changement de langue
+  d'un connecté est enregistré en base (toast d'erreur si impossible, la langue change quand même).
+- **Textes** : `next-intl`, `apps/web/messages/fr.json` et `en.json` (mêmes clés et mêmes variables : test `i18n/messages.spec.ts`).
+  **Aucun texte en dur dans l'interface** : `useTranslations('espace')` (composants, y compris serveur non asynchrones) ou
+  `getTranslations` (serveur asynchrone). Pluriels en ICU (`{count, plural, one {…} other {…}}`), liens dans un texte avec
+  `t.rich` (`<link>…</link>`). Les valeurs de l'API (type de célébration, de contenu, état de feuille, sujet de contact) se
+  traduisent par `useLabels()` (`i18n/labels.ts`) ou `getLabels()` (`labels.server.ts`) : clés `enums.*`. Jours : `weekdays.*`.
+  `request.ts` : langue de l'URL, sinon cookie, sinon `fr`. Le client API envoie `Accept-Language` (page → `lang` ; rendu serveur → langue de la requête).
+- **Dates** (`lib/format.ts`) : `formatDateLong(iso, { timeZone, locale })` ; `locale` vient de `useAppLocale()` (`i18n/locale.ts`,
+  toujours une langue gérée) ou de `getLocale()` côté serveur. Français `fr-FR`, anglais `en-GB` (jour avant le mois, heure sur 24 h).
+- **Métadonnées** : `pageMetadata` / `parishMetadata` (`lib/seo.ts`) donnent titre, description, `canonical`, `hreflang` (fr, en,
+  x-default), Open Graph (`og:locale`, `alternateLocale`) et Twitter Card ; `staticPageMetadata` (`lib/seo.server.ts`) pour les pages
+  statiques. L'image d'aperçu est **par langue** : `app/[locale]/opengraph-image.tsx` (`/fr/opengraph-image`, `/en/opengraph-image`).
+  `[locale]/layout.tsx` porte un `NextIntlClientProvider` (recréé quand la langue change) et `HtmlLang` (tient `<html lang>` à jour
+  en navigation). `app/global-error.tsx` est la seule page bilingue en dur (le layout racine a échoué).
+- **Tests de composants** : `vitest.setup.ts` simule `useLocale`/`useTranslations` avec les vrais messages (français par défaut,
+  `setTestLocale('en')` ; le traducteur est mémoïsé, comme dans next-intl, sinon les effets qui l'ont en dépendance bouclent) ;
+  les `href` attendus sont ceux de la langue (`/fr/paroisses/p1`). `i18n/english.spec.tsx` vérifie l'interface en anglais.
+- **Erreurs : codes stables** (`@churchy/shared`, `constants/error-codes.constants.ts`) : schémas Zod, planning (`SCHEDULE_WINDOW_MESSAGES`)
+  et exceptions de l'API renvoient un **code** (`ERR.parishNotFound`, `ERR.emailInvalid`…), jamais une phrase. `errorText(code, locale)`
+  le traduit (fr/en, `{max}` rempli ; un texte inconnu est rendu tel quel). Le client API traduit `ApiError.message` et les erreurs
+  de champ avec la langue de la page ; `FormMessage` (et les erreurs écrites à la main : `useErrorText()` de `i18n/error-text.ts`)
+  traduit les codes des schémas côté navigateur. **Nouveau message d'erreur = nouvelle entrée du catalogue (fr + en)**, puis `ERR.xxx`.
+- **Emails** : les jobs d'authentification portent `locale` (`authLinkEmailPayloadSchema`, `fr` par défaut) = `User.locale` ; le worker
+  (`apps/notifications/src/email-templates.ts`, textes `AUTH_TEXTS`) écrit sujet, texte, HTML (`lang`) et date dans cette langue. Le lien
+  est celui de la langue du compte (`authLinkPath` de `@churchy/shared` : `/en/reset-password`, `/fr/reinitialisation` ; table vérifiée
+  contre `routing.pathnames`). L'email de contact, destiné à l'équipe, reste en français.
+- **Référencement** : `app/sitemap.ts` (pages statiques + 5 pages par paroisse, chacune dans les deux langues avec `hreflang` et `x-default` ; généré à la demande, 4 000 paroisses max ; API injoignable → pages statiques seules) et `app/robots.ts` (exclut `/api/`, `/dashboard`, authentification et favoris dans chaque langue). Logique dans `lib/sitemap.ts`, URL du site dans `lib/site.ts` (`NEXT_PUBLIC_SITE_URL`). Une page publique **nouvelle** s'ajoute à `STATIC_PATHS` ; une page privée à `PRIVATE_PATHS`.
+- **Pages légales** (`LegalDocument`, `components/public`) : conditions, confidentialité et mentions légales sont des tableaux `sections` ({ title, paragraphs?, items?, after? }) dans `messages/*.json`, avec sommaire et ancres `#section-N`. Les faits propres à l'éditeur restent entre crochets `[À compléter : …]` (identité de l'éditeur, directeur de la publication, droit applicable) : bandeau « provisoire » à retirer une fois validés par un juriste.
+- **Pays et régions** : la valeur enregistrée reste le nom **français** (identité stable) ; l'affichage passe par `countryLabel(nom, locale)` / `regionLabel(nom, locale)` (`@churchy/shared`, `geo.constants`). Un nom absent de la table (saisie libre) est rendu tel quel. Les villes et quartiers sont des noms propres, non traduits.
+- **Domaine** : pour l'instant `churchy.tigilabs.com` ; le domaine définitif sera communiqué par le propriétaire (il suffira de changer `NEXT_PUBLIC_SITE_URL`).
+- **Paramètres de requête** : le nom **interne** s'écrit dans le code (`?mois=`), `localizeHref` le rend visible dans la langue (`?month=` en anglais) ; table `QUERY_PARAMS` de `i18n/paths.ts`. Lecture côté serveur par `readQueryParam(searchParams, 'mois')` (accepte les deux noms : les anciens liens restent valides) ; `LanguageSwitcher` renomme le paramètre en changeant de langue (`localizeSearch`). Nouveau paramètre traduit = nouvelle entrée de la table.
+- **Reste à faire** : rien de planifié côté i18n.
+
 ## Site public (sans authentification)
-Pages servies par le web (rendu serveur, `force-dynamic`, URL **par id** de paroisse, pas par slug) :
+Pages servies par le web (rendu serveur, `force-dynamic`, URL **par id** de paroisse, pas par slug ; chemins ci-dessous = chemins **internes** en français, voir « Langues » pour les URL visibles `/fr/…` et `/en/…`) :
 `/` (landing : recherche en premier), `/paroisses?q=&page=` (résultats), `/paroisses/[id]` (mini-site : accueil,
 `/messes`, `/messes/[celebrationId]`, `/annonces`, `/activites`), `/pour-les-paroisses`, `/a-propos`, `/contact`,
 `/conditions-generales`, `/confidentialite`, `/mentions-legales` (textes légaux **provisoires** : à faire valider).
@@ -94,6 +143,20 @@ Ces routes n'ont volontairement **pas** de `@ParishAccess` : elles ne renvoient 
 - Les pages sont rendues par le serveur web : toutes les requêtes publiques partent de **la même IP**. En production,
   transmettre l'IP du visiteur (`X-Forwarded-For` + `trust proxy`) pour que la limite `THROTTLE_LIMIT` ne
   s'applique pas à l'ensemble des visiteurs.
+
+## Paroisses favorites et aperçu des liens
+- **Favoris** (`MAX_FAVORITE_PARISHES` = 10, `@churchy/shared`). **Visiteur** : ids dans le `localStorage` (`churchy:favorites`, `lib/favorites/storage.ts`),
+  résumés demandés à `GET /api/public/parishes/summaries?ids=a,b,c` (public, ordre conservé, ids inconnus ignorés, 10 max).
+  **Connecté** : table `FavoriteParish` (clé `userId+parishId`, cascade) ; routes `GET /favorites`, `PUT|DELETE /favorites/:parishId`
+  (idempotentes, 409 au-delà de 10, 404 si paroisse inconnue), `POST /favorites/merge` (union sans doublon, surplus écarté).
+  Pas de `@ParishAccess` : un favori n'est qu'un raccourci, il ne donne aucun droit (module `apps/api/src/modules/favorites`).
+- Web : `FavoritesProvider` (dans `app/layout.tsx`, sous `AuthProvider`) + `useFavorites` / `useFavoriteItems`. À la connexion, les favoris de
+  l'appareil sont **fusionnés dans le compte puis effacés de l'appareil** ; à la déconnexion l'appareil ne garde rien. `FavoriteButton`
+  (étoile, sur les cartes de résultat et l'en-tête de paroisse), bloc `FavoritesShelf` sur la landing (rien sans favori), page `/favoris`,
+  lien « Mes favoris » dans l'en-tête public (avec compteur) et dans `Sidebar`/`MobileNav` du tableau de bord.
+- **Aperçu des liens partagés** (WhatsApp, Facebook, X…) : `metadataBase` (`NEXT_PUBLIC_SITE_URL`, défaut `https://churchy.tigilabs.com`), Open Graph +
+  Twitter Card dans `app/layout.tsx`, image 1200×630 générée par `app/opengraph-image.tsx` (et `twitter-image.tsx`), métadonnées par paroisse
+  (`lib/seo.ts` `parishMetadata`). Les réseaux mettent les aperçus en cache : après un changement, tester avec un lien `?v=2` ou le débogueur Facebook.
 
 ## Célébrations : séries, dates et feuilles de préparation
 Trois niveaux (`apps/api/src/modules/celebrations`, schémas dans `@churchy/shared`) :
@@ -233,9 +296,14 @@ exécute dans cet ordre, et bloque le commit au moindre échec :
 2. **lint + formatage** des fichiers indexés : ESLint `--fix` puis Prettier `--write` (lint-staged) ;
 3. **typecheck** de tous les workspaces (`npm run typecheck`) ;
 4. **tests unitaires** de tous les workspaces (`npm test`) ;
-5. **tests fonctionnels** : API (supertest, base `churchy_test`) puis web (Playwright)
-   (`npm run test:e2e`). Postgres + Redis sont démarrés automatiquement (`npm run infra:up`, qui attend
-   qu'ils soient prêts) ; Docker doit donc être lancé.
+5. **tests fonctionnels de l'API** (supertest, base `churchy_test` : `npm run test:e2e -w @churchy/api`).
+   Postgres + Redis sont démarrés automatiquement (`npm run infra:up`, qui attend qu'ils soient prêts) ;
+   Docker doit donc être lancé.
+
+**Les tests Playwright (web) ne sont PAS dans le précommit** (trop longs : ~15 min) : ils tournent dans le CI de
+`dev`, découpés en shards. On les écrit et on les maintient quand même (règle 1) ; pour les lancer en local :
+`npm run test:e2e -w @churchy/web` (un fichier : `… -- e2e/public-site.spec.ts`). Un échec Playwright se
+découvre donc dans le CI : le lire (`gh run view --log-failed`) et corriger (règle 2 bis).
 
 - Même contrôle à la main : `npm run precommit`. Outils seuls : `npm run lint`, `npm run format`, `npm run format:check`.
 - **Si le précommit révèle un problème, il faut le corriger soi-même, dans le code, avant de commiter** :
@@ -247,7 +315,7 @@ exécute dans cet ordre, et bloque le commit au moindre échec :
 
 ### 2 bis. Fin de travail : précommit complet, commit, push, suivi du CI
 À la fin de **chaque** travail, sans qu'on ait à le demander :
-1. lancer le **précommit complet** (`npm run precommit`) et corriger tout problème (règle 2) ;
+1. lancer le **précommit** (`npm run precommit`, sans Playwright) et corriger tout problème (règle 2) ;
 2. **commiter** dans `dev` (le hook rejoue le précommit) puis **pousser** (`git push origin dev`) ;
 3. **suivre le CI de la branche `dev`** (GitHub Actions, `gh run list --branch dev` / `gh run watch`) jusqu'à
    sa fin (workflow `ci.yml`, voir « CI » ci-dessous) ;

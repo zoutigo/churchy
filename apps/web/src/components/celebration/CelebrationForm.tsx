@@ -1,4 +1,6 @@
 'use client';
+import { useTranslations } from 'next-intl';
+import { useLabels } from '@/i18n/labels';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -11,7 +13,6 @@ import {
   type UpdateCelebrationDto,
 } from '@churchy/shared';
 import { celebrationsApi, templatesApi, type TemplateWithSteps } from '@/lib/api/celebrations.api';
-import { CELEBRATION_TYPE_LABELS } from '@/lib/format';
 import { emptyDraft, previewDraft, type ScheduleDraft } from '@/lib/schedule-draft';
 import { handleSubmitError } from '@/lib/forms/submit-error';
 import { notify } from '@/lib/notify';
@@ -38,8 +39,6 @@ const formSchema = createCelebrationSchema.omit({ schedule: true, templateId: tr
 type FormValues = z.infer<typeof formSchema>;
 type FormInput = z.input<typeof formSchema>;
 
-const optionalHint = <span className="text-muted-foreground text-xs">(optionnel)</span>;
-
 interface Props {
   parishId: string;
   /** Fuseau de la paroisse (heure locale du planning). */
@@ -51,6 +50,10 @@ interface Props {
 }
 
 export function CelebrationForm({ parishId, timezone, celebration, onDone, onCancel }: Props) {
+  const t = useTranslations('celebrationForm');
+  const tc = useTranslations('common');
+  const labels = useLabels();
+  const optionalHint = <span className="text-muted-foreground text-xs">{tc('optional')}</span>;
   const editing = !!celebration;
   const [templates, setTemplates] = useState<TemplateWithSteps[]>([]);
   const [templatesError, setTemplatesError] = useState<string | null>(null);
@@ -60,9 +63,9 @@ export function CelebrationForm({ parishId, timezone, celebration, onDone, onCan
       .findByParish(parishId)
       .then(setTemplates)
       .catch((err: unknown) =>
-        setTemplatesError(err instanceof Error ? err.message : 'Impossible de charger les modèles'),
+        setTemplatesError(err instanceof Error ? err.message : t('templatesError')),
       );
-  }, [parishId]);
+  }, [parishId, t]);
 
   const form = useForm<FormInput, unknown, FormValues>({
     resolver: zodResolver(formSchema),
@@ -92,7 +95,7 @@ export function CelebrationForm({ parishId, timezone, celebration, onDone, onCan
           defaultTemplateId: data.templateId || null,
         };
         const updated = await celebrationsApi.update(celebration.id, dto);
-        notify.success('Célébration modifiée');
+        notify.success(t('updated'));
         onDone(updated);
         return;
       }
@@ -101,7 +104,7 @@ export function CelebrationForm({ parishId, timezone, celebration, onDone, onCan
       if (preview.blank || !preview.schedule || preview.error || preview.instants.length === 0) {
         form.setError('schedule', {
           type: 'validate',
-          message: preview.error ?? 'Indiquez au moins une date',
+          message: preview.error ?? t('atLeastOneDate'),
         });
         return;
       }
@@ -115,19 +118,10 @@ export function CelebrationForm({ parishId, timezone, celebration, onDone, onCan
         templateId: data.templateId || undefined,
         schedule: preview.schedule,
       });
-      notify.success(
-        'Célébration créée',
-        created.occurrences.length > 1
-          ? `${created.occurrences.length} dates programmées`
-          : '1 date programmée',
-      );
+      notify.success(t('created'), t('scheduled', { count: created.occurrences.length }));
       onDone(created);
     } catch (err: unknown) {
-      handleSubmitError(
-        form,
-        err,
-        editing ? 'Erreur lors de la modification' : 'Erreur lors de la création',
-      );
+      handleSubmitError(form, err, editing ? t('updateError') : t('createError'));
     }
   }
 
@@ -140,9 +134,9 @@ export function CelebrationForm({ parishId, timezone, celebration, onDone, onCan
             name="title"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Titre</FormLabel>
+                <FormLabel>{t('title')}</FormLabel>
                 <FormControl>
-                  <Input placeholder="Messe du dimanche" {...field} />
+                  <Input placeholder={t('titlePlaceholder')} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -153,12 +147,12 @@ export function CelebrationForm({ parishId, timezone, celebration, onDone, onCan
             name="type"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Type</FormLabel>
+                <FormLabel>{t('type')}</FormLabel>
                 <FormControl>
                   <NativeSelect {...field}>
-                    {Object.values(CelebrationType).map((t) => (
-                      <option key={t} value={t}>
-                        {CELEBRATION_TYPE_LABELS[t]}
+                    {Object.values(CelebrationType).map((type) => (
+                      <option key={type} value={type}>
+                        {labels.celebrationType(type)}
                       </option>
                     ))}
                   </NativeSelect>
@@ -175,9 +169,15 @@ export function CelebrationForm({ parishId, timezone, celebration, onDone, onCan
             name="location"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Lieu {optionalHint}</FormLabel>
+                <FormLabel>
+                  {t('location')} {optionalHint}
+                </FormLabel>
                 <FormControl>
-                  <Input placeholder="Église Saint-Pierre" {...field} value={field.value ?? ''} />
+                  <Input
+                    placeholder={t('locationPlaceholder')}
+                    {...field}
+                    value={field.value ?? ''}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -188,20 +188,21 @@ export function CelebrationForm({ parishId, timezone, celebration, onDone, onCan
             name="templateId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Modèle de feuille par défaut {optionalHint}</FormLabel>
+                <FormLabel>
+                  {t('template')} {optionalHint}
+                </FormLabel>
                 <FormControl>
                   <NativeSelect {...field} value={field.value ?? ''}>
-                    <option value="">Aucun — feuille construite à la volée</option>
-                    {templates.map((t) => (
-                      <option key={t.id} value={t.id}>
-                        {t.name} ({t.steps?.length ?? 0} étapes)
+                    <option value="">{t('noTemplate')}</option>
+                    {templates.map((tpl) => (
+                      <option key={tpl.id} value={tpl.id}>
+                        {tpl.name} ({t('steps', { count: tpl.steps?.length ?? 0 })})
                       </option>
                     ))}
                   </NativeSelect>
                 </FormControl>
                 <p className="text-xs text-muted-foreground">
-                  {templatesError ??
-                    'Proposé pour chaque date ; celui qui prépare peut en changer à tout moment.'}
+                  {templatesError ?? t('templateHint')}
                 </p>
                 <FormMessage />
               </FormItem>
@@ -214,21 +215,20 @@ export function CelebrationForm({ parishId, timezone, celebration, onDone, onCan
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Description publique {optionalHint}</FormLabel>
+              <FormLabel>
+                {t('publicDescription')} {optionalHint}
+              </FormLabel>
               <FormControl>
                 <RichTextEditor
                   minHeight="8rem"
-                  aria-label="Description publique"
+                  aria-label={t('publicDescription')}
                   value={field.value ?? ''}
                   onChange={field.onChange}
                   onBlur={field.onBlur}
                   invalid={!!form.formState.errors.description}
                 />
               </FormControl>
-              <p className="text-xs text-muted-foreground">
-                Visible de tous sur la page de la paroisse (ex. « l’évêque de Yaoundé sera des
-                nôtres »).
-              </p>
+              <p className="text-xs text-muted-foreground">{t('publicDescriptionHint')}</p>
               <FormMessage />
             </FormItem>
           )}
@@ -239,19 +239,19 @@ export function CelebrationForm({ parishId, timezone, celebration, onDone, onCan
           name="internalNote"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Note interne {optionalHint}</FormLabel>
+              <FormLabel>
+                {t('internalNote')} {optionalHint}
+              </FormLabel>
               <FormControl>
                 <Textarea
                   rows={3}
                   maxLength={INTERNAL_NOTE_MAX_LENGTH}
-                  placeholder="Point de vigilance pour celui qui prépare la messe…"
+                  placeholder={t('internalNotePlaceholder')}
                   {...field}
                   value={field.value ?? ''}
                 />
               </FormControl>
-              <p className="text-xs text-muted-foreground">
-                Réservée à l’équipe de préparation : jamais visible du public.
-              </p>
+              <p className="text-xs text-muted-foreground">{t('internalNoteHint')}</p>
               <FormMessage />
             </FormItem>
           )}
@@ -263,7 +263,7 @@ export function CelebrationForm({ parishId, timezone, celebration, onDone, onCan
             name="schedule"
             render={({ field }) => (
               <FormItem>
-                <p className="text-base font-semibold leading-none">Dates</p>
+                <p className="text-base font-semibold leading-none">{t('dates')}</p>
                 <ScheduleFields
                   value={field.value as ScheduleDraft}
                   onChange={(v) => {
@@ -297,11 +297,8 @@ export function CelebrationForm({ parishId, timezone, celebration, onDone, onCan
                 />
               </FormControl>
               <div>
-                <FormLabel>Publier la série au public</FormLabel>
-                <p className="text-xs text-muted-foreground">
-                  Toutes les dates apparaissent sur la page de la paroisse, « feuille en préparation
-                  » jusqu’à la publication de chaque feuille.
-                </p>
+                <FormLabel>{t('announce')}</FormLabel>
+                <p className="text-xs text-muted-foreground">{t('announceHint')}</p>
               </div>
             </FormItem>
           )}
@@ -314,14 +311,14 @@ export function CelebrationForm({ parishId, timezone, celebration, onDone, onCan
           <Button type="submit" disabled={form.formState.isSubmitting}>
             {form.formState.isSubmitting
               ? editing
-                ? 'Enregistrement…'
-                : 'Création…'
+                ? t('saving')
+                : t('creating')
               : editing
-                ? 'Enregistrer'
-                : 'Créer la célébration'}
+                ? tc('save')
+                : t('submitCreate')}
           </Button>
           <Button type="button" variant="outline" onClick={onCancel}>
-            Annuler
+            {tc('cancel')}
           </Button>
         </div>
       </form>

@@ -53,7 +53,7 @@ export default defineConfig({
     },
     {
       command: 'npx next dev --port 3210',
-      url: `${WEB}/login`,
+      url: `${WEB}/fr/connexion`,
       timeout: 120_000,
       reuseExistingServer: !process.env.CI,
       env: {

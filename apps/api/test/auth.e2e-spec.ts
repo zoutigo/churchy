@@ -83,7 +83,7 @@ describe('Authentification (cookies httpOnly, refresh, reset, vérification)', (
         .send({ email: 'login@test.fr', password: 'faux-faux-faux' })
         .expect(401);
       expect(setCookieHeaders(ko)).toHaveLength(0);
-      expect(ko.body.message.message).toBe('Identifiants invalides');
+      expect(ko.body.message.message).toBe('invalidCredentials');
     });
 
     it('protège /auth/me : 401 sans cookie, profil avec cookie', async () => {
@@ -92,6 +92,48 @@ describe('Authentification (cookies httpOnly, refresh, reset, vérification)', (
       const res = await agent.get('/api/auth/me').expect(200);
       expect(res.body).toMatchObject({ email: 'me@test.fr', role: 'USER', emailVerified: false });
       expect(res.body.passwordHash).toBeUndefined();
+    });
+
+    describe('langue du compte', () => {
+      it('est le français par défaut et suit la langue choisie à l’inscription', async () => {
+        const fr = await http()
+          .post('/api/auth/register')
+          .send({ email: 'lang-fr@test.fr', password: PASSWORD, firstName: 'A', lastName: 'B' })
+          .expect(201);
+        expect(fr.body.user.locale).toBe('fr');
+
+        const en = await http()
+          .post('/api/auth/register')
+          .send({
+            email: 'lang-en@test.fr',
+            password: PASSWORD,
+            firstName: 'A',
+            lastName: 'B',
+            locale: 'en',
+          })
+          .expect(201);
+        expect(en.body.user.locale).toBe('en');
+      });
+
+      it('est modifiable et persistée : /auth/me et une nouvelle connexion la renvoient', async () => {
+        const agent = await registerAgent(app, 'lang-change@test.fr');
+        const res = await agent.patch('/api/auth/me/locale').send({ locale: 'en' }).expect(200);
+        expect(res.body.locale).toBe('en');
+        expect((await agent.get('/api/auth/me')).body.locale).toBe('en');
+
+        const login = await http()
+          .post('/api/auth/login')
+          .send({ email: 'lang-change@test.fr', password: PASSWORD })
+          .expect(201);
+        expect(login.body.user.locale).toBe('en');
+      });
+
+      it('refuse une langue inconnue (400) et un appel sans session (401)', async () => {
+        const agent = await registerAgent(app, 'lang-bad@test.fr');
+        await agent.patch('/api/auth/me/locale').send({ locale: 'de' }).expect(400);
+        await http().patch('/api/auth/me/locale').send({ locale: 'en' }).expect(401);
+        expect((await agent.get('/api/auth/me')).body.locale).toBe('fr');
+      });
     });
 
     it('accepte aussi un jeton Bearer pour les clients non navigateur', async () => {
@@ -180,6 +222,38 @@ describe('Authentification (cookies httpOnly, refresh, reset, vérification)', (
   });
 
   describe('vérification d’email', () => {
+    it('un compte anglophone reçoit un lien /en/… et un email en anglais (locale du job)', async () => {
+      await newAgent(app)
+        .post('/api/auth/register')
+        .send({
+          email: 'verify-en@test.fr',
+          password: 'password123',
+          firstName: 'Jane',
+          lastName: 'Doe',
+          locale: 'en',
+        })
+        .expect(201);
+      const job = await findJobFor(
+        queue,
+        NotificationJob.EMAIL_VERIFICATION_REQUESTED,
+        'verify-en@test.fr',
+      );
+      expect(job.data.locale).toBe('en');
+      expect(job.data.url).toContain('/en/verify-email?token=');
+
+      await http()
+        .post('/api/auth/forgot-password')
+        .send({ email: 'verify-en@test.fr' })
+        .expect(200);
+      const reset = await findJobFor(
+        queue,
+        NotificationJob.PASSWORD_RESET_REQUESTED,
+        'verify-en@test.fr',
+      );
+      expect(reset.data.locale).toBe('en');
+      expect(reset.data.url).toContain('/en/reset-password?token=');
+    });
+
     it('envoie un lien à l’inscription, le vérifie une seule fois', async () => {
       const agent = await registerAgent(app, 'verify@test.fr');
       const job = await findJobFor(
@@ -188,7 +262,7 @@ describe('Authentification (cookies httpOnly, refresh, reset, vérification)', (
         'verify@test.fr',
       );
       expect(job).toBeDefined();
-      expect(job.data.url).toContain('/verify-email?token=');
+      expect(job.data.url).toContain('/fr/verification-email?token=');
       const token = tokenFromUrl(job.data.url);
 
       await http().post('/api/auth/verify-email').send({ token: 'inventé' }).expect(400);
@@ -259,7 +333,7 @@ describe('Authentification (cookies httpOnly, refresh, reset, vérification)', (
         NotificationJob.PASSWORD_RESET_REQUESTED,
         'reset@test.fr',
       );
-      expect(job.data.url).toContain('/reset-password?token=');
+      expect(job.data.url).toContain('/fr/reinitialisation?token=');
       const token = tokenFromUrl(job.data.url);
 
       await http().post('/api/auth/reset-password').send({ token, password: 'court' }).expect(400);

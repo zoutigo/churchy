@@ -1,3 +1,4 @@
+import { ERR, errorText } from '@churchy/shared';
 import { SESSION_EXPIRED_EVENT } from '@/lib/auth/session';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3201/api';
@@ -27,6 +28,7 @@ export class ApiError extends Error {
  * l'exception Nest ({ message, error, statusCode }), soit l'erreur Zod ({ fieldErrors }).
  */
 function extractMessage(body: { message?: unknown }): string {
+  // Codes d'erreur stables (`ERR`) : la traduction se fait dans `request`, avec la langue de la page.
   const m = body?.message;
   if (typeof m === 'string') return m;
   if (m && typeof m === 'object') {
@@ -39,7 +41,7 @@ function extractMessage(body: { message?: unknown }): string {
     const first = fieldErrors && Object.values(fieldErrors).flat()[0];
     if (first) return first;
   }
-  return 'Erreur inconnue';
+  return ERR.unknownError;
 }
 
 /** Erreurs par champ renvoyées par la validation Zod de l'API (`flatten()`), sinon un objet vide. */
@@ -66,6 +68,20 @@ const NO_REFRESH = new Set([
   '/auth/verify-email',
 ]);
 
+/**
+ * Langue de l'interface, transmise à l'API (`Accept-Language`) : navigateur → attribut `lang` de la page ;
+ * rendu serveur → langue de la requête. Absente (tests, hors requête) : pas d'en-tête.
+ */
+async function currentLanguage(): Promise<string | undefined> {
+  if (typeof window !== 'undefined') return document.documentElement.lang || undefined;
+  try {
+    const { getLocale } = await import('next-intl/server');
+    return await getLocale();
+  } catch {
+    return undefined;
+  }
+}
+
 let refreshInFlight: Promise<boolean> | null = null;
 
 /** Renouvelle la session via le cookie de refresh. Un seul appel à la fois, partagé entre requêtes. */
@@ -81,6 +97,7 @@ function refreshSession(): Promise<boolean> {
 
 async function request<T>(path: string, options?: RequestInit, canRetry = true): Promise<T> {
   let res: Response;
+  const language = await currentLanguage();
   try {
     res = await fetch(`${apiUrl()}${path}`, {
       // Rendu serveur (pages publiques) : Next met les `fetch` en cache par défaut ; une annonce supprimée
@@ -89,10 +106,14 @@ async function request<T>(path: string, options?: RequestInit, canRetry = true):
       ...options,
       // Les jetons sont dans des cookies httpOnly : le navigateur les joint, le JavaScript ne les voit pas.
       credentials: 'include',
-      headers: { 'Content-Type': 'application/json', ...options?.headers },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(language ? { 'Accept-Language': language } : {}),
+        ...options?.headers,
+      },
     });
   } catch {
-    throw new ApiError('Impossible de joindre le serveur. Vérifiez votre connexion.', 0);
+    throw new ApiError(errorText(ERR.networkUnreachable, language), 0);
   }
 
   if (res.status === 401 && canRetry && !NO_REFRESH.has(path) && typeof window !== 'undefined') {
@@ -101,8 +122,14 @@ async function request<T>(path: string, options?: RequestInit, canRetry = true):
   }
 
   if (!res.ok) {
-    const error = await res.json().catch(() => ({ message: 'Erreur réseau' }));
-    throw new ApiError(extractMessage(error), res.status, extractFieldErrors(error));
+    const error = await res.json().catch(() => ({ message: ERR.unknownError }));
+    const fieldErrors = Object.fromEntries(
+      Object.entries(extractFieldErrors(error)).map(([name, list]) => [
+        name,
+        list.map((m) => errorText(m, language)),
+      ]),
+    );
+    throw new ApiError(errorText(extractMessage(error), language), res.status, fieldErrors);
   }
 
   // Une suppression réussie peut répondre sans corps : ne pas échouer sur un JSON vide.
@@ -115,6 +142,11 @@ export const api = {
   post: <T>(path: string, body?: unknown) =>
     request<T>(path, {
       method: 'POST',
+      body: body === undefined ? undefined : JSON.stringify(body),
+    }),
+  put: <T>(path: string, body?: unknown) =>
+    request<T>(path, {
+      method: 'PUT',
       body: body === undefined ? undefined : JSON.stringify(body),
     }),
   patch: <T>(path: string, body: unknown) =>

@@ -1,11 +1,14 @@
 'use client';
+import { useTranslations } from 'next-intl';
+import { useAppLocale } from '@/i18n/locale';
+import { useErrorText } from '@/i18n/error-text';
 import { useMemo } from 'react';
 import { CalendarPlus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import { WEEKDAYS, formatDateLong, formatDateShort, formatTime } from '@/lib/format';
+import { WEEKDAY_VALUES, formatDateLong, formatDateShort, formatTime } from '@/lib/format';
 import { DEFAULT_TIME, dateBounds, previewDraft, type ScheduleDraft } from '@/lib/schedule-draft';
 
 interface Props {
@@ -17,8 +20,8 @@ interface Props {
 }
 
 const MODES = [
-  { mode: 'dates', label: 'Une ou plusieurs dates' },
-  { mode: 'recurrence', label: 'Chaque semaine' },
+  { mode: 'dates', key: 'modeDates' },
+  { mode: 'recurrence', key: 'modeRecurrence' },
 ] as const;
 
 const PREVIEW_LIMIT = 6;
@@ -31,7 +34,10 @@ const PREVIEW_LIMIT = 6;
 export function ScheduleFields({ value, onChange, timezone, invalid }: Props) {
   const bounds = useMemo(() => dateBounds(timezone), [timezone]);
   const preview = useMemo(() => previewDraft(value, timezone), [value, timezone]);
-  const tz = { timeZone: timezone };
+  const t = useTranslations('schedule');
+  const tw = useTranslations('weekdays');
+  const errorText = useErrorText();
+  const tz = { timeZone: timezone, locale: useAppLocale() };
 
   const switchMode = (mode: ScheduleDraft['mode']) => {
     if (mode === value.mode) return;
@@ -46,7 +52,7 @@ export function ScheduleFields({ value, onChange, timezone, invalid }: Props) {
     <div className="space-y-4" data-testid="schedule-fields">
       <div
         role="group"
-        aria-label="Type de planning"
+        aria-label={t('modeGroup')}
         className="grid grid-cols-2 gap-2 sm:inline-grid"
       >
         {MODES.map((m) => (
@@ -62,7 +68,7 @@ export function ScheduleFields({ value, onChange, timezone, invalid }: Props) {
                 : 'border-input bg-background hover:bg-accent',
             )}
           >
-            {m.label}
+            {t(m.key)}
           </button>
         ))}
       </div>
@@ -76,7 +82,7 @@ export function ScheduleFields({ value, onChange, timezone, invalid }: Props) {
             >
               <div className="space-y-1.5">
                 <Label htmlFor={`schedule-date-${index}`}>
-                  Date{value.dates.length > 1 ? ` ${index + 1}` : ''}
+                  {value.dates.length > 1 ? t('dateN', { n: index + 1 }) : t('date')}
                 </Label>
                 <Input
                   id={`schedule-date-${index}`}
@@ -96,7 +102,7 @@ export function ScheduleFields({ value, onChange, timezone, invalid }: Props) {
                 />
               </div>
               <div className="space-y-1.5 sm:order-none">
-                <Label htmlFor={`schedule-time-${index}`}>Heure</Label>
+                <Label htmlFor={`schedule-time-${index}`}>{t('time')}</Label>
                 <Input
                   id={`schedule-time-${index}`}
                   type="time"
@@ -118,13 +124,13 @@ export function ScheduleFields({ value, onChange, timezone, invalid }: Props) {
                   variant="ghost"
                   size="icon"
                   className="col-span-2 h-10 w-full sm:col-span-1 sm:w-10"
-                  aria-label={`Retirer la date ${index + 1}`}
+                  aria-label={t('removeDate', { n: index + 1 })}
                   onClick={() =>
                     onChange({ ...value, dates: value.dates.filter((_, i) => i !== index) })
                   }
                 >
                   <X size={18} aria-hidden />
-                  <span className="ml-2 sm:hidden">Retirer</span>
+                  <span className="ml-2 sm:hidden">{t('remove')}</span>
                 </Button>
               )}
             </div>
@@ -144,28 +150,28 @@ export function ScheduleFields({ value, onChange, timezone, invalid }: Props) {
               })
             }
           >
-            <CalendarPlus size={16} aria-hidden /> Ajouter une date
+            <CalendarPlus size={16} aria-hidden /> {t('addDate')}
           </Button>
         </div>
       ) : (
         <div className="space-y-4">
           <fieldset className="space-y-1.5">
-            <legend className="text-sm font-medium leading-none">Jours de la semaine</legend>
+            <legend className="text-sm font-medium leading-none">{t('weekdays')}</legend>
             <div className="mt-2 flex flex-wrap gap-2">
-              {WEEKDAYS.map((w) => {
-                const on = value.weekdays.includes(w.value);
+              {WEEKDAY_VALUES.map((w) => {
+                const on = value.weekdays.includes(w);
                 return (
                   <button
-                    key={w.value}
+                    key={w}
                     type="button"
                     aria-pressed={on}
-                    aria-label={w.long}
+                    aria-label={tw(`long.${w}`)}
                     onClick={() =>
                       onChange({
                         ...value,
                         weekdays: on
-                          ? value.weekdays.filter((x) => x !== w.value)
-                          : [...value.weekdays, w.value],
+                          ? value.weekdays.filter((x) => x !== w)
+                          : [...value.weekdays, w],
                       })
                     }
                     className={cn(
@@ -175,7 +181,7 @@ export function ScheduleFields({ value, onChange, timezone, invalid }: Props) {
                         : 'border-input bg-background hover:bg-accent',
                     )}
                   >
-                    {w.short}
+                    {tw(`short.${w}`)}
                   </button>
                 );
               })}
@@ -183,7 +189,7 @@ export function ScheduleFields({ value, onChange, timezone, invalid }: Props) {
           </fieldset>
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="space-y-1.5">
-              <Label htmlFor="schedule-start">Début</Label>
+              <Label htmlFor="schedule-start">{t('start')}</Label>
               <Input
                 id="schedule-start"
                 type="date"
@@ -195,7 +201,7 @@ export function ScheduleFields({ value, onChange, timezone, invalid }: Props) {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="schedule-end">Fin</Label>
+              <Label htmlFor="schedule-end">{t('end')}</Label>
               <Input
                 id="schedule-end"
                 type="date"
@@ -207,7 +213,7 @@ export function ScheduleFields({ value, onChange, timezone, invalid }: Props) {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="schedule-time">Heure</Label>
+              <Label htmlFor="schedule-time">{t('time')}</Label>
               <Input
                 id="schedule-time"
                 type="time"
@@ -221,8 +227,7 @@ export function ScheduleFields({ value, onChange, timezone, invalid }: Props) {
       )}
 
       <p className="text-xs text-muted-foreground">
-        Heures de la paroisse ({timezone.replace('_', ' ')}). Une série peut être programmée jusqu’à
-        un an à l’avance ; vous serez prévenu un mois avant sa fin pour la prolonger.
+        {t('hint', { timezone: timezone.replace('_', ' ') })}
       </p>
 
       <div aria-live="polite" data-testid="schedule-preview">
@@ -231,28 +236,31 @@ export function ScheduleFields({ value, onChange, timezone, invalid }: Props) {
             role="alert"
             className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive"
           >
-            {preview.error}
+            {errorText(preview.error)}
           </p>
         ) : preview.instants.length > 0 ? (
           <div className="space-y-2 rounded-md border border-churchy-200 bg-churchy-50 px-3 py-3 text-sm">
             <p className="font-medium text-churchy-700">
               {preview.instants.length === 1
-                ? '1 date sera créée'
-                : `${preview.instants.length} dates seront créées`}
+                ? t('willCreateOne')
+                : t('willCreateMany', { count: preview.instants.length })}
               {preview.instants.length > 1 &&
-                ` — du ${formatDateShort(preview.instants[0].toISOString(), tz)} au ${formatDateShort(
-                  preview.instants.at(-1)!.toISOString(),
-                  tz,
-                )}`}
+                t('range', {
+                  from: formatDateShort(preview.instants[0].toISOString(), tz),
+                  to: formatDateShort(preview.instants.at(-1)!.toISOString(), tz),
+                })}
             </p>
             <ul className="grid gap-x-4 gap-y-1 text-muted-foreground sm:grid-cols-2">
               {preview.instants.slice(0, PREVIEW_LIMIT).map((i) => (
                 <li key={i.getTime()}>
-                  {formatDateLong(i.toISOString(), tz)} à {formatTime(i.toISOString(), tz)}
+                  {t('line', {
+                    date: formatDateLong(i.toISOString(), tz),
+                    time: formatTime(i.toISOString(), tz),
+                  })}
                 </li>
               ))}
               {preview.instants.length > PREVIEW_LIMIT && (
-                <li>… et {preview.instants.length - PREVIEW_LIMIT} autres</li>
+                <li>{t('more', { count: preview.instants.length - PREVIEW_LIMIT })}</li>
               )}
             </ul>
           </div>

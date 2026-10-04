@@ -12,7 +12,10 @@ let user: {
   email: string;
   emailVerified: boolean;
 } | null;
-vi.mock('next/navigation', () => ({ useRouter: () => ({ replace, refresh }) }));
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ replace, refresh }),
+  usePathname: () => '/dashboard',
+}));
 vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user, logout }) }));
 
 describe('Header', () => {
@@ -64,6 +67,6 @@ describe('Header', () => {
     await u.click(await screen.findByRole('menuitem', { name: /Se déconnecter/ }));
 
     expect(logout).toHaveBeenCalledTimes(1);
-    await vi.waitFor(() => expect(replace).toHaveBeenCalledWith('/login'));
+    await vi.waitFor(() => expect(replace).toHaveBeenCalledWith('/fr/connexion'));
   });
 });

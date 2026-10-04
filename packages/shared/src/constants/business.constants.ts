@@ -5,6 +5,9 @@ export const DEFAULT_LANGUAGE = 'fr';
 
 export const MAX_TAGS_PER_CONTENT = 10;
 
+/** Nombre maximal de paroisses favorites (visiteur anonyme comme compte connecté). */
+export const MAX_FAVORITE_PARISHES = 10;
+
 export const CELEBRATION_STEPS_SUNDAY_MASS = [
   { key: 'entrance', title: "Chant d'entrée", order: 1 },
   { key: 'kyrie', title: 'Kyrie', order: 2 },

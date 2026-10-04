@@ -78,7 +78,7 @@ describe('LoginForm', () => {
     render(<LoginForm />);
     expect(screen.getByRole('link', { name: 'Mot de passe oublié ?' })).toHaveAttribute(
       'href',
-      '/forgot-password',
+      '/fr/mot-de-passe-oublie',
     );
   });
 

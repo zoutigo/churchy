@@ -1,3 +1,4 @@
+import type { Locale } from '../constants/i18n.constants';
 import type { UserRole } from '../enums/user-role.enum';
 
 export type {
@@ -6,6 +7,7 @@ export type {
   ForgotPasswordDto,
   ResetPasswordDto,
   VerifyEmailDto,
+  UpdateLocaleDto,
 } from '../schemas/auth.schema';
 
 /** Utilisateur tel qu'exposé par l'API (jamais de hash de mot de passe). */
@@ -16,6 +18,8 @@ export interface AuthUserDto {
   lastName: string;
   role: UserRole;
   emailVerified: boolean;
+  /** Langue préférée du compte (interface et emails). */
+  locale: Locale;
 }
 
 /**

@@ -30,7 +30,7 @@ for (const [device, viewport] of Object.entries(VIEWPORTS)) {
       await page.waitForURL(/\/dashboard\/parishes\/[^/]+$/);
       const parishId = page.url().split('/').pop();
 
-      await page.goto(`/paroisses/${parishId}`);
+      await page.goto(`/fr/paroisses/${parishId}`);
       await expect(page.getByRole('link', { name: '+237 6 77 12 34 56' })).toHaveAttribute(
         'href',
         'tel:+237677123456',

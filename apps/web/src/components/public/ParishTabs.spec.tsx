@@ -14,11 +14,11 @@ describe('ParishTabs', () => {
     render(<ParishTabs parishId="p1" />);
     const hrefs = screen.getAllByRole('link').map((a) => a.getAttribute('href'));
     expect(hrefs).toEqual([
-      '/paroisses/p1',
-      '/paroisses/p1/messes',
-      '/paroisses/p1/calendrier',
-      '/paroisses/p1/annonces',
-      '/paroisses/p1/activites',
+      '/fr/paroisses/p1',
+      '/fr/paroisses/p1/messes',
+      '/fr/paroisses/p1/calendrier',
+      '/fr/paroisses/p1/annonces',
+      '/fr/paroisses/p1/activites',
     ]);
   });
 
@@ -33,5 +33,13 @@ describe('ParishTabs', () => {
     render(<ParishTabs parishId="p1" />);
     expect(screen.getByRole('link', { name: 'Messes' })).toHaveAttribute('aria-current', 'page');
     expect(screen.getByRole('link', { name: 'Accueil' })).not.toHaveAttribute('aria-current');
+  });
+
+  it('l’accueil est une icône sur mobile : le mot reste accessible et visible dès sm', () => {
+    render(<ParishTabs parishId="p1" />);
+    const home = screen.getByRole('link', { name: 'Accueil' });
+    expect(home.querySelector('svg')).toHaveClass('sm:hidden');
+    expect(screen.getByText('Accueil')).toHaveClass('sr-only', 'sm:not-sr-only');
+    expect(screen.getByText('Messes')).not.toHaveClass('sr-only');
   });
 });

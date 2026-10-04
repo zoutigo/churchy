@@ -1,0 +1,1368 @@
+{
+  "language": {
+    "label": "Language",
+    "fr": "Français",
+    "en": "English",
+    "switchTo": "Change language"
+  },
+  "common": {
+    "appName": "Churchy",
+    "search": "Search",
+    "back": "Back",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "loading": "Loading...",
+    "optional": "(optional)",
+    "loadingShort": "Loading…",
+    "loadingLabel": "Loading"
+  },
+  "nav": {
+    "home": "Churchy, home",
+    "main": "Main navigation",
+    "mobile": "Mobile menu",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "forParishes": "For parishes",
+    "favorites": "My favorites",
+    "favoritesCount": "{count, plural, one {# favorite} other {# favorites}}",
+    "mySpace": "My space",
+    "login": "Sign in"
+  },
+  "footer": {
+    "tagline": "Masses, celebration sheets, announcements and activities of your parish.",
+    "groupChurchy": "Churchy",
+    "findParish": "Find a parish",
+    "forParishes": "For parishes",
+    "login": "Sign in",
+    "groupAbout": "About",
+    "about": "About",
+    "contact": "Contact",
+    "groupLegal": "Legal information",
+    "terms": "Terms and conditions",
+    "privacy": "Privacy policy",
+    "legalNotice": "Legal notice"
+  },
+  "search": {
+    "label": "Search for a parish, a city or a neighbourhood",
+    "placeholder": "Search for a parish, a city or a neighbourhood",
+    "submit": "Search"
+  },
+  "home": {
+    "title": "Your parish, at your fingertips",
+    "intro": "Find the Masses, celebration sheets, announcements and activities of your parish.",
+    "featuresTitle": "Your whole parish, in one place",
+    "features": {
+      "masses": {
+        "title": "Masses",
+        "text": "See the upcoming celebrations of your parish."
+      },
+      "sheets": {
+        "title": "Celebration sheets",
+        "text": "See which sheets are available before Mass."
+      },
+      "announcements": {
+        "title": "Announcements",
+        "text": "Find the important news published by the parish."
+      },
+      "activities": {
+        "title": "Activities",
+        "text": "Discover upcoming events, gatherings and activities."
+      }
+    },
+    "prepareTitle": "Prepare for Mass before you even arrive at church.",
+    "steps": {
+      "one": "The parish publishes its celebration.",
+      "two": "The sheet is made available before Mass.",
+      "three": "You prepare your participation in advance.",
+      "four": "On the day of Mass, no more hunting for a paper sheet."
+    },
+    "parishesTitle": "Do you represent a parish?",
+    "parishesText": "Churchy lets you publish your Masses, celebration sheets, announcements and activities from a single place.",
+    "parishesCta": "Discover Churchy for parishes",
+    "benefits": {
+      "paper": "Cut down on paper printing",
+      "modern": "Modernise how celebration sheets are shared",
+      "central": "Keep all the parish information in one place"
+    },
+    "finalTitle": "Find your parish on Churchy"
+  },
+  "sheetCard": {
+    "label": "Example of a celebration sheet",
+    "when": "Sunday 10:30 a.m.",
+    "title": "Sunday Mass"
+  },
+  "errors": {
+    "notFound": {
+      "title": "Page not found",
+      "message": "This page does not exist or is no longer available. The link may be wrong or the page may have been moved."
+    },
+    "backHome": "Back to home",
+    "findParish": "Find a parish",
+    "searchParish": "Search for a parish",
+    "server": {
+      "title": "Something went wrong",
+      "message": "We could not display this page. It is on our side, not yours: please try again in a moment.",
+      "retry": "Try again"
+    },
+    "parishNotFound": {
+      "title": "Parish not found",
+      "message": "This parish does not exist or is no longer available. Try searching by name or by city."
+    },
+    "parishPageNotFound": {
+      "message": "This page does not exist or is no longer available.",
+      "back": "Back to the parish"
+    },
+    "dashboardNotFound": {
+      "message": "This page does not exist, or you do not have access to it. Find your parishes from the dashboard."
+    },
+    "dashboard": "Dashboard",
+    "myParishes": "My parishes",
+    "global": {
+      "title": "Churchy is temporarily unavailable",
+      "message": "An unexpected problem occurred. Please try again in a moment."
+    }
+  },
+  "enums": {
+    "celebrationType": {
+      "SUNDAY_MASS": "Sunday Mass",
+      "WEEKDAY_MASS": "Weekday Mass",
+      "WEDDING": "Wedding",
+      "BAPTISM": "Baptism",
+      "FUNERAL": "Funeral",
+      "OTHER": "Celebration"
+    },
+    "contentType": {
+      "SONG": "Song",
+      "PSALM": "Psalm",
+      "GOSPEL": "Gospel",
+      "READING": "Reading",
+      "PRAYER": "Prayer",
+      "UNIVERSAL_PRAYER": "Universal prayer",
+      "ANNOUNCEMENT": "Announcement",
+      "FREE_TEXT": "Free text"
+    },
+    "sheetStatus": {
+      "AVAILABLE": "Sheet available",
+      "IN_PREPARATION": "Sheet in preparation"
+    },
+    "contactTopic": {
+      "QUESTION": "Ask a question",
+      "PARISH": "I represent a parish",
+      "PROBLEM": "Report a problem",
+      "OTHER": "Other request"
+    }
+  },
+  "weekdays": {
+    "short": {
+      "1": "Mon",
+      "2": "Tue",
+      "3": "Wed",
+      "4": "Thu",
+      "5": "Fri",
+      "6": "Sat",
+      "0": "Sun"
+    },
+    "long": {
+      "1": "Monday",
+      "2": "Tuesday",
+      "3": "Wednesday",
+      "4": "Thursday",
+      "5": "Friday",
+      "6": "Saturday",
+      "0": "Sunday"
+    }
+  },
+  "celebration": {
+    "cancelled": "Cancelled",
+    "cancelledWithReason": "Cancelled — {reason}",
+    "cancelledSr": " (cancelled)"
+  },
+  "parishResult": {
+    "nextMass": "Next Mass: {date} at {time}",
+    "view": "View the parish",
+    "viewLabel": "View the parish {name}"
+  },
+  "parishTabs": {
+    "label": "Parish pages",
+    "home": "Home",
+    "masses": "Masses",
+    "calendar": "Calendar",
+    "announcements": "Announcements",
+    "activities": "Activities"
+  },
+  "parishInfo": {
+    "title": "Practical information"
+  },
+  "activity": {
+    "at": "{date} at {time}"
+  },
+  "calendar": {
+    "weekdays": {
+      "1": "Mon",
+      "2": "Tue",
+      "3": "Wed",
+      "4": "Thu",
+      "5": "Fri",
+      "6": "Sat",
+      "0": "Sun"
+    },
+    "previous": "Previous month",
+    "next": "Next month",
+    "empty": "No celebration announced this month.",
+    "today": " — today",
+    "legend": "Parish time. <green>Green</green>: sheet available · <amber>amber</amber>: sheet in preparation · <red>red</red>: cancelled."
+  },
+  "prose": {
+    "provisional": "Draft version: this text must be reviewed and completed before going live."
+  },
+  "contact": {
+    "name": "Name",
+    "email": "Email",
+    "topic": "Subject",
+    "message": "Message",
+    "honeypot": "Do not fill in",
+    "submit": "Send message",
+    "sending": "Sending…",
+    "toastSent": "Message sent",
+    "errorFallback": "The message could not be sent. Please try again.",
+    "sentTitle": "Message sent",
+    "sentText": "Thank you! We will reply by email as soon as possible.",
+    "another": "Send another message"
+  },
+  "meta": {
+    "siteTitle": "Churchy — Your parish, at your fingertips",
+    "siteDescription": "Find the Masses, celebration sheets, announcements and activities of your parish.",
+    "parishes": "Find a parish — Churchy",
+    "favorites": "My favorites — Churchy",
+    "contact": "Contact — Churchy",
+    "parishFallback": "Parish — Churchy",
+    "massFallback": "Mass — Churchy",
+    "forParishes": "For parishes — Churchy",
+    "about": "About — Churchy",
+    "terms": "Terms and conditions — Churchy",
+    "privacy": "Privacy — Churchy",
+    "legalNotice": "Legal notice — Churchy"
+  },
+  "parishSearch": {
+    "resultsFor": "Results for “{q}”",
+    "all": "All parishes",
+    "count": "{count, plural, one {# parish} other {# parishes}}",
+    "none": "No parish found",
+    "emptyTitle": "No parish matches your search",
+    "emptyHint": "Check the spelling, or try the name of a city or a neighbourhood.",
+    "seeAll": "See all parishes",
+    "pagination": "Pagination",
+    "previous": "Previous page",
+    "next": "Next page",
+    "pageOf": "Page {page} of {pages}"
+  },
+  "parishHome": {
+    "presentation": "About",
+    "nextMasses": "Upcoming Masses",
+    "allMasses": "All Masses",
+    "noMass": "No Mass announced yet",
+    "noMassHint": "Come back soon: the parish publishes its celebrations here.",
+    "announcements": "Announcements",
+    "allAnnouncements": "All announcements",
+    "noAnnouncement": "No announcement yet",
+    "activities": "Activities",
+    "allActivities": "All activities",
+    "noActivity": "No upcoming activity"
+  },
+  "parishMasses": {
+    "title": "Upcoming Masses",
+    "calendar": "View the calendar",
+    "empty": "No Mass announced yet",
+    "emptyHint": "The parish has not yet published its upcoming celebrations."
+  },
+  "publicCelebration": {
+    "at": "{date} at {time}",
+    "cancelled": "This celebration has been cancelled.",
+    "cancelledWithReason": "This celebration has been cancelled: {reason}",
+    "about": "About this celebration",
+    "inPreparation": "The parish is preparing the sheet for this celebration. It will be visible here as soon as it is published.",
+    "steps": "Order of celebration",
+    "contentSoon": "Content coming soon",
+    "loginPrompt": "To follow the sheet or prepare your participation, <link>sign in</link>."
+  },
+  "parishAnnouncements": {
+    "title": "Announcements",
+    "empty": "No announcement yet",
+    "emptyHint": "The parish's important news will appear here."
+  },
+  "parishActivities": {
+    "title": "Upcoming activities",
+    "empty": "No upcoming activity",
+    "emptyHint": "The parish's gatherings and events will appear here."
+  },
+  "contactPage": {
+    "title": "Contact",
+    "intro": "A question, a problem, or do you represent a parish and want to know more? Write to us: we reply by email."
+  },
+  "parishLayout": {
+    "photo": "Photo of {name}"
+  },
+  "forParishes": {
+    "title": "Publish your Masses, sheets, announcements and activities from a single place",
+    "intro": "Churchy is the platform that helps parishes prepare and share their celebrations, without unnecessary paper.",
+    "create": "Create my parish account",
+    "ask": "Ask a question",
+    "changesTitle": "What Churchy changes for your parish",
+    "sections": {
+      "publish": {
+        "title": "Publish your celebrations",
+        "text": "Build each Mass from templates, add the readings, songs and prayers from your library, then publish in one click. You can also announce the Mass before the sheet is ready."
+      },
+      "sheets": {
+        "title": "Share digital sheets",
+        "text": "The celebration sheet can be read on a phone, before Mass. The faithful prepare their participation in advance."
+      },
+      "news": {
+        "title": "Publish announcements and activities",
+        "text": "Schedules, registrations, collections, pilgrimages, gatherings: everything is published from the same place, on your parish's public page."
+      },
+      "paper": {
+        "title": "Cut down on printing",
+        "text": "Fewer sheets to print and fold every week: time saved for the team and paper saved for the parish."
+      },
+      "central": {
+        "title": "Centralise communication",
+        "text": "One single address to give the faithful to find the Masses, announcements and activities of the parish."
+      },
+      "team": {
+        "title": "Work as a team",
+        "text": "Invite your collaborators with suitable roles: administrator, preparer, reader."
+      }
+    },
+    "readyTitle": "Ready to publish your first Mass?",
+    "createShort": "Create an account"
+  },
+  "about": {
+    "title": "About Churchy",
+    "intro": "Churchy brings parishes and their faithful closer together through digital tools.",
+    "whyTitle": "Why Churchy exists",
+    "whyText": "Preparing a Mass takes time, and parish information is often scattered: printed sheets, notice boards, messages. Churchy brings it all together in one place, easy for the parish to publish and easy for the faithful to read.",
+    "missionTitle": "Our mission",
+    "missionText": "To let every parish publish its Masses, celebration sheets, announcements and activities, and every member of the faithful find them before coming.",
+    "question": "A question? <link>Write to us</link>."
+  },
+  "terms": {
+    "title": "Terms of use",
+    "intro": "Welcome to Churchy. These terms explain what the service lets you do, what you can expect from it and what we expect from you. Please read them before creating an account.",
+    "updated": "Last updated: 4 October 2026",
+    "tocTitle": "Contents",
+    "sections": [
+      {
+        "title": "Purpose",
+        "paragraphs": [
+          "Churchy is an online service that lets parishes prepare their celebrations (order of service, hymns, psalms, readings), publish their Masses, announcements and activities, and lets worshippers and visitors read them freely.",
+          "These terms of use (“Terms”) apply to anyone using the site, whether just browsing or holding an account. By using the site, you accept these Terms."
+        ]
+      },
+      {
+        "title": "Definitions",
+        "items": [
+          "“Visitor”: anyone who browses the public site without signing in.",
+          "“User”: anyone holding an account.",
+          "“Parish”: the community represented on Churchy by a public page and a management area.",
+          "“Parish administrator”: the user who manages the parish, its members and their roles.",
+          "“Content”: all texts, images, times, announcements, celebration descriptions, hymns, psalms and readings published or entered on the service."
+        ]
+      },
+      {
+        "title": "Access to the service",
+        "paragraphs": [
+          "Browsing the public site (finding a parish, Mass times, announcements, activities, calendar) is free and needs no account. It is available in French and English.",
+          "Management features require an account. Your internet connection costs (data plan, equipment) are your own. The service is designed to work on phones, tablets and computers, including over a slow connection."
+        ]
+      },
+      {
+        "title": "Accounts and roles",
+        "paragraphs": [
+          "To create an account you provide a valid email address, your last name, first name and a password. You agree to give accurate information and keep it up to date. Your email address must be confirmed using the link we send you.",
+          "You alone are responsible for keeping your password confidential and for how your account is used. Do not share it; tell us without delay if you think it has been compromised. A member’s role in a parish determines what they can do:"
+        ],
+        "items": [
+          "Administrator: manages the parish, its public information, its members and their roles;",
+          "Preparer: prepares and publishes celebrations, announcements and activities;",
+          "Reader: views the parish’s preparations, including unpublished ones;",
+          "Viewer: views the parish’s preparations, read-only."
+        ]
+      },
+      {
+        "title": "The role of the parish and its administrators",
+        "paragraphs": [
+          "Churchy provides the tool; each parish decides what it publishes and who may act on it. A parish administrator declares having the standing to represent it (parish priest, secretariat, pastoral team or authorised person) and carefully chooses the people given a role.",
+          "Churchy does not check each person’s authority over their parish; if people claiming the same parish dispute it, we may freeze changes to the page until the competent church authority confirms who is in charge."
+        ]
+      },
+      {
+        "title": "Content published by parishes",
+        "paragraphs": [
+          "Each parish is responsible for the content it enters or publishes, for its accuracy and for the rights attached to it. Content you publish must be lawful, respectful of others and consistent with the mission of a religious community.",
+          "You grant us, for as long as you use the service, a non-exclusive, free right to host, display and reproduce that content only as far as needed to run Churchy (display on the public page, preview when a link is shared, backups). You keep your rights."
+        ]
+      },
+      {
+        "title": "Liturgical texts, hymns and copyright",
+        "paragraphs": [
+          "Churchy does not supply liturgical texts, scores or hymn lyrics. You enter whatever you wish to keep yourself. Some liturgical texts, translations, hymns, psalms, scores and images are protected by copyright or neighbouring rights.",
+          "By publishing such content you warrant that you hold the necessary rights or permissions (publisher, author, rights society, parish licence). Churchy does not check these rights and cannot answer for them. The parish also remains solely responsible for the liturgical conformity of its preparations."
+        ]
+      },
+      {
+        "title": "Accuracy of public information",
+        "paragraphs": [
+          "Times, places, cancellations and announcements shown on a parish page are supplied by that parish. Times are shown in the parish’s time zone. Although we do our best to keep the display reliable, for essential information (special time, funeral, wedding) we advise you to check directly with the parish.",
+          "A cancelled date stays visible as such, with its public reason, so that worshippers do not travel for nothing."
+        ]
+      },
+      {
+        "title": "Prohibited uses",
+        "paragraphs": ["It is forbidden, in particular, to:"],
+        "items": [
+          "publish unlawful, defamatory, abusive, discriminatory or hateful content, or content inciting violence;",
+          "impersonate a person, a parish or a religious authority;",
+          "publish other people’s personal data (phone, address, photograph) without their consent;",
+          "use the service for commercial or advertising purposes unrelated to parish life, or for partisan political purposes;",
+          "attempt to access other users’ accounts or data, bypass the site’s protections, disrupt its operation or query it in a massive automated way;",
+          "introduce malicious code into a text, image or form."
+        ]
+      },
+      {
+        "title": "Moderation, suspension and deletion",
+        "paragraphs": [
+          "We may remove content that clearly breaches these Terms or the law, or suspend an account or a page, notably after a report. We try to warn the person concerned and let them explain, except in an emergency or where the law requires otherwise. You can report content through the Contact page."
+        ]
+      },
+      {
+        "title": "Churchy’s intellectual property",
+        "paragraphs": [
+          "The Churchy name, logo, visual identity, code, interface texts and the way the service is organised are protected. They may not be copied, modified or reused without written permission, beyond the normal use of the service."
+        ]
+      },
+      {
+        "title": "Personal data",
+        "paragraphs": [
+          "How your data is processed is described in the privacy policy, which forms part of these Terms. A parish’s public information (name, address, contacts, times) is meant to be seen by everyone; administrators must only include contact details they are entitled to publish."
+        ]
+      },
+      {
+        "title": "Availability of the service",
+        "paragraphs": [
+          "We strive to keep the service available at all times, but it may be interrupted for maintenance, updates or outages, without entitling anyone to compensation. We cannot guarantee that no data will ever be lost: keep your own copy of important texts."
+        ]
+      },
+      {
+        "title": "Liability",
+        "paragraphs": [
+          "The service is provided “as is”. Within the limits allowed by law, Churchy cannot be held liable for:"
+        ],
+        "items": [
+          "content published by parishes and users, or any infringement of third-party rights it may cause;",
+          "harm resulting from inaccurate or outdated information or temporary unavailability (for example a missed Mass because of a wrong time);",
+          "fraudulent use of an account whose password was not kept safe;",
+          "interruptions linked to the internet, electricity or phone networks, or indirect damage."
+        ],
+        "after": ["Nothing in these Terms excludes liability that cannot lawfully be excluded."]
+      },
+      {
+        "title": "Closing your account",
+        "paragraphs": [
+          "You may stop using the service at any time and ask for your account to be deleted through the Contact page. We may close an inactive account or one that breaches the Terms. Deleting an account does not erase a parish’s content, which remains the parish’s; the account’s personal data is deleted or anonymised as described in the privacy policy."
+        ]
+      },
+      {
+        "title": "Changes to these terms",
+        "paragraphs": [
+          "We may change these Terms to reflect changes to the service or the law. The update date is shown at the top of the page. For important changes, users will be informed. Continuing to use the service after a change means you accept it."
+        ]
+      },
+      {
+        "title": "Settling disputes",
+        "paragraphs": [
+          "If there is a problem, contact us first: most disagreements are settled amicably. Failing that, the dispute falls to the courts competent under the law applicable to the publisher of the service. [To be confirmed: applicable law and competent court.]"
+        ]
+      },
+      {
+        "title": "Contact us",
+        "paragraphs": [
+          "For any question about these terms, or to report content, use the Contact page of the site."
+        ]
+      }
+    ],
+    "contactLink": "Go to the Contact page"
+  },
+  "privacy": {
+    "title": "Privacy policy",
+    "intro": "Parishes entrust us with information about their worshippers and activities, and we take that trust seriously. This page explains, simply, what data we use, why, who can see it, how long we keep it and how to exercise your rights.",
+    "updated": "Last updated: 4 October 2026",
+    "tocTitle": "Contents",
+    "sections": [
+      {
+        "title": "Who is responsible for your data?",
+        "paragraphs": [
+          "The data controller is the publisher of the Churchy site, identified in the legal notice. For information a parish publishes on its page (times, parish contact details, announcements), the parish decides what it shares; Churchy then acts as the technical provider that hosts and displays it.",
+          "We process your data in line with the personal data protection law applicable in Cameroon and, where it applies, the European regulation (GDPR)."
+        ]
+      },
+      {
+        "title": "Data we collect",
+        "paragraphs": ["We only collect what is useful to the service:"],
+        "items": [
+          "Account: last name, first name, email address, password (never stored in clear: only an encrypted fingerprint is kept), chosen language, role(s) in one or more parishes, date the email address was verified.",
+          "Use: favourite parishes (on your device if you are not signed in, in your account otherwise); session data (see “Cookies”).",
+          "Contact form: name, email, subject and message.",
+          "Management content: celebrations, preparation sheets, internal notes, announcements, activities, written by a parish’s members.",
+          "Parish public information: the parish’s name, address, city, phone and email, times.",
+          "Technical data: IP address, browser type, date and time of requests, error logs, used for security and to limit abuse."
+        ],
+        "after": ["We do not ask for a date of birth, photograph, ID number or bank details."]
+      },
+      {
+        "title": "A point of care: data touching on religion",
+        "paragraphs": [
+          "Information about religious practice or affiliation is considered sensitive. Having an account linked to a parish, or a parish among your favourites, may reveal some. That is why: we never publish the list of members or favourites; members’ names are only visible in their parish’s management area; a visitor’s favourites stay on their device; we do not sell or hand over any data.",
+          "Parishes must not publish worshippers’ data (names, named Mass intentions, health or bereavement information) without their consent. A death notice or a named Mass intention requires the family’s consent."
+        ]
+      },
+      {
+        "title": "What your data is used for",
+        "items": [
+          "Providing the service: creating and securing your account, signing you in, showing the management and public pages (performance of the contract);",
+          "Writing to you about the service: confirming your email address, resetting your password, replying to your message (performance of the contract and legitimate interest);",
+          "Respecting your language: the interface and emails are sent in French or English as you chose;",
+          "Protecting the service: detecting and limiting abuse, intrusion attempts and mass sending (legitimate interest);",
+          "Improving the service: fixing errors using technical logs (legitimate interest)."
+        ],
+        "after": [
+          "We do not use your data for advertising or commercial profiling. We do not send you a newsletter unless you asked for one."
+        ]
+      },
+      {
+        "title": "Who can see your data?",
+        "items": [
+          "Only you see your password (we cannot access it).",
+          "The managers of your parish see your last name, first name, email and role.",
+          "A parish’s members see its preparations according to their role; internal notes are reserved for administrators and preparers.",
+          "The public sees only what a parish has chosen to publish (announced celebrations, announcements, activities, the parish’s contact details).",
+          "Our technical team may access data when needed to keep the service running and secure, under a duty of confidentiality."
+        ]
+      },
+      {
+        "title": "Providers and hosting",
+        "paragraphs": [
+          "The service is hosted by OVH (see legal notice). Emails go through a mail server that passes them on to your provider. These providers act only on our instructions.",
+          "We do not pass your data to advertising networks or data brokers. If a transfer outside your country ever became necessary, we would make sure appropriate safeguards are in place."
+        ]
+      },
+      {
+        "title": "Cookies and local storage",
+        "paragraphs": [
+          "Churchy only uses strictly necessary items: no advertising, no tracking, no third-party analytics. They therefore do not require a consent banner."
+        ],
+        "items": [
+          "churchy_at (sign-in, 15 minutes) and churchy_rt (sign-in renewal, 30 days): secure cookies, unreadable by the site’s JavaScript, that keep you signed in;",
+          "churchy_session: a simple flag that a session exists, with no personal information;",
+          "NEXT_LOCALE (1 year): remembers your chosen language;",
+          "Device local storage (churchy:favorites): the favourite parishes of a visitor who is not signed in. It is emptied when you sign in, after being added to your account."
+        ],
+        "after": [
+          "You can delete these at any time from your browser settings; you will then need to sign in again and choose your language again."
+        ]
+      },
+      {
+        "title": "How long do we keep your data?",
+        "items": [
+          "Account: while it is active, then deleted or anonymised within a reasonable time after your deletion request or the account’s closure.",
+          "Sessions: renewal tokens expire after 30 days or on sign-out.",
+          "Confirmation and reset links: valid for 24 hours and 1 hour, single use.",
+          "Contact messages: processed then removed from our sending queue; the copy received by the team is kept as long as needed to reply, then deleted.",
+          "Technical logs: kept for a limited time (a few weeks).",
+          "A parish’s content: as long as the parish keeps it; it can edit or delete it."
+        ]
+      },
+      {
+        "title": "How do we protect your data?",
+        "paragraphs": [
+          "Connections use HTTPS; passwords are encrypted with an algorithm designed for that; sessions use protected cookies and automatically renewed tokens; sensitive actions are rate-limited against repeated attacks; each parish is partitioned (a member cannot see another parish’s data); entered text is cleaned to prevent code injection. As no security is absolute, we will inform you, and the competent authority where the law requires, of any data breach that presents a risk."
+        ]
+      },
+      {
+        "title": "Your rights",
+        "paragraphs": ["You can ask at any time for:"],
+        "items": [
+          "access to the data about you and a copy;",
+          "correction of inaccurate information (you can also edit your details in your area);",
+          "deletion of your account and your data;",
+          "restriction of processing, or your objection to it for a legitimate reason;",
+          "withdrawal of your consent, where processing relies on it."
+        ],
+        "after": [
+          "Write to us through the Contact page, stating your account’s email address; we may ask you to confirm your identity. We reply within a reasonable time, at most within one month. If you believe your rights are not respected, you may refer the matter to your country’s data protection authority."
+        ]
+      },
+      {
+        "title": "Children and minors",
+        "paragraphs": [
+          "The service is aimed at adults serving their community. A minor should only create an account with the consent of their parents or guardian. Parishes must not publish a photograph or information identifying a child without their parents’ permission."
+        ]
+      },
+      {
+        "title": "Changes to this policy",
+        "paragraphs": [
+          "We may update this policy; the date at the top shows the latest version. For important changes, we will inform you."
+        ]
+      },
+      {
+        "title": "Contact us",
+        "paragraphs": [
+          "For any question or to exercise your rights, use the Contact page of the site."
+        ]
+      }
+    ],
+    "contactLink": "Go to the Contact page"
+  },
+  "legalNotice": {
+    "title": "Legal notice",
+    "intro": "Identification of the publisher and host of the Churchy site, and general rules for using its content.",
+    "updated": "Last updated: 4 October 2026",
+    "tocTitle": "Contents",
+    "sections": [
+      {
+        "title": "Site publisher",
+        "paragraphs": [
+          "The Churchy site is published by: [To be completed: company name, legal form, registered office address, registration number (RCCM or SIRET), VAT number where applicable].",
+          "Contact: see the Contact page."
+        ]
+      },
+      {
+        "title": "Publication director",
+        "paragraphs": ["[To be completed: name and position of the publication director.]"]
+      },
+      {
+        "title": "Host",
+        "paragraphs": [
+          "The site is hosted by OVH SAS, 2 rue Kellermann, 59100 Roubaix, France (www.ovhcloud.com). Domain names are managed at OVH."
+        ]
+      },
+      {
+        "title": "Purpose of the site",
+        "paragraphs": [
+          "Churchy is a free service for parishes and their worshippers: preparing celebrations, publishing Mass times, announcements and activities. Churchy is a technical tool: the site is not an official site of a Church, a diocese or a bishops’ conference, and does not speak on their behalf."
+        ]
+      },
+      {
+        "title": "Parish content",
+        "paragraphs": [
+          "Parish pages are written by the parishes, which are solely responsible for them. If you notice unlawful content or an error, report it through the Contact page, giving the address of the page concerned: we will review it quickly and remove anything clearly contrary to the law."
+        ]
+      },
+      {
+        "title": "Intellectual property",
+        "paragraphs": [
+          "The Churchy brand, logo, visual identity, interface texts, code and site structure are protected by intellectual property law. Any reproduction without written permission is forbidden. Content published by parishes remains the property of its authors or rights holders."
+        ]
+      },
+      {
+        "title": "Personal data and cookies",
+        "paragraphs": [
+          "How your data is processed, the cookies used, retention periods and your rights are detailed in the privacy policy."
+        ]
+      },
+      {
+        "title": "External links",
+        "paragraphs": [
+          "The site may contain links to third-party sites (for example a diocese’s site). We do not control their content and accept no responsibility for it."
+        ]
+      },
+      {
+        "title": "Liability",
+        "paragraphs": [
+          "We do our best to keep information accurate and the service available, without being able to guarantee it. The detailed conditions are in the terms of use."
+        ]
+      },
+      {
+        "title": "Applicable law",
+        "paragraphs": [
+          "This site and its legal notice are governed by the law of the publisher’s state. [To be confirmed: applicable law and competent court.]"
+        ]
+      }
+    ],
+    "contactLink": "Go to the Contact page"
+  },
+  "favorites": {
+    "loading": "Loading favorites",
+    "shelfOne": "My parish",
+    "shelfMany": "My favorite parishes",
+    "link": "My favorites",
+    "title": "My favorites",
+    "intro": "Go straight to your parishes, without going through the search.",
+    "count": "{count} of {max}.",
+    "emptyTitle": "No favorite parish yet",
+    "emptyHint": "Find your parish, then tap the star to find it here.",
+    "find": "Find a parish",
+    "add": "Add to favorites",
+    "remove": "Remove from favorites",
+    "inFavorites": "In my favorites",
+    "labelFor": "{label}: {name}",
+    "limitTitle": "Favorites limit reached",
+    "limitText": "You can keep {max} parishes as favorites. Remove one to add another.",
+    "removeFail": "Could not remove this favorite",
+    "addFail": "Could not add this favorite",
+    "retry": "Please try again in a moment.",
+    "removed": "Favorite removed",
+    "removedText": "{name} is no longer in your favorites.",
+    "added": "Added to your favorites",
+    "addedText": "{name} is in “My favorites”."
+  },
+  "auth": {
+    "email": "Email",
+    "emailPlaceholder": "you@parish.org",
+    "password": "Password",
+    "passwordHint": "At least 8 characters",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "login": {
+      "title": "Sign in",
+      "subtitle": "Access your Churchy space",
+      "noAccount": "No account yet? <link>Sign up</link>",
+      "expired": "Your session has expired. Sign in again to continue.",
+      "resetDone": "Password changed. You can now sign in.",
+      "forgot": "Forgot your password?",
+      "submit": "Sign in",
+      "submitting": "Signing in...",
+      "errorFallback": "Invalid credentials"
+    },
+    "register": {
+      "title": "Create an account",
+      "subtitle": "Join Churchy to manage your celebrations",
+      "haveAccount": "Already have an account? <link>Sign in</link>",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "firstNamePlaceholder": "John",
+      "lastNamePlaceholder": "Doe",
+      "submit": "Create my account",
+      "submitting": "Signing up...",
+      "errorFallback": "Sign-up failed"
+    },
+    "forgot": {
+      "title": "Forgot password",
+      "subtitle": "We will send you a link to choose a new one",
+      "back": "Back to sign in",
+      "checkTitle": "Check your inbox",
+      "sent": "If an account exists for <strong>{email}</strong>, a reset link has just been sent. It is valid for 1 hour. Remember to check your spam folder.",
+      "another": "Use another address",
+      "submit": "Send the link",
+      "submitting": "Sending...",
+      "errorFallback": "Could not send the link"
+    },
+    "reset": {
+      "title": "New password",
+      "subtitle": "Choose a password of at least 8 characters",
+      "missingToken": "Invalid link: the token is missing.",
+      "newLink": "Request a new link",
+      "newPassword": "New password",
+      "confirm": "Confirm password",
+      "submit": "Change password",
+      "saving": "Saving...",
+      "errorFallback": "Could not change the password"
+    },
+    "verify": {
+      "title": "Email confirmation",
+      "loading": "Verifying...",
+      "successTitle": "Email address confirmed",
+      "successText": "Thank you! Your account is now verified.",
+      "goSpace": "Go to my space",
+      "errorTitle": "Could not confirm the address",
+      "missingToken": "Invalid link: the token is missing.",
+      "invalidLink": "Invalid or expired link",
+      "loginHint": "Sign in to receive a new link from your dashboard. <link>Sign in</link>"
+    },
+    "banner": {
+      "title": "Confirm your email address",
+      "sentTo": "We sent a link to <strong>{email}</strong>.",
+      "resent": "A new link has just been sent.",
+      "resend": "Resend the link",
+      "sending": "Sending...",
+      "error": "Could not send, please try again in a moment."
+    }
+  },
+  "layout": {
+    "nav": {
+      "dashboard": "Dashboard",
+      "parishes": "Parishes",
+      "favorites": "My favorites",
+      "label": "Dashboard navigation"
+    },
+    "userMenu": "User menu",
+    "emailUnverified": "Email not confirmed",
+    "myParishes": "My parishes",
+    "logout": "Sign out"
+  },
+  "dashboard": {
+    "loadError": "Could not load the data",
+    "home": {
+      "title": "Dashboard",
+      "welcome": "Welcome to Churchy",
+      "myParishes": "My parishes",
+      "myParishesText": "Manage your parishes, members and celebrations",
+      "recent": "Recent celebrations",
+      "recentText": "Browse and prepare your upcoming celebrations"
+    },
+    "parishes": {
+      "createTitle": "Create a parish",
+      "createDesc": "This information feeds the parish's public page",
+      "title": "My parishes",
+      "desc": "Manage your parish spaces",
+      "new": "+ New parish",
+      "empty": "No parish yet.",
+      "emptyHint": "Create your first parish above."
+    },
+    "parish": {
+      "fallbackName": "Parish",
+      "viewPublic": "View the public page",
+      "editTitle": "Edit public information",
+      "publicDesc": "Shown on the parish page and in search results.",
+      "publicInfo": "Public information",
+      "saved": "Information saved.",
+      "sections": {
+        "contents": {
+          "title": "Library",
+          "text": "Songs, psalms, readings, prayers"
+        },
+        "templates": {
+          "title": "Templates",
+          "text": "Celebration templates"
+        },
+        "celebrations": {
+          "title": "Celebrations",
+          "text": "Prepare and publish Masses"
+        },
+        "announcements": {
+          "title": "Announcements",
+          "text": "News for the faithful"
+        },
+        "activities": {
+          "title": "Activities",
+          "text": "Gatherings and events"
+        }
+      }
+    }
+  },
+  "parishSummary": {
+    "description": "About",
+    "place": "Location",
+    "addressComplement": "Address details",
+    "mainChurch": "Main church",
+    "phone": "Phone",
+    "email": "Email",
+    "website": "Website",
+    "photo": "Photo",
+    "notSet": "Not provided"
+  },
+  "parishForm": {
+    "name": "Parish name",
+    "namePlaceholder": "Saint Joseph Parish, Mvog-Ada",
+    "description": "Description",
+    "descriptionPlaceholder": "Describe your parish...",
+    "email": "Parish email",
+    "create": "Create the parish",
+    "creating": "Creating...",
+    "created": "Parish created",
+    "createdText": "“{name}” is ready.",
+    "createError": "Error while creating",
+    "presentation": "About",
+    "presentationPlaceholder": "A few lines to introduce the parish",
+    "timezone": "Time zone",
+    "timezoneHint": "Celebration times use this time zone.",
+    "saving": "Saving…",
+    "updated": "Parish updated",
+    "saveError": "Error while saving",
+    "fields": {
+      "mainChurch": {
+        "label": "Main church",
+        "placeholder": "Saint Peter's Church"
+      },
+      "address": {
+        "label": "Address",
+        "placeholder": "1 Church Square"
+      },
+      "addressComplement": {
+        "label": "Address details",
+        "placeholder": "Opposite the central post office"
+      },
+      "email": {
+        "label": "Parish email",
+        "placeholder": "contact@parish.org"
+      },
+      "website": {
+        "label": "Website",
+        "placeholder": "https://…"
+      },
+      "imageUrl": {
+        "label": "Photo URL",
+        "placeholder": "https://…"
+      }
+    }
+  },
+  "phoneField": {
+    "label": "Phone"
+  },
+  "location": {
+    "country": "Country",
+    "region": "Region",
+    "chooseRegion": "Choose a region",
+    "regionPlaceholder": "Region, province, state…",
+    "city": "City",
+    "chooseCity": "Choose a city",
+    "chooseRegionFirst": "Choose a region first",
+    "otherCity": "Other city…",
+    "cityName": "City name",
+    "cityMissing": "City not in the list",
+    "district": "Neighbourhood",
+    "chooseDistrict": "Choose a neighbourhood",
+    "otherDistrict": "Other neighbourhood…",
+    "districtName": "Neighbourhood name",
+    "districtMissing": "Neighbourhood not in the list"
+  },
+  "celebrationCard": {
+    "next": "Next: {date} at {time}",
+    "cancelledSuffix": " (cancelled)",
+    "noUpcoming": "No upcoming date",
+    "dates": "{count, plural, one {# date} other {# dates}}",
+    "ofWhichUpcoming": " of which {upcoming} upcoming",
+    "template": " — template “{name}”",
+    "archived": "Archived",
+    "published": "Published to the public",
+    "draft": "Draft",
+    "endingSoon": "Ending soon"
+  },
+  "celebrationForm": {
+    "title": "Title",
+    "titlePlaceholder": "Sunday Mass",
+    "type": "Type",
+    "location": "Place",
+    "locationPlaceholder": "Saint Peter's Church",
+    "template": "Default sheet template",
+    "noTemplate": "None — sheet built on the fly",
+    "steps": "{count, plural, one {# step} other {# steps}}",
+    "templateHint": "Offered for each date; whoever prepares can change it at any time.",
+    "templatesError": "Could not load the templates",
+    "publicDescription": "Public description",
+    "publicDescriptionHint": "Visible to everyone on the parish page (e.g. “the Archbishop of Yaoundé will be with us”).",
+    "internalNote": "Internal note",
+    "internalNotePlaceholder": "Point of attention for whoever prepares the Mass…",
+    "internalNoteHint": "Reserved for the preparation team: never visible to the public.",
+    "dates": "Dates",
+    "atLeastOneDate": "Enter at least one date",
+    "announce": "Publish the series to the public",
+    "announceHint": "All dates appear on the parish page, as “sheet in preparation” until each sheet is published.",
+    "updated": "Celebration updated",
+    "created": "Celebration created",
+    "scheduled": "{count, plural, one {# date scheduled} other {# dates scheduled}}",
+    "updateError": "Error while updating",
+    "createError": "Error while creating",
+    "saving": "Saving…",
+    "creating": "Creating…",
+    "submitCreate": "Create the celebration"
+  },
+  "schedule": {
+    "modeGroup": "Schedule type",
+    "modeDates": "One or several dates",
+    "modeRecurrence": "Every week",
+    "date": "Date",
+    "dateN": "Date {n}",
+    "time": "Time",
+    "removeDate": "Remove date {n}",
+    "remove": "Remove",
+    "addDate": "Add a date",
+    "weekdays": "Days of the week",
+    "start": "Start",
+    "end": "End",
+    "hint": "Parish time ({timezone}). A series can be scheduled up to a year ahead; you will be notified a month before it ends so you can extend it.",
+    "willCreateOne": "1 date will be created",
+    "willCreateMany": "{count} dates will be created",
+    "range": " — from {from} to {to}",
+    "line": "{date} at {time}",
+    "more": "… and {count} more"
+  },
+  "occurrenceItem": {
+    "noSheet": "No sheet",
+    "sheetPublished": "Sheet published",
+    "draftProgress": "Draft — {filled}/{total} steps filled",
+    "at": "{date} at {time}",
+    "cancelled": "Cancelled",
+    "cancelledWithReason": "Cancelled — {reason}",
+    "past": "Past",
+    "internalNote": "Internal note:",
+    "reasonLabel": "Reason for cancelling (optional)",
+    "reasonPlaceholder": "Reason (optional)",
+    "confirmCancel": "Confirm cancellation",
+    "back": "Back",
+    "consult": "View",
+    "details": "Details",
+    "prepare": "Prepare",
+    "prepareSheet": "Prepare the sheet",
+    "reinstate": "Reinstate",
+    "cancelDate": "Cancel this date"
+  },
+  "occurrenceForm": {
+    "publicNote": "Public note for this date",
+    "publicNoteAria": "Public note",
+    "publicNoteHint": "Added to the series description (e.g. “the Archbishop of Yaoundé will be with us”).",
+    "internalNote": "Internal note for this date",
+    "internalNotePlaceholder": "Point of attention for whoever prepares…",
+    "internalNoteHint": "Reserved for the team: never visible to the public.",
+    "saved": "Date saved",
+    "timeChanged": "Time changed",
+    "saveError": "Error while saving",
+    "saving": "Saving…"
+  },
+  "extendSeries": {
+    "extended": "Series extended",
+    "added": "{count, plural, one {# date added} other {# dates added}}",
+    "alreadyExisted": "These dates already existed",
+    "error": "Error while extending",
+    "adding": "Adding…",
+    "submit": "Add these dates"
+  },
+  "endingSoon": {
+    "titleOne": "A series is ending soon",
+    "titleMany": "{count} series are ending soon",
+    "descOne": "The faithful will no longer see any Mass after the last date. Remember to extend this series (up to a year ahead).",
+    "descMany": "The faithful will no longer see any Mass after the last date. Remember to extend these series (up to a year ahead).",
+    "lastDate": "Last date: {date}",
+    "extend": "Extend the series",
+    "later": "Later"
+  },
+  "deleteButton": {
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "deleteLabel": "Delete {label}",
+    "confirmLabel": "Confirm deletion of {label}"
+  },
+  "sheetPanel": {
+    "unpublished": "Sheet unpublished",
+    "published": "Sheet published",
+    "unpublishError": "Error while unpublishing",
+    "publishError": "Error while publishing",
+    "orderSaved": "Order saved",
+    "orderError": "Error while changing the order",
+    "stepAdded": "Step added",
+    "addStepError": "Error while adding the step",
+    "statusPublished": "Published",
+    "statusDraft": "Draft",
+    "template": "Template: {name}",
+    "onTheFly": "Sheet built on the fly",
+    "changeTemplate": "Change template",
+    "unpublish": "Unpublish",
+    "publish": "Publish the sheet",
+    "empty": "The sheet is empty. Add the steps you want (entrance song, reading…).",
+    "stepSaved": "Step saved",
+    "stepSaveError": "Error while saving the step",
+    "stepRemoved": "Step removed",
+    "stepRemoveError": "Error while removing the step",
+    "newStepAria": "Title of the new step",
+    "newStepPlaceholder": "New step (e.g. Hymn to Mary)",
+    "addStep": "Add a step"
+  },
+  "sheetCreator": {
+    "created": "Sheet created",
+    "blankHint": "Empty sheet, to be completed",
+    "error": "Error while creating the sheet",
+    "title": "This date does not have a preparation sheet yet",
+    "hint": "Start from a parish template, or build the sheet on the fly.",
+    "template": "Template",
+    "defaultTemplate": "Default template — {name}",
+    "blank": "On the fly — empty sheet",
+    "creating": "Creating…",
+    "create": "Create the sheet"
+  },
+  "stepCard": {
+    "free": "Free step",
+    "moveUp": "Move step {title} up",
+    "moveDown": "Move step {title} down",
+    "content": "Library content",
+    "noContent": "— No content —",
+    "customText": "Free text or note",
+    "customPlaceholder": "E.g.: 2 verses only",
+    "removeLabel": "the step {title}"
+  },
+  "templateChange": {
+    "previewError": "Could not compute the preview",
+    "changed": "Template changed",
+    "changedHint": "Content already placed was kept",
+    "error": "Error while changing the template",
+    "title": "Change template",
+    "desc": "Steps with the same name keep their content. A filled step with no equivalent is kept as a free step.",
+    "newTemplate": "New template",
+    "none": "None — on the fly",
+    "computing": "Computing the preview…",
+    "current": "This is the sheet's current template.",
+    "kept": "Kept",
+    "added": "Added (empty)",
+    "keptAsFree": "Kept as free steps",
+    "removed": "Removed (empty)",
+    "nothing": "No step changes.",
+    "applying": "Applying…",
+    "submit": "Change template"
+  },
+  "defaultSteps": {
+    "entrance": "Entrance song",
+    "kyrie": "Kyrie",
+    "gloria": "Gloria",
+    "first_reading": "First reading",
+    "psalm": "Psalm",
+    "gospel": "Gospel",
+    "homily": "Homily",
+    "universal_prayer": "Universal prayer",
+    "offertory": "Offertory",
+    "communion": "Communion",
+    "sending": "Dismissal"
+  },
+  "templateForm": {
+    "name": "Template name",
+    "namePlaceholder": "Sunday Mass",
+    "type": "Type",
+    "description": "Description",
+    "steps": "Sheet steps",
+    "prefill": "Pre-fill: Sunday Mass",
+    "stepN": "Step {n}",
+    "stepPlaceholder": "E.g.: Entrance song",
+    "moveUp": "Move step {n} up",
+    "moveDown": "Move step {n} down",
+    "remove": "Remove step {n}",
+    "addStep": "Add a step",
+    "nameRequired": "Name required",
+    "stepsRequired": "Add at least one step",
+    "updateError": "Error while updating the template",
+    "createError": "Error while creating the template",
+    "updated": "Template updated",
+    "created": "Template created",
+    "saveChanges": "Save changes",
+    "saving": "Saving…",
+    "creating": "Creating…",
+    "submitCreate": "Create the template"
+  },
+  "templateCard": {
+    "collapse": "Collapse",
+    "expand": "Expand",
+    "noSteps": "No step.",
+    "editAria": "Edit {name}"
+  },
+  "contentForm": {
+    "title": "Title",
+    "titlePlaceholder": "Content title",
+    "type": "Type",
+    "chooseType": "Choose a type",
+    "body": "Content",
+    "saving": "Saving...",
+    "saveChanges": "Save changes",
+    "submitCreate": "Add the content",
+    "updated": "Content updated",
+    "added": "Content added",
+    "updatedText": "“{title}” has been updated.",
+    "addedText": "“{title}” is in the library.",
+    "updateError": "Update failed",
+    "createError": "Creation failed"
+  },
+  "announcementForm": {
+    "title": "Title",
+    "titlePlaceholder": "Change of time for the Sunday Mass",
+    "summary": "Summary",
+    "summaryPlaceholder": "One sentence to summarise the announcement",
+    "body": "Content",
+    "image": "Image URL",
+    "publishing": "Publishing…",
+    "submit": "Publish the announcement",
+    "published": "Announcement published",
+    "error": "Error while publishing"
+  },
+  "activityForm": {
+    "title": "Title",
+    "titlePlaceholder": "Youth group",
+    "description": "Description",
+    "startsAt": "Date and time",
+    "invalidDate": "Invalid date and time",
+    "location": "Place",
+    "locationPlaceholder": "Parish hall",
+    "image": "Image URL",
+    "publishing": "Publishing…",
+    "submit": "Publish the activity",
+    "published": "Activity published",
+    "error": "Error while publishing"
+  },
+  "dashCelebrations": {
+    "title": "Celebrations",
+    "desc": "Celebration series, their dates and their preparation sheets",
+    "new": "+ New celebration",
+    "empty": "No celebration yet.",
+    "archived": "Archived ({count})",
+    "newTitle": "New celebration",
+    "newDesc": "One or several dates: the preparation sheet is created afterwards, for each date"
+  },
+  "celebrationPage": {
+    "editTitle": "Edit the celebration",
+    "extendTitle": "Extend the series",
+    "extendDesc": "Add dates to “{title}”",
+    "archivedStatus": "Archived — removed from the public site",
+    "publishedStatus": "Published to the public (all dates)",
+    "draftStatus": "Draft — not visible to the public",
+    "extend": "Extend",
+    "unannounced": "Series removed from the public site",
+    "announced": "Series published to the public",
+    "updateError": "Error while updating",
+    "withdraw": "Withdraw from the public",
+    "publishToPublic": "Publish to the public",
+    "unarchived": "Series unarchived",
+    "archivedToast": "Series archived",
+    "archiveError": "Error while archiving",
+    "unarchive": "Unarchive",
+    "archive": "Archive",
+    "endingTitle": "This series is ending soon",
+    "endingText": "Last date: {date}. Extend it so the faithful can see the upcoming Masses.",
+    "internalNoteTitle": "Internal note — reserved for the team",
+    "upcomingDates": "Upcoming dates ({count})",
+    "noUpcoming": "No upcoming date. Extend the series to add some.",
+    "cancelled": "Date cancelled",
+    "cancelError": "Error while cancelling",
+    "reinstated": "Date reinstated",
+    "reinstateError": "Error while reinstating",
+    "pastDates": "Past dates ({count}) — view only"
+  },
+  "occurrencePage": {
+    "line": "{time} — {title} · {type}",
+    "location": " · {location}",
+    "reinstateDate": "Reinstate this date",
+    "cancelDate": "Cancel this date",
+    "pastTitle": "Past date",
+    "pastText": "It can be viewed, but can no longer be changed.",
+    "cancelledTitle": "Date cancelled",
+    "cancelledText": "{reason} It remains displayed as cancelled on the public site.",
+    "noReason": "No reason given.",
+    "notesTitle": "To know before preparing — internal note",
+    "forThisDate": "For this date: ",
+    "whatPublicSees": "What the public sees",
+    "tablist": "Preparation",
+    "tabSheet": "Preparation sheet",
+    "tabDate": "Date information",
+    "noSheet": "No sheet was prepared for this date.",
+    "locked": "This date can no longer be changed."
+  },
+  "dashContents": {
+    "newTitle": "New content",
+    "newDesc": "Song, reading, prayer… reusable in your celebrations",
+    "title": "Content library",
+    "desc": "Songs, readings, prayers and more",
+    "add": "+ Add content",
+    "empty": "No content yet.",
+    "searchAria": "Search for content",
+    "searchPlaceholder": "Search by title or text",
+    "filterAria": "Filter by type",
+    "allTypes": "All types",
+    "count": "{count, plural, one {# item} other {# items}}",
+    "ofTotal": " of {total}",
+    "noMatch": "No content matches your search.",
+    "showMore": "Show more ({remaining} remaining)",
+    "loadOneError": "Could not load the content",
+    "backToLibrary": "Back to the library",
+    "editTitle": "Edit the content",
+    "quoted": "“{title}”",
+    "library": "Library",
+    "addedOn": "Added on {date}",
+    "by": "by {name}",
+    "deleted": "Content deleted",
+    "deleteFailed": "Deletion failed",
+    "retryLater": "Please try again later.",
+    "onlyAuthor": "Only the author of this content can edit or delete it."
+  },
+  "dashAnnouncements": {
+    "newTitle": "New announcement",
+    "newDesc": "Visible on the parish's public page",
+    "title": "Announcements",
+    "desc": "News published on the parish's public page",
+    "add": "+ New announcement",
+    "empty": "No announcement yet.",
+    "deleted": "Announcement deleted"
+  },
+  "dashActivities": {
+    "newTitle": "New activity",
+    "newDesc": "Parish gathering or event",
+    "title": "Activities",
+    "desc": "Parish gatherings and events",
+    "add": "+ New activity",
+    "empty": "No activity yet.",
+    "deleted": "Activity deleted",
+    "at": "{date} at {time}"
+  },
+  "dashTemplates": {
+    "editTitle": "Edit “{name}”",
+    "newTitle": "New template",
+    "editDesc": "Sheets already prepared keep their steps",
+    "newDesc": "The steps of the preparation sheet, in order",
+    "removed": "Template deleted",
+    "removeError": "Error while deleting",
+    "removeFailed": "Deletion failed",
+    "title": "Sheet templates",
+    "desc": "Define the order of your celebrations",
+    "add": "+ New template",
+    "empty": "No template yet."
+  },
+  "richText": {
+    "placeholder": "Type your text here…",
+    "imageFail": "Could not add the image",
+    "strike": "Strikethrough",
+    "superscript": "Superscript",
+    "subscript": "Subscript",
+    "textColor": "Text colour",
+    "highlight": "Highlight",
+    "alignLeft": "Align left",
+    "center": "Centre",
+    "alignRight": "Align right",
+    "justify": "Justify",
+    "quote": "Refrain / quotation",
+    "separator": "Separator",
+    "insertTable": "Insert a table",
+    "toolbar": "Formatting",
+    "undo": "Undo",
+    "redo": "Redo",
+    "paragraphStyle": "Paragraph style",
+    "paragraph": "Paragraph",
+    "heading": "Heading",
+    "subheading": "Subheading",
+    "bold": "Bold",
+    "italic": "Italic",
+    "underline": "Underline",
+    "bullets": "Bulleted list",
+    "numbered": "Numbered list",
+    "link": "Link",
+    "insertImage": "Insert an image",
+    "moreOptions": "More options",
+    "lessOptions": "Fewer options",
+    "linkAddress": "Link address",
+    "apply": "Apply",
+    "remove": "Remove",
+    "default": "Default",
+    "none": "None",
+    "colourSwatch": "Colour {c}",
+    "table": "Table",
+    "rowAdd": "Row +",
+    "rowDelete": "Row −",
+    "columnAdd": "Column +",
+    "columnDelete": "Column −",
+    "deleteTable": "Delete the table",
+    "image": "Image",
+    "deleteImage": "Delete the image",
+    "counter": "{words} words · {chars} characters",
+    "imageErrors": {
+      "unreadable": "Unreadable image",
+      "format": "Unsupported format (PNG, JPEG, WebP or GIF)",
+      "canvas": "Image processing unavailable",
+      "tooHeavy": "Image too heavy, even compressed"
+    }
+  }
+}

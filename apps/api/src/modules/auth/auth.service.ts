@@ -9,7 +9,18 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { randomUUID } from 'node:crypto';
 import type { User } from '@prisma/client';
-import type { AuthUserDto, LoginDto, RegisterDto, UserRole } from '@churchy/shared';
+import {
+  DEFAULT_LOCALE,
+  isLocale,
+  type AuthUserDto,
+  type Locale,
+  type LoginDto,
+  type RegisterDto,
+  type UserRole,
+  ERR,
+  authLinkPath,
+  type AuthLinkKind,
+} from '@churchy/shared';
 import type { AuthLinkEmailPayload } from '@churchy/contracts';
 import { env } from '../../config/env';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -39,6 +50,7 @@ export function toAuthUserDto(user: User): AuthUserDto {
     lastName: user.lastName,
     role: user.role as UserRole,
     emailVerified: user.emailVerifiedAt !== null,
+    locale: isLocale(user.locale) ? user.locale : DEFAULT_LOCALE,
   };
 }
 
@@ -54,7 +66,7 @@ export class AuthService {
 
   async register(dto: RegisterDto): Promise<AuthResult> {
     const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
-    if (existing) throw new ConflictException('Email déjà utilisé');
+    if (existing) throw new ConflictException(ERR.emailAlreadyUsed);
 
     const user = await this.prisma.user.create({
       data: {
@@ -62,6 +74,7 @@ export class AuthService {
         passwordHash: await bcrypt.hash(dto.password, BCRYPT_ROUNDS),
         firstName: dto.firstName,
         lastName: dto.lastName,
+        locale: dto.locale ?? DEFAULT_LOCALE,
       },
     });
 
@@ -72,20 +85,27 @@ export class AuthService {
   async login(dto: LoginDto): Promise<AuthResult> {
     const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
     const valid = await bcrypt.compare(dto.password, user?.passwordHash ?? DUMMY_HASH);
-    if (!user || !valid) throw new UnauthorizedException('Identifiants invalides');
+    if (!user || !valid) throw new UnauthorizedException(ERR.invalidCredentials);
 
     return { user: toAuthUserDto(user), session: await this.issueSession(user) };
   }
 
+  /** Mémorise la langue préférée du compte. */
+  async updateLocale(userId: string, locale: Locale): Promise<AuthUserDto> {
+    return toAuthUserDto(
+      await this.prisma.user.update({ where: { id: userId }, data: { locale } }),
+    );
+  }
+
   /** Échange un refresh token contre une nouvelle paire (rotation : l'ancien est révoqué). */
   async refresh(rawToken: string | undefined): Promise<AuthResult> {
-    if (!rawToken) throw new UnauthorizedException('Session absente');
+    if (!rawToken) throw new UnauthorizedException(ERR.sessionMissing);
 
     const record = await this.prisma.refreshToken.findUnique({
       where: { tokenHash: hashToken(rawToken) },
       include: { user: true },
     });
-    if (!record) throw new UnauthorizedException('Session invalide');
+    if (!record) throw new UnauthorizedException(ERR.sessionInvalid);
 
     const now = new Date();
     if (record.revokedAt) {
@@ -97,16 +117,16 @@ export class AuthService {
         });
         this.logger.warn(`Réutilisation d'un refresh token révoqué (utilisateur ${record.userId})`);
       }
-      throw new UnauthorizedException('Session expirée');
+      throw new UnauthorizedException(ERR.sessionExpired);
     }
-    if (record.expiresAt <= now) throw new UnauthorizedException('Session expirée');
+    if (record.expiresAt <= now) throw new UnauthorizedException(ERR.sessionExpired);
 
     // Révocation atomique : si deux requêtes arrivent en même temps, une seule gagne.
     const { count } = await this.prisma.refreshToken.updateMany({
       where: { id: record.id, revokedAt: null },
       data: { revokedAt: now },
     });
-    if (count !== 1) throw new UnauthorizedException('Session expirée');
+    if (count !== 1) throw new UnauthorizedException(ERR.sessionExpired);
 
     return {
       user: toAuthUserDto(record.user),
@@ -142,6 +162,7 @@ export class AuthService {
       email: user.email,
       firstName: user.firstName,
       url,
+      locale: isLocale(user.locale) ? user.locale : DEFAULT_LOCALE,
       expiresAt,
     });
   }
@@ -208,6 +229,7 @@ export class AuthService {
       email: user.email,
       firstName: user.firstName,
       url,
+      locale: isLocale(user.locale) ? user.locale : DEFAULT_LOCALE,
       expiresAt,
     });
   }
@@ -216,7 +238,7 @@ export class AuthService {
   private async createLinkToken(
     user: User,
     type: 'PASSWORD_RESET' | 'EMAIL_VERIFICATION',
-    path: string,
+    path: AuthLinkKind,
     ttlMs: number,
   ) {
     const token = generateToken();
@@ -229,7 +251,7 @@ export class AuthService {
       data: { userId: user.id, type, tokenHash: hashToken(token), expiresAt },
     });
     return {
-      url: `${env.FRONTEND_URL}/${path}?token=${encodeURIComponent(token)}`,
+      url: `${env.FRONTEND_URL}${authLinkPath(path, user.locale)}?token=${encodeURIComponent(token)}`,
       expiresAt: expiresAt.toISOString(),
     };
   }
@@ -239,7 +261,7 @@ export class AuthService {
       where: { tokenHash: hashToken(token) },
     });
     if (!record || record.type !== type || record.usedAt || record.expiresAt <= new Date()) {
-      throw new BadRequestException('Lien invalide ou expiré');
+      throw new BadRequestException(ERR.linkInvalidOrExpired);
     }
     return record;
   }

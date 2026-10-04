@@ -20,6 +20,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { assertNotPast } from './celebration.rules';
 import { SHEET_INCLUDE, isStepFilled, toSheetView } from './sheet.mapper';
+import { ERR } from '@churchy/shared';
 
 const FREE_KEY_PREFIX = 'free-';
 
@@ -44,10 +45,10 @@ export class SheetsService {
       where: { id: sheetId },
       include: { occurrence: { include: { celebration: { select: { title: true } } } } },
     });
-    if (!sheet) throw new NotFoundException('Feuille introuvable');
+    if (!sheet) throw new NotFoundException(ERR.sheetNotFound);
     assertNotPast(sheet.occurrence.startsAt, new Date());
     if (!opts.allowCancelled && sheet.occurrence.status === 'CANCELLED') {
-      throw new ConflictException('Cette date est annulée');
+      throw new ConflictException(ERR.occurrenceCancelled);
     }
     return sheet;
   }
@@ -57,7 +58,7 @@ export class SheetsService {
       where: { id: sheetId },
       include: SHEET_INCLUDE,
     });
-    if (!sheet) throw new NotFoundException('Feuille introuvable');
+    if (!sheet) throw new NotFoundException(ERR.sheetNotFound);
     return toSheetView(sheet);
   }
 
@@ -67,7 +68,7 @@ export class SheetsService {
       include: { steps: { orderBy: { order: 'asc' } } },
     });
     if (!template || template.parishId !== parishId) {
-      throw new NotFoundException('Modèle introuvable');
+      throw new NotFoundException(ERR.templateNotFound);
     }
     return template;
   }
@@ -81,17 +82,15 @@ export class SheetsService {
       where: { id: occurrenceId },
       include: { sheet: true, celebration: { select: { defaultTemplateId: true } } },
     });
-    if (!occurrence) throw new NotFoundException('Date introuvable');
+    if (!occurrence) throw new NotFoundException(ERR.occurrenceNotFound);
     if (occurrence.sheet) {
       if (dto.templateId !== undefined) {
-        throw new ConflictException(
-          'Cette date a déjà une feuille : utilisez « changer de modèle »',
-        );
+        throw new ConflictException(ERR.sheetAlreadyExists);
       }
       return this.findById(occurrence.sheet.id);
     }
     assertNotPast(occurrence.startsAt, new Date());
-    if (occurrence.status === 'CANCELLED') throw new ConflictException('Cette date est annulée');
+    if (occurrence.status === 'CANCELLED') throw new ConflictException(ERR.occurrenceCancelled);
 
     const templateId =
       dto.templateId === undefined ? occurrence.celebration.defaultTemplateId : dto.templateId;
@@ -223,7 +222,7 @@ export class SheetsService {
   private async findStep(sheetId: string, stepId: string) {
     const step = await this.prisma.celebrationStep.findUnique({ where: { id: stepId } });
     // L'étape doit appartenir à la feuille de l'URL (celle dont on a contrôlé l'accès).
-    if (!step || step.sheetId !== sheetId) throw new NotFoundException('Étape introuvable');
+    if (!step || step.sheetId !== sheetId) throw new NotFoundException(ERR.stepNotFound);
     return step;
   }
 
@@ -237,7 +236,7 @@ export class SheetsService {
     if (dto.contentId) {
       const content = await this.prisma.content.findUnique({ where: { id: dto.contentId } });
       if (!content || content.parishId !== sheet.occurrence.parishId) {
-        throw new BadRequestException('Contenu introuvable');
+        throw new BadRequestException(ERR.contentNotFound);
       }
     }
     await this.prisma.celebrationStep.update({
@@ -267,7 +266,7 @@ export class SheetsService {
       given.size !== known.size ||
       dto.stepIds.some((id) => !known.has(id))
     ) {
-      throw new BadRequestException('La liste doit contenir exactement les étapes de la feuille');
+      throw new BadRequestException(ERR.stepsListMismatch);
     }
     await this.prisma.$transaction(
       dto.stepIds.map((id, index) =>
@@ -279,7 +278,7 @@ export class SheetsService {
 
   async publish(sheetId: string): Promise<SheetView> {
     const sheet = await this.loadEditable(sheetId);
-    if (sheet.status === 'PUBLISHED') throw new BadRequestException('Feuille déjà publiée');
+    if (sheet.status === 'PUBLISHED') throw new BadRequestException(ERR.sheetAlreadyPublished);
     const published = await this.prisma.preparationSheet.update({
       where: { id: sheetId },
       data: { status: 'PUBLISHED', publishedAt: new Date() },
@@ -302,7 +301,7 @@ export class SheetsService {
 
   async unpublish(sheetId: string): Promise<SheetView> {
     const sheet = await this.loadEditable(sheetId);
-    if (sheet.status !== 'PUBLISHED') throw new BadRequestException('Feuille non publiée');
+    if (sheet.status !== 'PUBLISHED') throw new BadRequestException(ERR.sheetNotPublished);
     await this.prisma.preparationSheet.update({
       where: { id: sheetId },
       data: { status: 'DRAFT', publishedAt: null },

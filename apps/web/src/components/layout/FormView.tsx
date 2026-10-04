@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -19,6 +20,7 @@ export function FormView({
   onBack: () => void;
   children: ReactNode;
 }) {
+  const t = useTranslations('common');
   return (
     <div className="mx-auto w-full max-w-5xl space-y-4 sm:space-y-6">
       <div className="space-y-2">
@@ -29,7 +31,7 @@ export function FormView({
           className="-ml-3 h-10 gap-2 text-muted-foreground sm:h-9"
           onClick={onBack}
         >
-          <ArrowLeft size={16} aria-hidden /> Retour
+          <ArrowLeft size={16} aria-hidden /> {t('back')}
         </Button>
         <div>
           <h1 className="text-2xl font-bold">{title}</h1>

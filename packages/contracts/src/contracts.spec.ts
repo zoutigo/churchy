@@ -58,6 +58,12 @@ describe('authLinkEmailPayloadSchema', () => {
     expect(authLinkEmailPayloadSchema.safeParse(valid).success).toBe(true);
   });
 
+  it('la langue vaut français par défaut (ancien job), accepte en, refuse le reste', () => {
+    expect(authLinkEmailPayloadSchema.parse(valid).locale).toBe('fr');
+    expect(authLinkEmailPayloadSchema.parse({ ...valid, locale: 'en' }).locale).toBe('en');
+    expect(authLinkEmailPayloadSchema.safeParse({ ...valid, locale: 'es' }).success).toBe(false);
+  });
+
   it('rejette une url invalide ou un email invalide', () => {
     expect(authLinkEmailPayloadSchema.safeParse({ ...valid, url: 'pas-une-url' }).success).toBe(
       false,

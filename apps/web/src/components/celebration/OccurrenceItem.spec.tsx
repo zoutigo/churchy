@@ -40,7 +40,7 @@ describe('OccurrenceItem', () => {
     expect(screen.getByText('Pas de feuille')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Préparer la feuille' })).toHaveAttribute(
       'href',
-      '/d/o1',
+      '/fr/d/o1',
     );
   });
 

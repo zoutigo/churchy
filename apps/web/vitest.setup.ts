@@ -1,6 +1,40 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
-import { afterEach } from 'vitest';
+import { afterEach, vi } from 'vitest';
+import frMessages from './messages/fr.json';
+import enMessages from './messages/en.json';
+
+// next-intl : pas de fournisseur dans les tests de composants. `useLocale` et `useTranslations` s'appuient
+// sur les vrais fichiers de messages ; le français par défaut, `setTestLocale('en')` pour l'anglais.
+const testState = { locale: 'fr' as 'fr' | 'en' };
+export const setTestLocale = (locale: 'fr' | 'en') => {
+  testState.locale = locale;
+};
+// Comme dans next-intl, `useTranslations` renvoie la même fonction tant que langue et espace de noms ne
+// changent pas : sans cela, les effets qui l'ont en dépendance se relanceraient à chaque rendu.
+const translators = new Map<string, unknown>();
+vi.mock('next-intl', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('next-intl')>();
+  const all = { fr: frMessages, en: enMessages };
+  return {
+    ...actual,
+    useLocale: () => testState.locale,
+    useTranslations: (namespace?: string) => {
+      const key = `${testState.locale}:${namespace ?? ''}`;
+      if (!translators.has(key)) {
+        translators.set(
+          key,
+          actual.createTranslator({
+            locale: testState.locale,
+            messages: all[testState.locale],
+            namespace,
+          } as never),
+        );
+      }
+      return translators.get(key);
+    },
+  };
+});
 
 // jsdom n'implémente pas la géométrie, dont ProseMirror (éditeur de texte riche) a besoin.
 if (typeof Range !== 'undefined') {
@@ -23,6 +57,7 @@ if (typeof Range !== 'undefined') {
 
 afterEach(() => {
   cleanup();
+  testState.locale = 'fr';
   // Absent dans les tests qui tournent sous l'environnement « node » (ex. middleware).
   if (typeof localStorage !== 'undefined') localStorage.clear();
 });

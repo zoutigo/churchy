@@ -1,24 +1,19 @@
-import { CelebrationType, type SheetStatus } from '@churchy/shared';
+import type { Locale } from '@churchy/shared';
 
-export const CELEBRATION_TYPE_LABELS: Record<CelebrationType, string> = {
-  [CelebrationType.SUNDAY_MASS]: 'Messe dominicale',
-  [CelebrationType.WEEKDAY_MASS]: 'Messe en semaine',
-  [CelebrationType.WEDDING]: 'Mariage',
-  [CelebrationType.BAPTISM]: 'Baptême',
-  [CelebrationType.FUNERAL]: 'Funérailles',
-  [CelebrationType.OTHER]: 'Célébration',
-};
+/**
+ * `timeZone` : fuseau d'affichage (celui de la paroisse ; le fuseau du serveur à défaut).
+ * `locale` : langue de l'interface (`fr` par défaut).
+ */
+type Tz = { timeZone?: string; locale?: Locale };
 
-export const SHEET_STATUS_LABELS: Record<SheetStatus, string> = {
-  AVAILABLE: 'Feuille disponible',
-  IN_PREPARATION: 'Feuille en préparation',
-};
-
-/** `timeZone` n'est précisé que par les tests : en production, le fuseau du serveur s'applique. */
-type Tz = { timeZone?: string };
+/** Langue d'affichage des dates : l'anglais du Cameroun suit l'usage britannique (jour avant le mois). */
+const INTL_LOCALES: Record<Locale, string> = { fr: 'fr-FR', en: 'en-GB' };
 
 const fmt = (iso: string, options: Intl.DateTimeFormatOptions, tz?: Tz) =>
-  new Date(iso).toLocaleString('fr-FR', { ...options, ...tz });
+  new Date(iso).toLocaleString(INTL_LOCALES[tz?.locale ?? 'fr'], {
+    ...options,
+    ...(tz?.timeZone ? { timeZone: tz.timeZone } : {}),
+  });
 
 /** « dimanche 4 octobre 2026 » */
 export const formatDateLong = (iso: string, tz?: Tz) =>
@@ -48,17 +43,9 @@ export const placeLabel = (p: { city: string; district?: string | null }) =>
 /** Numéro de téléphone utilisable dans un lien `tel:`. */
 export const telHref = (phone: string) => `tel:${phone.replace(/[^\d+]/g, '')}`;
 
-/** « dimanche 4 octobre 2026 à 10:30 » dans le fuseau de la paroisse. */
+/** « dimanche 4 octobre 2026 à 10:30 » (« Sunday 4 October 2026 at 10:30 ») dans le fuseau de la paroisse. */
 export const formatDateTimeLong = (iso: string, tz?: Tz) =>
-  `${formatDateLong(iso, tz)} à ${formatTime(iso, tz)}`;
+  `${formatDateLong(iso, tz)} ${tz?.locale === 'en' ? 'at' : 'à'} ${formatTime(iso, tz)}`;
 
-/** Jours de la semaine, du lundi au dimanche, avec le numéro attendu par l'API (0 = dimanche). */
-export const WEEKDAYS = [
-  { value: 1, short: 'Lun', long: 'lundi' },
-  { value: 2, short: 'Mar', long: 'mardi' },
-  { value: 3, short: 'Mer', long: 'mercredi' },
-  { value: 4, short: 'Jeu', long: 'jeudi' },
-  { value: 5, short: 'Ven', long: 'vendredi' },
-  { value: 6, short: 'Sam', long: 'samedi' },
-  { value: 0, short: 'Dim', long: 'dimanche' },
-] as const;
+/** Jours de la semaine, du lundi au dimanche, avec le numéro attendu par l'API (0 = dimanche). Noms : `weekdays.*`. */
+export const WEEKDAY_VALUES = [1, 2, 3, 4, 5, 6, 0] as const;

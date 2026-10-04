@@ -8,6 +8,7 @@ const api = vi.hoisted(() => ({
   login: vi.fn(),
   register: vi.fn(),
   logout: vi.fn(),
+  updateLocale: vi.fn(),
 }));
 vi.mock('@/lib/api/auth.api', () => ({ authApi: api }));
 
@@ -18,6 +19,7 @@ const user = {
   lastName: 'Dupont',
   role: 'USER',
   emailVerified: false,
+  locale: 'fr' as const,
 };
 
 let ctx: ReturnType<typeof useAuthContext>;
@@ -165,6 +167,32 @@ describe('AuthProvider', () => {
 
     expect(screen.getByTestId('state')).toHaveTextContent('anonymous');
     expect(screen.getByTestId('expired')).toHaveTextContent('true');
+  });
+
+  it('setLocale : enregistre la langue sur le compte et met l’utilisateur à jour', async () => {
+    setSessionCookie();
+    api.me.mockResolvedValue(user);
+    api.updateLocale.mockResolvedValue({ ...user, locale: 'en' });
+    mount();
+    await waitFor(() => expect(screen.getByTestId('state')).toHaveTextContent('user:'));
+
+    await act(async () => {
+      await ctx.setLocale('en');
+    });
+
+    expect(api.updateLocale).toHaveBeenCalledWith('en');
+    expect(ctx.user?.locale).toBe('en');
+  });
+
+  it('setLocale : un échec laisse l’utilisateur inchangé et remonte l’erreur', async () => {
+    setSessionCookie();
+    api.me.mockResolvedValue(user);
+    api.updateLocale.mockRejectedValue(new Error('hors ligne'));
+    mount();
+    await waitFor(() => expect(screen.getByTestId('state')).toHaveTextContent('user:'));
+
+    await expect(ctx.setLocale('en')).rejects.toThrow('hors ligne');
+    expect(ctx.user?.locale).toBe('fr');
   });
 
   it('useAuth hors du provider lève une erreur explicite', () => {

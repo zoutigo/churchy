@@ -1,15 +1,17 @@
 'use client';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/link';
+import { usePathname } from '@/i18n/link';
 import { cn } from '@/lib/utils';
 import { dashboardNav } from './Sidebar';
 
 /** Navigation du tableau de bord sur mobile (la barre latérale n'apparaît qu'à partir de `md`). */
 export function MobileNav() {
+  const t = useTranslations('layout.nav');
   const pathname = usePathname();
   return (
     <nav
-      aria-label="Navigation du tableau de bord"
+      aria-label={t('label')}
       className="flex gap-1 overflow-x-auto border-b border-churchy-200 bg-white px-3 md:hidden"
     >
       {dashboardNav.map((item) => {
@@ -28,7 +30,7 @@ export function MobileNav() {
             )}
           >
             <Icon size={16} aria-hidden />
-            {item.label}
+            {t(item.key)}
           </Link>
         );
       })}

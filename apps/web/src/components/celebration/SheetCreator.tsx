@@ -1,4 +1,5 @@
 'use client';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import type { SheetView } from '@churchy/shared';
 import { celebrationsApi, type TemplateWithSteps } from '@/lib/api/celebrations.api';
@@ -20,6 +21,8 @@ const BLANK = '__blank__';
 
 /** Création de la feuille d'une date : depuis le modèle par défaut, un autre modèle, ou à la volée (vide). */
 export function SheetCreator({ occurrenceId, templates, defaultTemplate, onCreated }: Props) {
+  const t = useTranslations('sheetCreator');
+  const tf = useTranslations('celebrationForm');
   const [choice, setChoice] = useState<string>(defaultTemplate?.id ?? BLANK);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,12 +34,12 @@ export function SheetCreator({ occurrenceId, templates, defaultTemplate, onCreat
       const sheet = await celebrationsApi.createSheet(occurrenceId, {
         templateId: choice === BLANK ? null : choice,
       });
-      notify.success('Feuille créée', choice === BLANK ? 'Feuille vide, à compléter' : undefined);
+      notify.success(t('created'), choice === BLANK ? t('blankHint') : undefined);
       onCreated(sheet);
     } catch (err) {
-      const message = errorMessage(err, 'Erreur lors de la création de la feuille');
+      const message = errorMessage(err, t('error'));
       setError(message);
-      notify.error('Erreur lors de la création de la feuille', message);
+      notify.error(t('error'), message);
     } finally {
       setBusy(false);
     }
@@ -48,29 +51,29 @@ export function SheetCreator({ occurrenceId, templates, defaultTemplate, onCreat
       data-testid="sheet-creator"
     >
       <div>
-        <h3 className="font-semibold">Cette date n’a pas encore de feuille de préparation</h3>
-        <p className="text-sm text-muted-foreground">
-          Partez d’un modèle de la paroisse, ou construisez la feuille à la volée.
-        </p>
+        <h3 className="font-semibold">{t('title')}</h3>
+        <p className="text-sm text-muted-foreground">{t('hint')}</p>
       </div>
       <div className="max-w-md space-y-1.5">
-        <Label htmlFor="sheet-template">Modèle</Label>
+        <Label htmlFor="sheet-template">{t('template')}</Label>
         <NativeSelect
           id="sheet-template"
           value={choice}
           onChange={(e) => setChoice(e.target.value)}
         >
           {defaultTemplate && (
-            <option value={defaultTemplate.id}>Modèle par défaut — {defaultTemplate.name}</option>
+            <option value={defaultTemplate.id}>
+              {t('defaultTemplate', { name: defaultTemplate.name })}
+            </option>
           )}
           {templates
-            .filter((t) => t.id !== defaultTemplate?.id)
-            .map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name} ({t.steps?.length ?? 0} étapes)
+            .filter((tpl) => tpl.id !== defaultTemplate?.id)
+            .map((tpl) => (
+              <option key={tpl.id} value={tpl.id}>
+                {tpl.name} ({tf('steps', { count: tpl.steps?.length ?? 0 })})
               </option>
             ))}
-          <option value={BLANK}>À la volée — feuille vide</option>
+          <option value={BLANK}>{t('blank')}</option>
         </NativeSelect>
       </div>
       {error && (
@@ -79,7 +82,7 @@ export function SheetCreator({ occurrenceId, templates, defaultTemplate, onCreat
         </p>
       )}
       <Button type="button" disabled={busy} onClick={create} className="w-full sm:w-auto">
-        {busy ? 'Création…' : 'Créer la feuille'}
+        {busy ? t('creating') : t('create')}
       </Button>
     </div>
   );

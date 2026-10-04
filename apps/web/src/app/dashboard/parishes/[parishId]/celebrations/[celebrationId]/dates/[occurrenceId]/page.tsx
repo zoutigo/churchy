@@ -1,12 +1,15 @@
 'use client';
+import { useTranslations } from 'next-intl';
+import { useLabels } from '@/i18n/labels';
+import { useAppLocale } from '@/i18n/locale';
 import { useCallback, useEffect, useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { Link } from '@/i18n/link';
+import { useRouter } from '@/i18n/link';
 import { ArrowLeft, StickyNote } from 'lucide-react';
 import type { Content, OccurrenceDetail, SheetView } from '@churchy/shared';
 import { celebrationsApi, templatesApi, type TemplateWithSteps } from '@/lib/api/celebrations.api';
 import { contentsApi } from '@/lib/api/contents.api';
-import { CELEBRATION_TYPE_LABELS, formatDateLong, formatTime } from '@/lib/format';
+import { formatDateLong, formatTime } from '@/lib/format';
 import { errorMessage } from '@/lib/forms/submit-error';
 import { notify } from '@/lib/notify';
 import { OccurrenceForm } from '@/components/celebration/OccurrenceForm';
@@ -25,6 +28,12 @@ type Tab = 'sheet' | 'date';
 
 /** Préparation d'une date : feuille (créée à la demande, modèle ou à la volée) et informations de la date. */
 export default function OccurrencePage({ params }: Props) {
+  const t = useTranslations('occurrencePage');
+  const tc = useTranslations('common');
+  const tp = useTranslations('celebrationPage');
+  const td = useTranslations('dashboard');
+  const labels = useLabels();
+  const locale = useAppLocale();
   const { parishId, celebrationId, occurrenceId } = params;
   const router = useRouter();
   const [occurrence, setOccurrence] = useState<OccurrenceDetail | null>(null);
@@ -41,8 +50,8 @@ export default function OccurrencePage({ params }: Props) {
         setOccurrence(o);
         setSheet(o.sheet);
       })
-      .catch((err: unknown) => setError(errorMessage(err, 'Impossible de charger les données')));
-  }, [occurrenceId]);
+      .catch((err: unknown) => setError(errorMessage(err, td('loadError'))));
+  }, [occurrenceId, td]);
 
   useEffect(load, [load]);
   useEffect(() => {
@@ -57,9 +66,9 @@ export default function OccurrencePage({ params }: Props) {
   }, [parishId]);
 
   if (error) return <ErrorNotice message={error} />;
-  if (!occurrence) return <p className="text-muted-foreground">Chargement…</p>;
+  if (!occurrence) return <p className="text-muted-foreground">{tc('loadingShort')}</p>;
 
-  const tz = { timeZone: occurrence.timezone };
+  const tz = { timeZone: occurrence.timezone, locale };
   const cancelled = occurrence.status === 'CANCELLED';
   const readOnly = occurrence.isPast || cancelled;
   const back = `/dashboard/parishes/${parishId}/celebrations/${celebrationId}`;
@@ -69,17 +78,14 @@ export default function OccurrencePage({ params }: Props) {
     try {
       if (cancelled) {
         await celebrationsApi.reinstateOccurrence(occurrenceId);
-        notify.success('Date rétablie');
+        notify.success(tp('reinstated'));
       } else {
         await celebrationsApi.cancelOccurrence(occurrenceId, {});
-        notify.success('Date annulée');
+        notify.success(tp('cancelled'));
       }
       load();
     } catch (err) {
-      notify.error(
-        'Erreur lors de la modification',
-        errorMessage(err, 'Erreur lors de la modification'),
-      );
+      notify.error(tp('updateError'), errorMessage(err, tp('updateError')));
     }
   }
 
@@ -102,13 +108,17 @@ export default function OccurrencePage({ params }: Props) {
               {formatDateLong(occurrence.startsAt, tz)}
             </h1>
             <p className="text-muted-foreground">
-              {formatTime(occurrence.startsAt, tz)} — {c.title} · {CELEBRATION_TYPE_LABELS[c.type]}
-              {c.location ? ` · ${c.location}` : ''}
+              {t('line', {
+                time: formatTime(occurrence.startsAt, tz),
+                title: c.title,
+                type: labels.celebrationType(c.type),
+              })}
+              {c.location ? t('location', { location: c.location }) : ''}
             </p>
           </div>
           {!occurrence.isPast && (
             <Button type="button" variant="outline" onClick={toggleCancel}>
-              {cancelled ? 'Rétablir cette date' : 'Annuler cette date'}
+              {cancelled ? t('reinstateDate') : t('cancelDate')}
             </Button>
           )}
         </div>
@@ -116,16 +126,15 @@ export default function OccurrencePage({ params }: Props) {
 
       {occurrence.isPast && (
         <Alert>
-          <AlertTitle>Date passée</AlertTitle>
-          <AlertDescription>Elle se consulte, mais ne peut plus être modifiée.</AlertDescription>
+          <AlertTitle>{t('pastTitle')}</AlertTitle>
+          <AlertDescription>{t('pastText')}</AlertDescription>
         </Alert>
       )}
       {cancelled && (
         <Alert variant="destructive">
-          <AlertTitle>Date annulée</AlertTitle>
+          <AlertTitle>{t('cancelledTitle')}</AlertTitle>
           <AlertDescription>
-            {occurrence.cancelReason ?? 'Aucun motif indiqué.'} Elle reste affichée comme annulée
-            sur le site public.
+            {t('cancelledText', { reason: occurrence.cancelReason ?? t('noReason') })}
           </AlertDescription>
         </Alert>
       )}
@@ -136,14 +145,14 @@ export default function OccurrencePage({ params }: Props) {
           data-testid="internal-notes"
         >
           <h2 className="flex items-center gap-1.5 text-sm font-semibold text-amber-900">
-            <StickyNote size={14} aria-hidden /> À savoir avant de préparer — note interne
+            <StickyNote size={14} aria-hidden /> {t('notesTitle')}
           </h2>
           {c.internalNote && (
             <p className="whitespace-pre-wrap text-sm text-amber-900">{c.internalNote}</p>
           )}
           {occurrence.internalNote && (
             <p className="whitespace-pre-wrap text-sm text-amber-900">
-              <span className="font-semibold">Pour cette date : </span>
+              <span className="font-semibold">{t('forThisDate')}</span>
               {occurrence.internalNote}
             </p>
           )}
@@ -152,7 +161,7 @@ export default function OccurrencePage({ params }: Props) {
 
       {(c.description || occurrence.description) && (
         <section className="space-y-2 rounded-lg border bg-white p-4">
-          <h2 className="text-sm font-semibold text-muted-foreground">Ce que voit le public</h2>
+          <h2 className="text-sm font-semibold text-muted-foreground">{t('whatPublicSees')}</h2>
           {c.description && <RichContent html={c.description} />}
           {occurrence.description && <RichContent html={occurrence.description} />}
         </section>
@@ -160,13 +169,13 @@ export default function OccurrencePage({ params }: Props) {
 
       <div
         role="tablist"
-        aria-label="Préparation"
+        aria-label={t('tablist')}
         className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1 sm:inline-grid sm:grid-cols-2"
       >
         {(
           [
-            ['sheet', 'Feuille de préparation'],
-            ['date', 'Informations de la date'],
+            ['sheet', t('tabSheet')],
+            ['date', t('tabDate')],
           ] as const
         ).map(([id, label]) => (
           <button
@@ -185,7 +194,7 @@ export default function OccurrencePage({ params }: Props) {
       </div>
 
       {tab === 'sheet' ? (
-        <section aria-label="Feuille de préparation">
+        <section aria-label={t('tabSheet')}>
           {sheet ? (
             <SheetPanel
               sheet={sheet}
@@ -197,7 +206,7 @@ export default function OccurrencePage({ params }: Props) {
             />
           ) : readOnly ? (
             <p className="rounded-lg border border-dashed p-6 text-center text-muted-foreground">
-              Aucune feuille n’a été préparée pour cette date.
+              {t('noSheet')}
             </p>
           ) : (
             <SheetCreator
@@ -209,7 +218,7 @@ export default function OccurrencePage({ params }: Props) {
           )}
         </section>
       ) : readOnly ? (
-        <p className="text-muted-foreground">Cette date ne peut plus être modifiée.</p>
+        <p className="text-muted-foreground">{t('locked')}</p>
       ) : (
         <OccurrenceForm occurrence={occurrence} onSaved={load} />
       )}

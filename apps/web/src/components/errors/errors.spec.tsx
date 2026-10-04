@@ -9,7 +9,7 @@ describe('NotFoundPage', () => {
     render(<NotFoundPage />);
     expect(screen.getByRole('heading', { name: 'Page introuvable' })).toBeInTheDocument();
     expect(screen.getByTestId('error-page')).toHaveAttribute('data-kind', 'not-found');
-    expect(screen.getByRole('link', { name: 'Retour à l’accueil' })).toHaveAttribute('href', '/');
+    expect(screen.getByRole('link', { name: 'Retour à l’accueil' })).toHaveAttribute('href', '/fr');
   });
 
   it('accepte des liens de sortie adaptés à l’endroit', () => {

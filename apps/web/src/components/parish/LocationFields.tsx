@@ -1,10 +1,20 @@
 'use client';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { useFormContext } from 'react-hook-form';
-import { COUNTRIES, DEFAULT_COUNTRY, citiesOf, districtsOf, regionsOf } from '@churchy/shared';
+import {
+  COUNTRIES,
+  DEFAULT_COUNTRY,
+  citiesOf,
+  countryLabel,
+  districtsOf,
+  regionLabel,
+  regionsOf,
+} from '@churchy/shared';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
+import { useAppLocale } from '@/i18n/locale';
 
 /** Champs de localisation partagés par les formulaires de création et de modification. */
 export interface LocationValues {
@@ -41,6 +51,9 @@ export function LocationFields() {
     structured && !!district && !districts.includes(district),
   );
 
+  const locale = useAppLocale();
+  const t = useTranslations('location');
+  const tc = useTranslations('common');
   const set = (name: keyof LocationValues, value: string) =>
     setValue(name, value, { shouldDirty: true, shouldValidate: true });
 
@@ -60,7 +73,7 @@ export function LocationFields() {
         name="country"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Pays</FormLabel>
+            <FormLabel>{t('country')}</FormLabel>
             <FormControl>
               <NativeSelect
                 {...field}
@@ -72,7 +85,7 @@ export function LocationFields() {
               >
                 {COUNTRIES.map((c) => (
                   <option key={c} value={c}>
-                    {c}
+                    {countryLabel(c, locale)}
                   </option>
                 ))}
               </NativeSelect>
@@ -88,8 +101,10 @@ export function LocationFields() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>
-                Région
-                {!structured && <span className="text-muted-foreground text-xs"> (optionnel)</span>}
+                {t('region')}
+                {!structured && (
+                  <span className="text-muted-foreground text-xs"> {tc('optional')}</span>
+                )}
               </FormLabel>
               <FormControl>
                 {structured ? (
@@ -101,16 +116,16 @@ export function LocationFields() {
                       resetBelow('region');
                     }}
                   >
-                    <option value="">Choisir une région</option>
+                    <option value="">{t('chooseRegion')}</option>
                     {regions.map((r) => (
                       <option key={r} value={r}>
-                        {r}
+                        {regionLabel(r, locale)}
                       </option>
                     ))}
                   </NativeSelect>
                 ) : (
                   <Input
-                    placeholder="Région, province, État…"
+                    placeholder={t('regionPlaceholder')}
                     {...field}
                     value={field.value ?? ''}
                   />
@@ -126,7 +141,7 @@ export function LocationFields() {
             name="city"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Ville</FormLabel>
+                <FormLabel>{t('city')}</FormLabel>
                 <FormControl>
                   <NativeSelect
                     {...field}
@@ -139,15 +154,13 @@ export function LocationFields() {
                       set('city', v === OTHER ? '' : v);
                     }}
                   >
-                    <option value="">
-                      {region ? 'Choisir une ville' : "Choisir d'abord une région"}
-                    </option>
+                    <option value="">{region ? t('chooseCity') : t('chooseRegionFirst')}</option>
                     {cities.map((c) => (
                       <option key={c} value={c}>
                         {c}
                       </option>
                     ))}
-                    {region && <option value={OTHER}>Autre ville…</option>}
+                    {region && <option value={OTHER}>{t('otherCity')}</option>}
                   </NativeSelect>
                 </FormControl>
                 <FormMessage />
@@ -159,9 +172,9 @@ export function LocationFields() {
             name="city"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Ville</FormLabel>
+                <FormLabel>{t('city')}</FormLabel>
                 <FormControl>
-                  <Input placeholder="Ville" {...field} value={field.value ?? ''} />
+                  <Input placeholder={t('city')} {...field} value={field.value ?? ''} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -175,13 +188,9 @@ export function LocationFields() {
           name="city"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Nom de la ville</FormLabel>
+              <FormLabel>{t('cityName')}</FormLabel>
               <FormControl>
-                <Input
-                  placeholder="Ville absente de la liste"
-                  {...field}
-                  value={field.value ?? ''}
-                />
+                <Input placeholder={t('cityMissing')} {...field} value={field.value ?? ''} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -196,7 +205,8 @@ export function LocationFields() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>
-                  Quartier <span className="text-muted-foreground text-xs">(optionnel)</span>
+                  {t('district')}{' '}
+                  <span className="text-muted-foreground text-xs">{tc('optional')}</span>
                 </FormLabel>
                 <FormControl>
                   <NativeSelect
@@ -208,13 +218,13 @@ export function LocationFields() {
                       set('district', v === OTHER ? '' : v);
                     }}
                   >
-                    <option value="">Choisir un quartier</option>
+                    <option value="">{t('chooseDistrict')}</option>
                     {districts.map((d) => (
                       <option key={d} value={d}>
                         {d}
                       </option>
                     ))}
-                    <option value={OTHER}>Autre quartier…</option>
+                    <option value={OTHER}>{t('otherDistrict')}</option>
                   </NativeSelect>
                 </FormControl>
                 <FormMessage />
@@ -226,10 +236,10 @@ export function LocationFields() {
               name="district"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nom du quartier</FormLabel>
+                  <FormLabel>{t('districtName')}</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Quartier absent de la liste"
+                      placeholder={t('districtMissing')}
                       {...field}
                       value={field.value ?? ''}
                     />
@@ -246,10 +256,11 @@ export function LocationFields() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>
-                Quartier <span className="text-muted-foreground text-xs">(optionnel)</span>
+                {t('district')}{' '}
+                <span className="text-muted-foreground text-xs">{tc('optional')}</span>
               </FormLabel>
               <FormControl>
-                <Input placeholder="Nom du quartier" {...field} value={field.value ?? ''} />
+                <Input placeholder={t('districtName')} {...field} value={field.value ?? ''} />
               </FormControl>
               <FormMessage />
             </FormItem>

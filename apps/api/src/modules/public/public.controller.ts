@@ -2,8 +2,10 @@ import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import {
   calendarQuerySchema,
+  parishIdsQuerySchema,
   searchParishesSchema,
   type CalendarQuery,
+  type ParishIdsQuery,
   type SearchParishesQuery,
 } from '@churchy/shared';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
@@ -21,6 +23,12 @@ export class PublicController {
   @Get('parishes')
   search(@Query(new ZodValidationPipe(searchParishesSchema)) query: SearchParishesQuery) {
     return this.service.searchParishes(query);
+  }
+
+  /** Résumés par identifiants (`?ids=a,b,c`, 10 au plus) : sert à afficher les favoris d'un visiteur. */
+  @Get('parishes/summaries')
+  summaries(@Query(new ZodValidationPipe(parishIdsQuerySchema)) query: ParishIdsQuery) {
+    return this.service.listParishSummaries(query.ids);
   }
 
   @Get('parishes/:id')

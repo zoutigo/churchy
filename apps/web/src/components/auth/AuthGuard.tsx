@@ -1,6 +1,7 @@
 'use client';
+import { useTranslations } from 'next-intl';
 import { useEffect } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter } from '@/i18n/link';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -10,6 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
  * n'est pas confirmé par l'API.
  */
 export function AuthGuard({ children }: { children: React.ReactNode }) {
+  const t = useTranslations('common');
   const { user, initializing, sessionExpired, loggedOut } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -31,7 +33,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     return (
       <div
         role="status"
-        aria-label="Chargement"
+        aria-label={t('loadingLabel')}
         className="min-h-screen flex items-center justify-center bg-churchy-50"
       >
         <Loader2 className="animate-spin text-churchy-500" size={24} />
