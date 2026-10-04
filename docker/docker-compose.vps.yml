@@ -70,11 +70,13 @@ services:
       dockerfile: docker/web.Dockerfile
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
     restart: unless-stopped
     logging: *default-logging
     environment:
       NODE_ENV: production
       PORT: 3200
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
       # Rendu serveur : l'API est jointe directement sur le réseau Docker.
       API_INTERNAL_URL: http://api:3201/api
     expose:

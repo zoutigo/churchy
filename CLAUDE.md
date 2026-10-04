@@ -238,7 +238,7 @@ toucher à leurs conf nginx / conteneurs**. Modèle repris de scolive/tigilabs :
 - production : `NODE_ENV=production`, `TRUST_PROXY_HOPS=1` (l'API lit l'IP cliente dans `X-Forwarded-For`, que nginx
   **écrase** avec `$remote_addr`), `THROTTLE_LIMIT` élevé car le rendu serveur du web appelle l'API depuis une seule
   IP Docker (`API_INTERNAL_URL=http://api:3201/api`, sans repasser par nginx) ;
-- `NEXT_PUBLIC_API_URL` est **inlinée au build** du web (build arg) : la changer impose de reconstruire l'image ;
+- `NEXT_PUBLIC_API_URL` et `NEXT_PUBLIC_SITE_URL` sont **inlinées au build** du web (build args) : les changer impose de reconstruire l'image (`NEXT_PUBLIC_SITE_URL` = `https://churchy.tigilabs.com` dans `docker/.env`, aussi passée à l'exécution) ;
 - mise à jour : `docker compose -f docker/docker-compose.vps.yml --env-file docker/.env build`, puis
   `run --rm api npx prisma migrate deploy` (avant de démarrer le nouveau code), puis `up -d`.
 
