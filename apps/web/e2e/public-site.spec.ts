@@ -214,9 +214,30 @@ test.describe('site public', () => {
       await page.goto(path);
       await expect(page.getByRole('heading', { level: 1, name: title })).toBeVisible();
       await expect(page.getByRole('note')).toContainText('Version provisoire');
+      await expect(page.getByRole('navigation', { name: 'Sommaire' })).toBeVisible();
+      expect(await page.getByRole('heading', { level: 2 }).count()).toBeGreaterThanOrEqual(8);
+      expect(await hasHorizontalOverflow(page)).toBe(false);
     }
 
-    await page.goto('/');
+    // Le sommaire mène à la section demandée.
+    await page.goto('/fr/confidentialite');
+    await page
+      .getByRole('navigation', { name: 'Sommaire' })
+      .getByRole('link', { name: 'Vos droits' })
+      .click();
+    await expect(page).toHaveURL(/#section-\d+$/);
+    await expect(page.getByRole('heading', { level: 2, name: /Vos droits/ })).toBeInViewport();
+
+    // Même document en anglais.
+    await page.goto('/en/privacy');
+    await expect(page.getByRole('heading', { level: 1, name: 'Privacy policy' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 2, name: /Your rights/ })).toBeVisible();
+    await page.goto('/en/terms');
+    await expect(page.getByRole('heading', { level: 2, name: /Liability/ })).toBeVisible();
+    await page.goto('/en/legal-notice');
+    await expect(page.getByRole('heading', { level: 2, name: /Host/ })).toBeVisible();
+
+    await page.goto('/fr');
     const footer = page.locator('footer');
     for (const label of [
       'Trouver une paroisse',
@@ -321,5 +342,48 @@ test.describe('contact', () => {
     await expect(page.getByText('Message envoyé')).toBeVisible();
     // Aucun job n'est enfilé (la recherche dans la file dure quelques secondes avant d'abandonner).
     expect(await latestContactJob(botEmail)).toBeNull();
+  });
+});
+
+test.describe('référencement', () => {
+  test('sitemap.xml : pages statiques et paroisses, dans les deux langues avec hreflang', async ({
+    request,
+    browser,
+  }) => {
+    const page = await browser.newPage();
+    await registerViaUi(page, uniqueEmail('sitemap'));
+    const seeded = await seedParish(page);
+    await page.close();
+
+    const res = await request.get('/sitemap.xml');
+    expect(res.ok()).toBe(true);
+    const xml = await res.text();
+    for (const path of [
+      '/fr',
+      '/en',
+      '/fr/conditions-generales',
+      '/en/terms',
+      '/fr/mentions-legales',
+      '/en/legal-notice',
+      `/fr/paroisses/${seeded.id}/messes`,
+      `/en/parishes/${seeded.id}/masses`,
+    ]) {
+      expect(xml, path).toContain(`${path}</loc>`);
+    }
+    expect(xml).toContain('hreflang="en"');
+    expect(xml).toContain('hreflang="x-default"');
+    expect(xml).not.toContain('/dashboard');
+    expect(xml).not.toContain('/connexion');
+  });
+
+  test('robots.txt : exclut l’espace privé et annonce le sitemap', async ({ request }) => {
+    const res = await request.get('/robots.txt');
+    expect(res.ok()).toBe(true);
+    const txt = await res.text();
+    expect(txt).toMatch(/Disallow: \/dashboard/);
+    expect(txt).toMatch(/Disallow: \/api\//);
+    expect(txt).toMatch(/Disallow: \/fr\/connexion/);
+    expect(txt).toMatch(/Disallow: \/en\/login/);
+    expect(txt).toMatch(/Sitemap: .*\/sitemap\.xml/);
   });
 });

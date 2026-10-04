@@ -106,7 +106,9 @@ Le Cameroun est bilingue. Langues : `fr` (défaut) et `en` (`LOCALES`, `DEFAULT_
   (`apps/notifications/src/email-templates.ts`, textes `AUTH_TEXTS`) écrit sujet, texte, HTML (`lang`) et date dans cette langue. Le lien
   est celui de la langue du compte (`authLinkPath` de `@churchy/shared` : `/en/reset-password`, `/fr/reinitialisation` ; table vérifiée
   contre `routing.pathnames`). L'email de contact, destiné à l'équipe, reste en français.
-- **Reste à faire** : noms de pays/régions (stockés en français, `geo.constants`), paramètres de requête traduits (`mois` → `month`), sitemap multilingue.
+- **Référencement** : `app/sitemap.ts` (pages statiques + 5 pages par paroisse, chacune dans les deux langues avec `hreflang` et `x-default` ; généré à la demande, 4 000 paroisses max ; API injoignable → pages statiques seules) et `app/robots.ts` (exclut `/api/`, `/dashboard`, authentification et favoris dans chaque langue). Logique dans `lib/sitemap.ts`, URL du site dans `lib/site.ts` (`NEXT_PUBLIC_SITE_URL`). Une page publique **nouvelle** s'ajoute à `STATIC_PATHS` ; une page privée à `PRIVATE_PATHS`.
+- **Pages légales** (`LegalDocument`, `components/public`) : conditions, confidentialité et mentions légales sont des tableaux `sections` ({ title, paragraphs?, items?, after? }) dans `messages/*.json`, avec sommaire et ancres `#section-N`. Les faits propres à l'éditeur restent entre crochets `[À compléter : …]` (identité de l'éditeur, directeur de la publication, droit applicable) : bandeau « provisoire » à retirer une fois validés par un juriste.
+- **Reste à faire** : noms de pays/régions (stockés en français, `geo.constants`), paramètres de requête traduits (`mois` → `month`).
 
 ## Site public (sans authentification)
 Pages servies par le web (rendu serveur, `force-dynamic`, URL **par id** de paroisse, pas par slug ; chemins ci-dessous = chemins **internes** en français, voir « Langues » pour les URL visibles `/fr/…` et `/en/…`) :

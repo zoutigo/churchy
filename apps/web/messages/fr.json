@@ -351,34 +351,350 @@
   },
   "terms": {
     "title": "Conditions générales d’utilisation",
-    "purposeTitle": "Objet",
-    "purposeText": "Les présentes conditions encadrent l’utilisation du site Churchy, qui permet aux paroisses de publier leurs célébrations, annonces et activités, et aux visiteurs de les consulter.",
-    "accountsTitle": "Comptes",
-    "accountsText": "Un compte est nécessaire pour préparer et publier des célébrations. Vous êtes responsable de la confidentialité de votre mot de passe.",
-    "contentTitle": "Contenus publiés",
-    "contentText": "Les paroisses sont responsables des contenus qu’elles publient (textes, images, informations pratiques) et des droits qui y sont attachés.",
-    "liabilityTitle": "Responsabilité",
-    "liabilityText": "[À compléter : limitation de responsabilité, disponibilité du service, résiliation.]"
+    "intro": "Bienvenue sur Churchy. Ces conditions expliquent ce que le service permet de faire, ce que vous pouvez en attendre et ce que nous attendons de vous. Merci de les lire avant de créer un compte.",
+    "updated": "Dernière mise à jour : 4 octobre 2026",
+    "tocTitle": "Sommaire",
+    "sections": [
+      {
+        "title": "Objet",
+        "paragraphs": [
+          "Churchy est un service en ligne qui permet aux paroisses de préparer leurs célébrations (déroulement, chants, psaumes, lectures), de publier leurs messes, annonces et activités, et aux fidèles et visiteurs de les consulter librement.",
+          "Les présentes conditions générales d’utilisation (« CGU ») s’appliquent à toute personne qui utilise le site, qu’elle y navigue simplement ou qu’elle y possède un compte. En utilisant le site, vous acceptez ces CGU."
+        ]
+      },
+      {
+        "title": "Définitions",
+        "items": [
+          "« Visiteur » : toute personne qui consulte le site public sans se connecter.",
+          "« Utilisateur » : toute personne titulaire d’un compte.",
+          "« Paroisse » : la communauté représentée sur Churchy par une page publique et un espace de gestion.",
+          "« Administrateur de paroisse » : l’utilisateur qui gère la paroisse, ses membres et leurs rôles.",
+          "« Contenus » : tous les textes, images, horaires, annonces, descriptions de célébrations, chants, psaumes et lectures publiés ou saisis sur le service."
+        ]
+      },
+      {
+        "title": "Accès au service",
+        "paragraphs": [
+          "La consultation du site public (recherche de paroisse, horaires des messes, annonces, activités, calendrier) est libre et ne demande aucun compte. Elle est disponible en français et en anglais.",
+          "L’accès aux fonctions de gestion exige un compte. Les frais de connexion à internet (forfait, matériel) restent à votre charge. Le service est conçu pour fonctionner sur téléphone, tablette et ordinateur, y compris avec une connexion lente."
+        ]
+      },
+      {
+        "title": "Comptes et rôles",
+        "paragraphs": [
+          "Pour créer un compte, vous fournissez une adresse email valide, votre nom, votre prénom et un mot de passe. Vous vous engagez à donner des informations exactes et à les tenir à jour. Une adresse email doit être confirmée par le lien qui vous est envoyé.",
+          "Vous êtes seul responsable de la confidentialité de votre mot de passe et de l’usage fait de votre compte. Ne le partagez pas ; prévenez-nous sans délai si vous pensez qu’il a été compromis. Les rôles d’un membre dans une paroisse déterminent ce qu’il peut faire :"
+        ],
+        "items": [
+          "Administrateur : gère la paroisse, ses informations publiques, ses membres et leurs rôles ;",
+          "Préparateur : prépare et publie les célébrations, annonces et activités ;",
+          "Lecteur : consulte les préparations de la paroisse, y compris celles qui ne sont pas publiées ;",
+          "Spectateur : consulte les préparations de la paroisse en lecture seule."
+        ]
+      },
+      {
+        "title": "Rôle de la paroisse et de ses administrateurs",
+        "paragraphs": [
+          "Churchy fournit l’outil ; chaque paroisse décide de ce qu’elle y publie et de qui peut y agir. L’administrateur d’une paroisse déclare avoir qualité pour la représenter (curé, secrétariat, équipe pastorale ou personne mandatée) et choisit avec soin les personnes à qui il confie un rôle.",
+          "Churchy ne vérifie pas l’autorité de chacun sur sa paroisse ; en cas de contestation entre personnes se réclamant de la même paroisse, nous pouvons suspendre la modification de la page le temps d’obtenir une confirmation de l’autorité ecclésiale compétente."
+        ]
+      },
+      {
+        "title": "Contenus publiés par les paroisses",
+        "paragraphs": [
+          "Chaque paroisse est responsable des contenus qu’elle saisit ou publie, de leur exactitude et du respect des droits qui y sont attachés. Les contenus que vous publiez doivent être licites, respectueux des personnes et conformes à la mission d’une communauté religieuse.",
+          "Vous nous accordez, pour la durée de votre utilisation du service, le droit non exclusif et gratuit d’héberger, d’afficher et de reproduire ces contenus dans la seule mesure nécessaire au fonctionnement de Churchy (affichage sur la page publique, aperçu lors d’un partage de lien, sauvegardes). Vous restez titulaire de vos droits."
+        ]
+      },
+      {
+        "title": "Textes liturgiques, chants et droits d’auteur",
+        "paragraphs": [
+          "Churchy ne fournit pas de textes liturgiques, de partitions ni de paroles de chants. Vous saisissez vous-même ce que vous souhaitez y conserver. Certains textes liturgiques, traductions, chants, psaumes, partitions et images sont protégés par le droit d’auteur ou par des droits voisins.",
+          "En publiant un tel contenu, vous garantissez disposer des droits ou autorisations nécessaires (éditeur, auteur, société de gestion de droits, licence paroissiale). Churchy ne contrôle pas ces droits et ne saurait en répondre. La paroisse reste également seule responsable de la conformité liturgique de ses préparations."
+        ]
+      },
+      {
+        "title": "Exactitude des informations publiques",
+        "paragraphs": [
+          "Les horaires, lieux, annulations et annonces affichés sur la page d’une paroisse sont fournis par cette paroisse. Les heures sont affichées dans le fuseau horaire de la paroisse. Même si nous faisons le maximum pour que l’affichage soit fiable, nous vous invitons, pour une information essentielle (horaire exceptionnel, obsèques, mariage), à vérifier directement auprès de la paroisse.",
+          "Une date annulée reste visible comme telle, avec son motif public, afin que les fidèles ne se déplacent pas inutilement."
+        ]
+      },
+      {
+        "title": "Usages interdits",
+        "paragraphs": ["Il est interdit, notamment, de :"],
+        "items": [
+          "publier des contenus illicites, diffamatoires, injurieux, discriminatoires, haineux ou incitant à la violence ;",
+          "usurper l’identité d’une personne, d’une paroisse ou d’une autorité religieuse ;",
+          "publier les données personnelles d’autrui (téléphone, adresse, photographie) sans son accord ;",
+          "utiliser le service à des fins commerciales ou publicitaires sans rapport avec la vie de la paroisse, ou à des fins politiques partisanes ;",
+          "tenter d’accéder aux comptes ou aux données d’autres utilisateurs, contourner les protections du site, perturber son fonctionnement ou l’interroger de façon automatisée et massive ;",
+          "introduire du code malveillant dans un texte, une image ou un formulaire."
+        ]
+      },
+      {
+        "title": "Modération, suspension et suppression",
+        "paragraphs": [
+          "Nous pouvons retirer un contenu manifestement contraire aux présentes CGU ou à la loi, ou suspendre un compte ou une page, notamment après un signalement. Nous cherchons à prévenir la personne concernée et à lui permettre de s’expliquer, sauf urgence ou obligation légale. Vous pouvez nous signaler un contenu par la page Contact."
+        ]
+      },
+      {
+        "title": "Propriété intellectuelle de Churchy",
+        "paragraphs": [
+          "Le nom Churchy, le logo, la charte graphique, le code, les textes d’interface et l’organisation du service sont protégés. Ils ne peuvent être copiés, modifiés ni réutilisés sans autorisation écrite, en dehors de l’usage normal du service."
+        ]
+      },
+      {
+        "title": "Données personnelles",
+        "paragraphs": [
+          "Le traitement de vos données est décrit dans la politique de confidentialité, qui fait partie des présentes CGU. Les informations publiques d’une paroisse (nom, adresse, contacts, horaires) sont destinées à être vues de tous ; les administrateurs ne doivent y faire figurer que des coordonnées qu’ils sont autorisés à diffuser."
+        ]
+      },
+      {
+        "title": "Disponibilité du service",
+        "paragraphs": [
+          "Nous nous efforçons de maintenir le service accessible en permanence, mais il peut être interrompu pour maintenance, mise à jour ou panne, sans que cela donne droit à une indemnité. Nous ne pouvons garantir l’absence totale de perte de données : conservez de votre côté une copie des textes importants."
+        ]
+      },
+      {
+        "title": "Responsabilité",
+        "paragraphs": [
+          "Le service est fourni « en l’état ». Dans les limites permises par la loi, Churchy ne peut être tenu responsable :"
+        ],
+        "items": [
+          "des contenus publiés par les paroisses et les utilisateurs, ni des atteintes aux droits de tiers qu’ils pourraient causer ;",
+          "d’un préjudice résultant d’une information inexacte, périmée ou d’une indisponibilité temporaire (par exemple une messe manquée à cause d’un horaire erroné) ;",
+          "de l’usage frauduleux d’un compte dont le mot de passe n’a pas été protégé ;",
+          "des interruptions liées à l’internet, à l’électricité ou aux réseaux de téléphonie, ni des dommages indirects."
+        ],
+        "after": ["Rien dans ces CGU n’exclut une responsabilité qui ne peut l’être légalement."]
+      },
+      {
+        "title": "Résiliation et suppression du compte",
+        "paragraphs": [
+          "Vous pouvez cesser d’utiliser le service à tout moment et demander la suppression de votre compte par la page Contact. Nous pouvons clore un compte inactif ou contrevenant aux CGU. La suppression d’un compte n’efface pas les contenus d’une paroisse qui restent la propriété de celle-ci ; les données personnelles du compte sont supprimées ou anonymisées selon la politique de confidentialité."
+        ]
+      },
+      {
+        "title": "Évolution des conditions",
+        "paragraphs": [
+          "Nous pouvons modifier ces CGU pour tenir compte de l’évolution du service ou de la loi. La date de mise à jour figure en haut de la page. En cas de changement important, les utilisateurs en seront informés. Continuer d’utiliser le service après une modification vaut acceptation."
+        ]
+      },
+      {
+        "title": "Règlement des différends",
+        "paragraphs": [
+          "En cas de difficulté, contactez-nous d’abord : la plupart des désaccords se règlent à l’amiable. À défaut, le litige relève des juridictions compétentes selon le droit applicable à l’éditeur du service. [À confirmer : droit applicable et juridiction compétente.]"
+        ]
+      },
+      {
+        "title": "Nous contacter",
+        "paragraphs": [
+          "Pour toute question sur ces conditions, ou pour signaler un contenu, utilisez la page Contact du site."
+        ]
+      }
+    ],
+    "contactLink": "Aller à la page Contact"
   },
   "privacy": {
     "title": "Politique de confidentialité",
-    "collectedTitle": "Données collectées",
-    "collectedText": "Pour un compte : nom, prénom, adresse email et mot de passe (stocké sous forme chiffrée). Pour le formulaire de contact : nom, email et message.",
-    "useTitle": "Utilisation",
-    "useText": "Ces données servent uniquement à fournir le service (connexion, emails de vérification et de réinitialisation, réponse à vos messages).",
-    "cookiesTitle": "Cookies",
-    "cookiesText": "Churchy utilise uniquement des cookies nécessaires à la session de connexion et à la mémorisation de votre langue. Aucun cookie publicitaire n’est utilisé.",
-    "rightsTitle": "Vos droits",
-    "rightsText": "Vous pouvez demander l’accès, la rectification ou la suppression de vos données via la page Contact. [À compléter : responsable du traitement, durée de conservation.]"
+    "intro": "Les paroisses nous confient des informations sur leurs fidèles et leurs activités : nous prenons cette confiance au sérieux. Cette page explique, simplement, quelles données nous utilisons, pourquoi, qui peut les voir, combien de temps nous les gardons et comment exercer vos droits.",
+    "updated": "Dernière mise à jour : 4 octobre 2026",
+    "tocTitle": "Sommaire",
+    "sections": [
+      {
+        "title": "Qui est responsable de vos données ?",
+        "paragraphs": [
+          "Le responsable du traitement est l’éditeur du site Churchy, identifié dans les mentions légales. Pour les informations qu’une paroisse publie sur sa page (horaires, coordonnées de la paroisse, annonces), la paroisse décide elle-même de ce qu’elle diffuse ; Churchy agit alors comme prestataire technique qui les héberge et les affiche.",
+          "Nous traitons vos données dans le respect de la législation sur la protection des données personnelles applicable au Cameroun et, lorsqu’il s’applique, du règlement européen (RGPD)."
+        ]
+      },
+      {
+        "title": "Données que nous collectons",
+        "paragraphs": ["Nous ne collectons que ce qui est utile au service :"],
+        "items": [
+          "Compte : nom, prénom, adresse email, mot de passe (jamais conservé en clair : seule une empreinte chiffrée est stockée), langue choisie, rôle(s) dans la ou les paroisses, date de vérification de l’adresse email.",
+          "Utilisation : paroisses favorites (sur votre appareil si vous n’êtes pas connecté, dans votre compte sinon) ; données de session (voir « Cookies »).",
+          "Formulaire de contact : nom, email, sujet et message.",
+          "Contenus de gestion : célébrations, feuilles de préparation, notes internes, annonces, activités, rédigés par les membres d’une paroisse.",
+          "Informations publiques de la paroisse : nom, adresse, ville, téléphone et email de la paroisse, horaires.",
+          "Données techniques : adresse IP, type de navigateur, date et heure des requêtes, journaux d’erreurs, utilisés pour la sécurité et la limitation des abus."
+        ],
+        "after": [
+          "Nous ne demandons ni date de naissance, ni photographie, ni numéro d’identité, ni coordonnées bancaires."
+        ]
+      },
+      {
+        "title": "Un point de vigilance : des données qui touchent à la religion",
+        "paragraphs": [
+          "Les informations relatives à la pratique ou à l’appartenance religieuse sont considérées comme sensibles. Le fait d’avoir un compte rattaché à une paroisse, ou une paroisse en favori, peut en révéler. C’est pourquoi : nous ne publions jamais la liste des membres ni des favoris ; les noms des membres ne sont visibles que dans l’espace de gestion de leur paroisse ; les favoris d’un visiteur restent sur son appareil ; nous ne vendons ni ne cédons aucune donnée.",
+          "Les paroisses ne doivent pas publier de données de fidèles (noms, intentions de messe nominatives, informations de santé ou de deuil) sans leur accord. Une annonce de décès ou une intention de messe nominative suppose le consentement de la famille."
+        ]
+      },
+      {
+        "title": "À quoi servent vos données",
+        "items": [
+          "Fournir le service : créer et sécuriser votre compte, vous connecter, afficher les pages de gestion et les pages publiques (exécution du contrat) ;",
+          "Vous écrire pour le service : confirmer votre adresse email, réinitialiser votre mot de passe, répondre à votre message (exécution du contrat et intérêt légitime) ;",
+          "Respecter votre langue : l’interface et les emails vous sont adressés en français ou en anglais selon votre choix ;",
+          "Protéger le service : détecter et limiter les abus, les tentatives d’intrusion et les envois massifs (intérêt légitime) ;",
+          "Améliorer le service : corriger les erreurs à partir des journaux techniques (intérêt légitime)."
+        ],
+        "after": [
+          "Nous n’utilisons pas vos données pour de la publicité, ni pour du profilage commercial. Nous ne vous envoyons pas de lettre d’information sans que vous l’ayez demandée."
+        ]
+      },
+      {
+        "title": "Qui peut voir vos données ?",
+        "items": [
+          "Vous seul voyez votre mot de passe (nous n’y avons pas accès).",
+          "Les responsables de votre paroisse voient votre nom, votre prénom, votre email et votre rôle.",
+          "Les membres d’une paroisse voient les préparations de leur paroisse selon leur rôle ; les notes internes sont réservées aux administrateurs et aux préparateurs.",
+          "Le public voit uniquement les informations qu’une paroisse a choisi de publier (célébrations annoncées, annonces, activités, coordonnées de la paroisse).",
+          "Notre équipe technique peut accéder aux données lorsque c’est nécessaire pour assurer le fonctionnement et la sécurité, dans le cadre d’un devoir de confidentialité."
+        ]
+      },
+      {
+        "title": "Prestataires et hébergement",
+        "paragraphs": [
+          "Le service est hébergé chez OVH (voir mentions légales). L’envoi des emails passe par un serveur de messagerie qui transmet les messages à votre fournisseur. Ces prestataires n’agissent que sur nos instructions.",
+          "Nous ne transférons pas vos données à des régies publicitaires ni à des courtiers en données. Si un transfert hors de votre pays devait devenir nécessaire, nous veillerions à ce que des garanties appropriées soient prises."
+        ]
+      },
+      {
+        "title": "Cookies et stockage local",
+        "paragraphs": [
+          "Churchy n’utilise que des témoins strictement nécessaires : pas de publicité, pas de pistage, pas d’outil d’analyse tiers. Ils ne demandent donc pas de bandeau de consentement."
+        ],
+        "items": [
+          "churchy_at (connexion, 15 minutes) et churchy_rt (renouvellement de la connexion, 30 jours) : cookies sécurisés, inaccessibles au JavaScript du site, qui vous maintiennent connecté ;",
+          "churchy_session : simple indicateur qu’une session existe, sans information personnelle ;",
+          "NEXT_LOCALE (1 an) : mémorise la langue choisie ;",
+          "Stockage local de l’appareil (churchy:favorites) : liste des paroisses favorites d’un visiteur non connecté. Il est vidé lorsque vous vous connectez, après versement dans votre compte."
+        ],
+        "after": [
+          "Vous pouvez supprimer ces données à tout moment depuis les réglages de votre navigateur ; il vous faudra alors vous reconnecter et choisir à nouveau votre langue."
+        ]
+      },
+      {
+        "title": "Combien de temps conservons-nous vos données ?",
+        "items": [
+          "Compte : tant qu’il est actif, puis supprimé ou anonymisé dans un délai raisonnable après votre demande de suppression ou la fermeture du compte.",
+          "Sessions : les jetons de renouvellement expirent après 30 jours ou à la déconnexion.",
+          "Liens de confirmation et de réinitialisation : valables 24 heures et 1 heure, à usage unique.",
+          "Messages de contact : traités puis supprimés de notre file d’envoi ; la copie reçue par l’équipe est conservée le temps nécessaire pour répondre, puis supprimée.",
+          "Journaux techniques : conservés pour une durée limitée (quelques semaines).",
+          "Contenus d’une paroisse : tant que la paroisse les maintient ; elle peut les modifier ou les supprimer."
+        ]
+      },
+      {
+        "title": "Comment protégeons-nous vos données ?",
+        "paragraphs": [
+          "Les connexions se font en HTTPS ; les mots de passe sont chiffrés avec un algorithme prévu à cet effet ; les sessions utilisent des cookies protégés et des jetons à renouvellement automatique ; les actions sensibles sont limitées pour contrer les attaques répétées ; chaque paroisse est cloisonnée (un membre ne voit pas les données d’une autre paroisse) ; le texte saisi est nettoyé pour empêcher l’injection de code. Aucune sécurité n’étant absolue, nous vous informerons, ainsi que l’autorité compétente lorsque la loi l’exige, en cas de violation de données présentant un risque."
+        ]
+      },
+      {
+        "title": "Vos droits",
+        "paragraphs": ["Vous pouvez à tout moment demander :"],
+        "items": [
+          "l’accès aux données qui vous concernent et une copie ;",
+          "la rectification d’informations inexactes (vous pouvez aussi modifier vos informations dans votre espace) ;",
+          "la suppression de votre compte et de vos données ;",
+          "la limitation du traitement ou votre opposition à celui-ci pour un motif légitime ;",
+          "le retrait de votre consentement, lorsque le traitement repose sur lui."
+        ],
+        "after": [
+          "Écrivez-nous par la page Contact en indiquant l’adresse email de votre compte ; nous pourrons vous demander de confirmer votre identité. Nous répondons dans un délai raisonnable, au plus tard dans un délai d’un mois. Si vous estimez que vos droits ne sont pas respectés, vous pouvez saisir l’autorité de protection des données de votre pays."
+        ]
+      },
+      {
+        "title": "Enfants et mineurs",
+        "paragraphs": [
+          "Le service s’adresse aux adultes qui servent leur communauté. Un mineur ne devrait créer un compte qu’avec l’accord de ses parents ou de son tuteur. Les paroisses ne doivent pas publier de photographie ni d’information identifiant un enfant sans l’autorisation de ses parents."
+        ]
+      },
+      {
+        "title": "Évolution de cette politique",
+        "paragraphs": [
+          "Nous pouvons mettre à jour cette politique ; la date en haut de page indique la dernière version. En cas de changement important, nous vous en informerons."
+        ]
+      },
+      {
+        "title": "Nous contacter",
+        "paragraphs": [
+          "Pour toute question ou pour exercer vos droits, utilisez la page Contact du site."
+        ]
+      }
+    ],
+    "contactLink": "Aller à la page Contact"
   },
   "legalNotice": {
     "title": "Mentions légales",
-    "publisherTitle": "Éditeur du site",
-    "publisherText": "[À compléter : dénomination, forme juridique, adresse, numéro d’immatriculation, directeur de la publication.]",
-    "hostTitle": "Hébergeur",
-    "hostText": "[À compléter : nom et adresse de l’hébergeur.]",
-    "contactTitle": "Contact",
-    "contactText": "Pour toute question, utilisez la page Contact du site."
+    "intro": "Informations d’identification de l’éditeur et de l’hébergeur du site Churchy, et règles générales d’utilisation de son contenu.",
+    "updated": "Dernière mise à jour : 4 octobre 2026",
+    "tocTitle": "Sommaire",
+    "sections": [
+      {
+        "title": "Éditeur du site",
+        "paragraphs": [
+          "Le site Churchy est édité par : [À compléter : dénomination, forme juridique, capital, adresse du siège, numéro d’immatriculation (RCCM ou SIRET), numéro de TVA le cas échéant.]",
+          "Adresse de contact : voir la page Contact."
+        ]
+      },
+      {
+        "title": "Directeur de la publication",
+        "paragraphs": ["[À compléter : nom et qualité du directeur de la publication.]"]
+      },
+      {
+        "title": "Hébergeur",
+        "paragraphs": [
+          "Le site est hébergé par OVH SAS, 2 rue Kellermann, 59100 Roubaix, France (www.ovhcloud.com). Les noms de domaine sont gérés chez OVH."
+        ]
+      },
+      {
+        "title": "Objet du site",
+        "paragraphs": [
+          "Churchy est un service gratuit à destination des paroisses et de leurs fidèles : préparation des célébrations, publication des horaires de messes, annonces et activités. Churchy est un outil technique : le site n’est pas un site officiel d’une Église, d’un diocèse ou d’une conférence épiscopale, et ne parle pas en son nom."
+        ]
+      },
+      {
+        "title": "Contenus des paroisses",
+        "paragraphs": [
+          "Les pages des paroisses sont rédigées par ces dernières, qui en sont seules responsables. Si vous constatez un contenu illicite ou une erreur, signalez-le par la page Contact en indiquant l’adresse de la page concernée : nous l’examinerons rapidement et retirerons ce qui est manifestement contraire à la loi."
+        ]
+      },
+      {
+        "title": "Propriété intellectuelle",
+        "paragraphs": [
+          "La marque Churchy, le logo, la charte graphique, les textes d’interface, le code et la structure du site sont protégés par le droit de la propriété intellectuelle. Toute reproduction sans autorisation écrite est interdite. Les contenus publiés par les paroisses restent la propriété de leurs auteurs ou de leurs titulaires de droits."
+        ]
+      },
+      {
+        "title": "Données personnelles et cookies",
+        "paragraphs": [
+          "Le traitement de vos données, les cookies utilisés, la durée de conservation et vos droits sont détaillés dans la politique de confidentialité."
+        ]
+      },
+      {
+        "title": "Liens externes",
+        "paragraphs": [
+          "Le site peut contenir des liens vers des sites tiers (par exemple le site d’un diocèse). Nous n’en contrôlons pas le contenu et déclinons toute responsabilité à leur sujet."
+        ]
+      },
+      {
+        "title": "Responsabilité",
+        "paragraphs": [
+          "Nous faisons le maximum pour que les informations soient exactes et le service disponible, sans pouvoir le garantir. Les conditions détaillées figurent dans les conditions générales d’utilisation."
+        ]
+      },
+      {
+        "title": "Droit applicable",
+        "paragraphs": [
+          "Le présent site et ses mentions légales sont soumis au droit de l’État de l’éditeur. [À confirmer : droit applicable et juridiction compétente.]"
+        ]
+      }
+    ],
+    "contactLink": "Aller à la page Contact"
   },
   "favorites": {
     "loading": "Chargement des favoris",

@@ -2,18 +2,21 @@ import { useTranslations } from 'next-intl';
 interface Props {
   title: string;
   intro?: string;
+  /** Mention « Dernière mise à jour » (pages légales). */
+  updated?: string;
   /** Texte provisoire à faire valider avant publication (pages légales). */
   provisional?: boolean;
   children: React.ReactNode;
 }
 
 /** Page de texte (à propos, légal) : colonne de lecture étroite. */
-export function ProsePage({ title, intro, provisional, children }: Props) {
+export function ProsePage({ title, intro, updated, provisional, children }: Props) {
   const t = useTranslations('prose');
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
       <h1 className="font-playfair text-3xl font-bold text-churchy-700 sm:text-4xl">{title}</h1>
       {intro && <p className="mt-3 text-lg text-churchy-900/85">{intro}</p>}
+      {updated && <p className="mt-2 text-sm text-churchy-900/60">{updated}</p>}
       {provisional && (
         <p
           role="note"
