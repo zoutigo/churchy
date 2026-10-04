@@ -6,7 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { ParishRole } from '@churchy/shared';
+import { ParishRole, ERR } from '@churchy/shared';
 import {
   PARISH_ROLES_KEY,
   PARISH_SCOPE_KEY,
@@ -28,7 +28,7 @@ export class ParishRolesGuard implements CanActivate {
 
     const request = context.switchToHttp().getRequest();
     const user = request.user;
-    if (!user) throw new ForbiddenException('Accès refusé');
+    if (!user) throw new ForbiddenException(ERR.accessDenied);
     if (user.role === 'SUPER_ADMIN') {
       request.parishRole = 'SUPER_ADMIN';
       return true;
@@ -41,7 +41,7 @@ export class ParishRolesGuard implements CanActivate {
       where: { userId_parishId: { userId: user.id, parishId } },
     });
     if (!member || !requiredRoles.includes(member.role as ParishRole)) {
-      throw new ForbiddenException('Accès refusé pour cette paroisse');
+      throw new ForbiddenException(ERR.parishAccessDenied);
     }
     // Les services s'en servent pour masquer ce que certains rôles ne doivent pas voir (notes internes).
     request.parishRole = member.role;
@@ -54,7 +54,7 @@ export class ParishRolesGuard implements CanActivate {
   ): Promise<string> {
     const id =
       scope.kind === 'parish' ? (params.parishId ?? params.id) : params[scope.param ?? 'id'];
-    const notFound = new NotFoundException('Ressource introuvable');
+    const notFound = new NotFoundException(ERR.resourceNotFound);
     if (!id) throw notFound;
 
     let parishId: string | undefined;

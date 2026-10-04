@@ -1,5 +1,6 @@
 import { BadRequestException, ConflictException } from '@nestjs/common';
 import {
+  ERR,
   SCHEDULE_WINDOW_MESSAGES,
   SERIES_END_REMINDER_DAYS,
   checkScheduleWindow,
@@ -14,7 +15,7 @@ export function isPast(startsAt: Date, now: Date): boolean {
   return startsAt.getTime() <= now.getTime();
 }
 
-export const PAST_MESSAGE = 'Cette date est passée : elle ne peut plus être modifiée';
+export const PAST_MESSAGE = ERR.occurrencePast;
 
 export function assertNotPast(startsAt: Date, now: Date): void {
   if (isPast(startsAt, now)) throw new ConflictException(PAST_MESSAGE);

@@ -11,6 +11,7 @@ import type {
   UpdateCelebrationTemplateDto,
 } from '@churchy/shared';
 import { uniqueStepKeys } from './step-keys';
+import { ERR } from '@churchy/shared';
 
 // Décalage temporaire des ordres : (templateId, order) est unique, on ne peut pas permuter en place.
 const ORDER_OFFSET = 10_000;
@@ -38,7 +39,7 @@ export class CelebrationTemplatesService {
       where: { id },
       include: { steps: { orderBy: { order: 'asc' } } },
     });
-    if (!template) throw new NotFoundException('Modèle introuvable');
+    if (!template) throw new NotFoundException(ERR.templateNotFound);
     return template;
   }
 
@@ -52,9 +53,7 @@ export class CelebrationTemplatesService {
   async removeStep(stepId: string) {
     const used = await this.prisma.celebrationStep.count({ where: { templateStepId: stepId } });
     if (used > 0) {
-      throw new ConflictException(
-        `Cette étape est utilisée par ${used} célébration(s) et ne peut pas être supprimée`,
-      );
+      throw new ConflictException(ERR.stepInUse);
     }
     await this.prisma.celebrationTemplateStep.delete({ where: { id: stepId } });
   }
@@ -67,9 +66,9 @@ export class CelebrationTemplatesService {
     if (steps) {
       const existing = new Map(current.steps.map((s) => [s.id, s]));
       const unknown = steps.find((s) => s.id && !existing.has(s.id));
-      if (unknown) throw new BadRequestException('Étape inconnue pour ce modèle');
+      if (unknown) throw new BadRequestException(ERR.stepUnknownForTemplate);
       const ids = steps.filter((s) => s.id).map((s) => s.id);
-      if (new Set(ids).size !== ids.length) throw new BadRequestException('Étape en double');
+      if (new Set(ids).size !== ids.length) throw new BadRequestException(ERR.stepDuplicate);
     }
 
     await this.prisma.$transaction(async (tx) => {

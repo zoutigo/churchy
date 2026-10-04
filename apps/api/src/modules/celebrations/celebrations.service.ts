@@ -14,6 +14,7 @@ import {
   type OccurrenceView,
   type UpdateCelebrationDto,
   type UpdateOccurrenceDto,
+  ERR,
 } from '@churchy/shared';
 import { PrismaService } from '../../prisma/prisma.service';
 import { sanitizeRichText } from '../../common/rich-text';
@@ -46,7 +47,7 @@ export class CelebrationsService {
     });
     // Un modèle d'une autre paroisse ne doit pas être utilisable.
     if (!template || template.parishId !== parishId) {
-      throw new NotFoundException('Modèle introuvable');
+      throw new NotFoundException(ERR.templateNotFound);
     }
   }
 
@@ -55,7 +56,7 @@ export class CelebrationsService {
       where: { id: parishId },
       select: { timezone: true },
     });
-    if (!parish) throw new NotFoundException('Paroisse introuvable');
+    if (!parish) throw new NotFoundException(ERR.parishNotFound);
     return parish.timezone;
   }
 
@@ -172,7 +173,7 @@ export class CelebrationsService {
         },
       },
     });
-    if (!c) throw new NotFoundException('Célébration introuvable');
+    if (!c) throw new NotFoundException(ERR.celebrationNotFound);
     const last = c.occurrences.at(-1)?.startsAt ?? null;
     return {
       id: c.id,
@@ -203,7 +204,7 @@ export class CelebrationsService {
       where: { id },
       select: { parishId: true, occurrences: { select: { startsAt: true } } },
     });
-    if (!series) throw new NotFoundException('Célébration introuvable');
+    if (!series) throw new NotFoundException(ERR.celebrationNotFound);
     if (series.occurrences.length > 0 && series.occurrences.every((o) => isPast(o.startsAt, now))) {
       throw new ConflictException(PAST_MESSAGE);
     }
@@ -240,8 +241,8 @@ export class CelebrationsService {
       where: { id },
       select: { parishId: true, archivedAt: true, parish: { select: { timezone: true } } },
     });
-    if (!series) throw new NotFoundException('Célébration introuvable');
-    if (series.archivedAt) throw new ConflictException('Cette série est archivée');
+    if (!series) throw new NotFoundException(ERR.celebrationNotFound);
+    if (series.archivedAt) throw new ConflictException(ERR.seriesArchived);
     const instants = resolveSchedule(dto.schedule, series.parish.timezone, new Date());
     await this.prisma.celebrationOccurrence.createMany({
       data: instants.map((startsAt) => ({
@@ -259,7 +260,7 @@ export class CelebrationsService {
       where: { id },
       include: { parish: { select: { timezone: true } } },
     });
-    if (!occurrence) throw new NotFoundException('Date introuvable');
+    if (!occurrence) throw new NotFoundException(ERR.occurrenceNotFound);
     return occurrence;
   }
 
@@ -274,7 +275,7 @@ export class CelebrationsService {
         sheet: { include: SHEET_INCLUDE },
       },
     });
-    if (!o) throw new NotFoundException('Date introuvable');
+    if (!o) throw new NotFoundException(ERR.occurrenceNotFound);
     const view = this.occurrenceView(
       { ...o, sheet: o.sheet ? { ...o.sheet } : null },
       now,
@@ -326,7 +327,7 @@ export class CelebrationsService {
       });
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
-        throw new ConflictException('Cette série a déjà une date à ce moment');
+        throw new ConflictException(ERR.seriesAlreadyHasDate);
       }
       throw err;
     }

@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { ERR } from '@churchy/shared';
 
 @Injectable()
 export class UsersService {
@@ -7,7 +8,7 @@ export class UsersService {
 
   async findById(id: string) {
     const user = await this.prisma.user.findUnique({ where: { id } });
-    if (!user) throw new NotFoundException('Utilisateur introuvable');
+    if (!user) throw new NotFoundException(ERR.userNotFound);
     const { passwordHash: _pw, ...safe } = user;
     return safe;
   }

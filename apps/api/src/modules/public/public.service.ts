@@ -14,7 +14,7 @@ import type {
   SearchParishesQuery,
   SheetStatus,
 } from '@churchy/shared';
-import { currentMonth, monthRange } from '@churchy/shared';
+import { currentMonth, monthRange, ERR } from '@churchy/shared';
 import { PrismaService } from '../../prisma/prisma.service';
 
 /** Champs d'une paroisse visibles de tous. Liste blanche : on n'expose jamais l'entité entière. */
@@ -182,7 +182,7 @@ export class PublicService {
       where: { id },
       select: PARISH_PUBLIC_SELECT,
     });
-    if (!parish) throw new NotFoundException('Paroisse introuvable');
+    if (!parish) throw new NotFoundException(ERR.parishNotFound);
     return parish;
   }
 
@@ -191,7 +191,7 @@ export class PublicService {
       where: { id },
       select: { timezone: true },
     });
-    if (!parish) throw new NotFoundException('Paroisse introuvable');
+    if (!parish) throw new NotFoundException(ERR.parishNotFound);
     return parish.timezone;
   }
 
@@ -241,7 +241,7 @@ export class PublicService {
         },
       },
     });
-    if (!row) throw new NotFoundException('Célébration introuvable');
+    if (!row) throw new NotFoundException(ERR.celebrationNotFound);
 
     const summary = toCelebrationSummary(row, row.parish.timezone);
     // Le déroulement n'est public qu'une fois la feuille publiée, et jamais pour une date annulée.

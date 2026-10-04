@@ -3,6 +3,7 @@ import { ParishRole } from '../enums/parish-role.enum';
 import { isCompletePhone } from '../constants/phone.constants';
 import { MAX_FAVORITE_PARISHES } from '../constants/business.constants';
 import { isValidMonth, isValidTimezone } from '../schedule';
+import { ERR } from '../constants/error-codes.constants';
 
 /** Texte facultatif : une chaîne vide (champ de formulaire non rempli) équivaut à « non renseigné ». */
 const optional = (schema: z.ZodType<string>) =>
@@ -27,11 +28,11 @@ const httpUrl = z
   .string()
   .trim()
   .max(500)
-  .url('Adresse web invalide')
-  .refine((v) => /^https?:\/\//i.test(v), 'Adresse web invalide (http ou https)');
+  .url(ERR.urlInvalid)
+  .refine((v) => /^https?:\/\//i.test(v), ERR.urlInvalidHttp);
 
-const timezone = z.string().trim().refine(isValidTimezone, 'Fuseau horaire invalide');
-const email = z.string().trim().max(200).email('Email invalide');
+const timezone = z.string().trim().refine(isValidTimezone, ERR.timezoneInvalid);
+const email = z.string().trim().max(200).email(ERR.emailInvalid);
 const text = (max: number) => z.string().trim().max(max, `${max} caractères maximum`);
 
 /** Informations publiques d'une paroisse, communes à la création et à la modification. */
@@ -40,17 +41,17 @@ const publicFields = {
   address: text(200),
   addressComplement: text(200),
   mainChurch: text(150),
-  phone: text(40).regex(/^[\d\s+().-]+$/, 'Numéro de téléphone invalide'),
+  phone: text(40).regex(/^[\d\s+().-]+$/, ERR.phoneInvalid),
   email,
   website: httpUrl,
   imageUrl: httpUrl,
 };
 
 export const createParishSchema = z.object({
-  name: z.string().trim().min(2, 'Nom requis (min 2 caractères)').max(150),
+  name: z.string().trim().min(2, ERR.nameMin2).max(150),
   description: optional(text(2000)),
-  city: z.string().trim().min(1, 'Ville requise').max(100),
-  country: z.string().trim().min(1, 'Pays requis').max(100),
+  city: z.string().trim().min(1, ERR.cityRequired).max(100),
+  country: z.string().trim().min(1, ERR.countryRequired).max(100),
   region: optional(text(100)),
   district: optional(publicFields.district),
   address: optional(publicFields.address),
@@ -66,9 +67,9 @@ export const createParishSchema = z.object({
 
 /** Modification : tout est facultatif ; les champs d'information vidés repassent à `null`. */
 export const updateParishSchema = z.object({
-  name: z.string().trim().min(2, 'Nom requis (min 2 caractères)').max(150).optional(),
-  city: z.string().trim().min(1, 'Ville requise').max(100).optional(),
-  country: z.string().trim().min(1, 'Pays requis').max(100).optional(),
+  name: z.string().trim().min(2, ERR.nameMin2).max(150).optional(),
+  city: z.string().trim().min(1, ERR.cityRequired).max(100).optional(),
+  country: z.string().trim().min(1, ERR.countryRequired).max(100).optional(),
   description: clearable(text(2000)),
   region: clearable(text(100)),
   district: clearable(publicFields.district),
@@ -90,12 +91,12 @@ export const withCompletePhone = <T extends z.ZodTypeAny>(schema: T) =>
   schema.superRefine((data, ctx) => {
     const { phone, country } = data as { phone?: string | null; country?: string };
     if (phone && country && !isCompletePhone(country, phone)) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['phone'], message: 'Numéro incomplet' });
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['phone'], message: ERR.phoneIncomplete });
     }
   });
 
 export const inviteMemberSchema = z.object({
-  email: z.string().email('Email invalide'),
+  email: z.string().email(ERR.emailInvalid),
   role: z.nativeEnum(ParishRole),
 });
 
@@ -136,8 +137,8 @@ export const mergeFavoritesSchema = z.object({ parishIds: parishIdList });
 export const calendarQuerySchema = z.object({
   month: z
     .string()
-    .refine(isValidMonth, 'Mois invalide (format AAAA-MM)')
-    .refine((m) => m >= '2020-01' && m <= '2100-12', 'Mois hors limites')
+    .refine(isValidMonth, ERR.monthInvalid)
+    .refine((m) => m >= '2020-01' && m <= '2100-12', ERR.monthOutOfRange)
     .optional(),
 });
 

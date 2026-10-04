@@ -32,8 +32,8 @@ describe('previewDraft', () => {
   it('applique les mêmes refus que l’API : passé et au-delà d’un an', () => {
     const one = (date: string) =>
       previewDraft({ mode: 'dates', dates: [{ date, time: '10:00' }] }, 'Europe/Paris', now);
-    expect(one('2026-10-01').error).toBe('Impossible de programmer une date passée');
-    expect(one('2027-11-01').error).toBe('Impossible de programmer au-delà d’un an');
+    expect(one('2026-10-01').error).toBe('schedulePast');
+    expect(one('2027-11-01').error).toBe('scheduleTooFar');
     expect(one('2026-10-05').error).toBeNull();
   });
 
@@ -49,7 +49,7 @@ describe('previewDraft', () => {
       'Europe/Paris',
       now,
     );
-    expect(p.error).toBe('La fin doit être après le début');
+    expect(p.error).toBe('endBeforeStart');
   });
 
   it('une récurrence sans jour correspondant est signalée', () => {
@@ -64,7 +64,7 @@ describe('previewDraft', () => {
       'Europe/Paris',
       now,
     );
-    expect(p.error).toBe('Aucune date ne correspond à ce planning');
+    expect(p.error).toBe('scheduleEmpty');
   });
 
   it('ignore les lignes de dates laissées vides', () => {

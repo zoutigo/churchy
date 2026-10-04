@@ -17,6 +17,7 @@ import {
   type LoginDto,
   type RegisterDto,
   type UserRole,
+  ERR,
 } from '@churchy/shared';
 import type { AuthLinkEmailPayload } from '@churchy/contracts';
 import { env } from '../../config/env';
@@ -63,7 +64,7 @@ export class AuthService {
 
   async register(dto: RegisterDto): Promise<AuthResult> {
     const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
-    if (existing) throw new ConflictException('Email déjà utilisé');
+    if (existing) throw new ConflictException(ERR.emailAlreadyUsed);
 
     const user = await this.prisma.user.create({
       data: {
@@ -82,7 +83,7 @@ export class AuthService {
   async login(dto: LoginDto): Promise<AuthResult> {
     const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
     const valid = await bcrypt.compare(dto.password, user?.passwordHash ?? DUMMY_HASH);
-    if (!user || !valid) throw new UnauthorizedException('Identifiants invalides');
+    if (!user || !valid) throw new UnauthorizedException(ERR.invalidCredentials);
 
     return { user: toAuthUserDto(user), session: await this.issueSession(user) };
   }
@@ -96,13 +97,13 @@ export class AuthService {
 
   /** Échange un refresh token contre une nouvelle paire (rotation : l'ancien est révoqué). */
   async refresh(rawToken: string | undefined): Promise<AuthResult> {
-    if (!rawToken) throw new UnauthorizedException('Session absente');
+    if (!rawToken) throw new UnauthorizedException(ERR.sessionMissing);
 
     const record = await this.prisma.refreshToken.findUnique({
       where: { tokenHash: hashToken(rawToken) },
       include: { user: true },
     });
-    if (!record) throw new UnauthorizedException('Session invalide');
+    if (!record) throw new UnauthorizedException(ERR.sessionInvalid);
 
     const now = new Date();
     if (record.revokedAt) {
@@ -114,16 +115,16 @@ export class AuthService {
         });
         this.logger.warn(`Réutilisation d'un refresh token révoqué (utilisateur ${record.userId})`);
       }
-      throw new UnauthorizedException('Session expirée');
+      throw new UnauthorizedException(ERR.sessionExpired);
     }
-    if (record.expiresAt <= now) throw new UnauthorizedException('Session expirée');
+    if (record.expiresAt <= now) throw new UnauthorizedException(ERR.sessionExpired);
 
     // Révocation atomique : si deux requêtes arrivent en même temps, une seule gagne.
     const { count } = await this.prisma.refreshToken.updateMany({
       where: { id: record.id, revokedAt: null },
       data: { revokedAt: now },
     });
-    if (count !== 1) throw new UnauthorizedException('Session expirée');
+    if (count !== 1) throw new UnauthorizedException(ERR.sessionExpired);
 
     return {
       user: toAuthUserDto(record.user),
@@ -256,7 +257,7 @@ export class AuthService {
       where: { tokenHash: hashToken(token) },
     });
     if (!record || record.type !== type || record.usedAt || record.expiresAt <= new Date()) {
-      throw new BadRequestException('Lien invalide ou expiré');
+      throw new BadRequestException(ERR.linkInvalidOrExpired);
     }
     return record;
   }

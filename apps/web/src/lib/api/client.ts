@@ -1,3 +1,4 @@
+import { ERR, errorText } from '@churchy/shared';
 import { SESSION_EXPIRED_EVENT } from '@/lib/auth/session';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3201/api';
@@ -27,6 +28,7 @@ export class ApiError extends Error {
  * l'exception Nest ({ message, error, statusCode }), soit l'erreur Zod ({ fieldErrors }).
  */
 function extractMessage(body: { message?: unknown }): string {
+  // Codes d'erreur stables (`ERR`) : la traduction se fait dans `request`, avec la langue de la page.
   const m = body?.message;
   if (typeof m === 'string') return m;
   if (m && typeof m === 'object') {
@@ -39,7 +41,7 @@ function extractMessage(body: { message?: unknown }): string {
     const first = fieldErrors && Object.values(fieldErrors).flat()[0];
     if (first) return first;
   }
-  return 'Erreur inconnue';
+  return ERR.unknownError;
 }
 
 /** Erreurs par champ renvoyées par la validation Zod de l'API (`flatten()`), sinon un objet vide. */
@@ -111,7 +113,7 @@ async function request<T>(path: string, options?: RequestInit, canRetry = true):
       },
     });
   } catch {
-    throw new ApiError('Impossible de joindre le serveur. Vérifiez votre connexion.', 0);
+    throw new ApiError(errorText(ERR.networkUnreachable, language), 0);
   }
 
   if (res.status === 401 && canRetry && !NO_REFRESH.has(path) && typeof window !== 'undefined') {
@@ -120,8 +122,14 @@ async function request<T>(path: string, options?: RequestInit, canRetry = true):
   }
 
   if (!res.ok) {
-    const error = await res.json().catch(() => ({ message: 'Erreur réseau' }));
-    throw new ApiError(extractMessage(error), res.status, extractFieldErrors(error));
+    const error = await res.json().catch(() => ({ message: ERR.unknownError }));
+    const fieldErrors = Object.fromEntries(
+      Object.entries(extractFieldErrors(error)).map(([name, list]) => [
+        name,
+        list.map((m) => errorText(m, language)),
+      ]),
+    );
+    throw new ApiError(errorText(extractMessage(error), language), res.status, fieldErrors);
   }
 
   // Une suppression réussie peut répondre sans corps : ne pas échouer sur un JSON vide.

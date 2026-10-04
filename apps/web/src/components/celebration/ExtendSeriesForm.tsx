@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { CelebrationDetail } from '@churchy/shared';
 import { celebrationsApi } from '@/lib/api/celebrations.api';
 import { emptyDraft, previewDraft, type ScheduleDraft } from '@/lib/schedule-draft';
+import { useErrorText } from '@/i18n/error-text';
 import { errorMessage } from '@/lib/forms/submit-error';
 import { notify } from '@/lib/notify';
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,7 @@ export function ExtendSeriesForm({ celebration, onDone, onCancel }: Props) {
   const t = useTranslations('extendSeries');
   const tf = useTranslations('celebrationForm');
   const tc = useTranslations('common');
+  const errorText = useErrorText();
   const [draft, setDraft] = useState<ScheduleDraft>(emptyDraft);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -63,7 +65,7 @@ export function ExtendSeriesForm({ celebration, onDone, onCancel }: Props) {
       />
       {error && (
         <p role="alert" className="text-sm font-medium text-destructive">
-          {error}
+          {errorText(error)}
         </p>
       )}
       <div className="flex flex-col gap-3 sm:flex-row">

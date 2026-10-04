@@ -40,6 +40,37 @@ describe('api client', () => {
       expect(fetchMock.mock.calls[1][1].headers['Accept-Language']).toBeUndefined();
     });
 
+    it('traduit les codes d’erreur de l’API dans la langue de la page (message et erreurs de champ)', async () => {
+      const body = {
+        statusCode: 400,
+        message: { formErrors: [], fieldErrors: { email: ['emailInvalid'] } },
+      };
+      fetchMock.mockImplementation(async () => jsonResponse(body, 400));
+      document.documentElement.lang = 'en';
+      const en = await api.post<never>('/x', {}).catch((e: unknown) => e as ApiError);
+      expect(en.message).toBe('Invalid email address');
+      expect(en.fieldErrors).toEqual({ email: ['Invalid email address'] });
+
+      document.documentElement.lang = 'fr';
+      const fr = await api.post<never>('/x', {}).catch((e: unknown) => e as ApiError);
+      expect(fr.message).toBe('Email invalide');
+      expect(fr.fieldErrors).toEqual({ email: ['Email invalide'] });
+
+      fetchMock.mockImplementation(async () => jsonResponse({ message: 'parishNotFound' }, 404));
+      document.documentElement.lang = 'en';
+      expect((await api.get<never>('/x').catch((e: unknown) => e as ApiError)).message).toBe(
+        'Parish not found',
+      );
+      document.documentElement.lang = '';
+    });
+
+    it('le message « serveur injoignable » suit la langue de la page', async () => {
+      fetchMock.mockRejectedValue(new TypeError('fetch failed'));
+      document.documentElement.lang = 'en';
+      await expect(api.get('/x')).rejects.toThrow('Unable to reach the server');
+      document.documentElement.lang = '';
+    });
+
     it('non-régression : côté serveur (pages publiques), jamais de cache Next sur les requêtes', async () => {
       fetchMock.mockResolvedValue(jsonResponse({}));
       const win = globalThis.window;
@@ -202,9 +233,9 @@ describe('api client', () => {
       await expect(api.get('/x')).rejects.toThrow('Internal server error');
     });
 
-    it('retombe sur « Erreur réseau » si la réponse n’est pas du JSON', async () => {
+    it('retombe sur « Erreur inconnue » si la réponse n’est pas du JSON', async () => {
       fetchMock.mockResolvedValue(new Response('<html>', { status: 502 }));
-      await expect(api.get('/x')).rejects.toThrow('Erreur réseau');
+      await expect(api.get('/x')).rejects.toThrow('Erreur inconnue');
     });
   });
 
@@ -246,7 +277,7 @@ describe('api client', () => {
       const err = await api.get<never>('/x').catch((e: unknown) => e as ApiError);
       expect(err).toBeInstanceOf(ApiError);
       expect(err.status).toBe(500);
-      expect(err.message).toBe('Erreur réseau');
+      expect(err.message).toBe('Erreur inconnue');
     });
 
     it('serveur injoignable : ApiError explicite (status 0), pas une TypeError brute', async () => {

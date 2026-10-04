@@ -168,11 +168,11 @@ describe('API — parcours principaux (vraie base churchy_test)', () => {
       const past = await send({ kind: 'dates', dates: [{ date: day(-2), time: '10:00' }] }).expect(
         400,
       );
-      expect(past.body.message.fieldErrors.schedule[0]).toContain('passée');
+      expect(past.body.message.fieldErrors.schedule[0]).toEqual('schedulePast');
       const far = await send({ kind: 'dates', dates: [{ date: day(400), time: '10:00' }] }).expect(
         400,
       );
-      expect(far.body.message.fieldErrors.schedule[0]).toContain('un an');
+      expect(far.body.message.fieldErrors.schedule[0]).toEqual('scheduleTooFar');
       const empty = await send({
         kind: 'recurrence',
         startDate: day(1),

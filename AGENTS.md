@@ -97,9 +97,13 @@ Le Cameroun est bilingue. Langues : `fr` (défaut) et `en` (`LOCALES`, `DEFAULT_
 - **Tests de composants** : `vitest.setup.ts` simule `useLocale`/`useTranslations` avec les vrais messages (français par défaut,
   `setTestLocale('en')` ; le traducteur est mémoïsé, comme dans next-intl, sinon les effets qui l'ont en dépendance bouclent) ;
   les `href` attendus sont ceux de la langue (`/fr/paroisses/p1`). `i18n/english.spec.tsx` vérifie l'interface en anglais.
-- **Reste à faire** : erreurs de l'API en **codes** traduits côté web (schémas Zod en clés : les messages de validation, ceux de
-  l'API et `handleSubmitError` sont encore en français), noms de pays/régions (stockés en français, `geo.constants`), emails bilingues
-  (`locale` dans les payloads de `@churchy/contracts`), paramètres de requête traduits (`mois` → `month`), sitemap multilingue.
+- **Erreurs : codes stables** (`@churchy/shared`, `constants/error-codes.constants.ts`) : schémas Zod, planning (`SCHEDULE_WINDOW_MESSAGES`)
+  et exceptions de l'API renvoient un **code** (`ERR.parishNotFound`, `ERR.emailInvalid`…), jamais une phrase. `errorText(code, locale)`
+  le traduit (fr/en, `{max}` rempli ; un texte inconnu est rendu tel quel). Le client API traduit `ApiError.message` et les erreurs
+  de champ avec la langue de la page ; `FormMessage` (et les erreurs écrites à la main : `useErrorText()` de `i18n/error-text.ts`)
+  traduit les codes des schémas côté navigateur. **Nouveau message d'erreur = nouvelle entrée du catalogue (fr + en)**, puis `ERR.xxx`.
+- **Reste à faire** : noms de pays/régions (stockés en français, `geo.constants`), emails bilingues (`locale` dans les payloads de
+  `@churchy/contracts`), paramètres de requête traduits (`mois` → `month`), sitemap multilingue.
 
 ## Site public (sans authentification)
 Pages servies par le web (rendu serveur, `force-dynamic`, URL **par id** de paroisse, pas par slug ; chemins ci-dessous = chemins **internes** en français, voir « Langues » pour les URL visibles `/fr/…` et `/en/…`) :

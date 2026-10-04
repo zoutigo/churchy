@@ -8,9 +8,11 @@ import {
   CelebrationType,
   createCelebrationTemplateSchema,
   uniqueKeys,
+  ERR,
 } from '@churchy/shared';
 import { templatesApi, type TemplateWithSteps } from '@/lib/api/celebrations.api';
 
+import { useErrorText } from '@/i18n/error-text';
 import { errorMessage } from '@/lib/forms/submit-error';
 import { notify } from '@/lib/notify';
 import { Button } from '@/components/ui/button';
@@ -35,6 +37,7 @@ interface StepRow {
 /** Modèle de feuille de préparation : un nom, un type et la liste ordonnée des étapes (chant d'entrée, psaume…). */
 export function TemplateForm({ parishId, template, onDone, onCancel }: Props) {
   const t = useTranslations('templateForm');
+  const errorText = useErrorText();
   const tc = useTranslations('common');
   const tf = useTranslations('celebrationForm');
   const td = useTranslations('defaultSteps');
@@ -71,7 +74,7 @@ export function TemplateForm({ parishId, template, onDone, onCancel }: Props) {
     });
     const next: typeof errors = {};
     if (!parsed.success)
-      next.name = parsed.error.flatten().fieldErrors.name?.[0] ?? t('nameRequired');
+      next.name = errorText(parsed.error.flatten().fieldErrors.name?.[0] ?? ERR.nameRequired);
     if (titles.length === 0) next.steps = t('stepsRequired');
     setErrors(next);
     if (!parsed.success || titles.length === 0) return;

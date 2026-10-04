@@ -1,6 +1,7 @@
 'use client';
 import { useTranslations } from 'next-intl';
 import { useAppLocale } from '@/i18n/locale';
+import { useErrorText } from '@/i18n/error-text';
 import { useMemo } from 'react';
 import { CalendarPlus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -35,6 +36,7 @@ export function ScheduleFields({ value, onChange, timezone, invalid }: Props) {
   const preview = useMemo(() => previewDraft(value, timezone), [value, timezone]);
   const t = useTranslations('schedule');
   const tw = useTranslations('weekdays');
+  const errorText = useErrorText();
   const tz = { timeZone: timezone, locale: useAppLocale() };
 
   const switchMode = (mode: ScheduleDraft['mode']) => {
@@ -234,7 +236,7 @@ export function ScheduleFields({ value, onChange, timezone, invalid }: Props) {
             role="alert"
             className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive"
           >
-            {preview.error}
+            {errorText(preview.error)}
           </p>
         ) : preview.instants.length > 0 ? (
           <div className="space-y-2 rounded-md border border-churchy-200 bg-churchy-50 px-3 py-3 text-sm">

@@ -1,5 +1,5 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { MAX_FAVORITE_PARISHES, type PublicParishSummary } from '@churchy/shared';
+import { MAX_FAVORITE_PARISHES, type PublicParishSummary, ERR } from '@churchy/shared';
 import { PrismaService } from '../../prisma/prisma.service';
 import { PublicService } from '../public/public.service';
 
@@ -27,7 +27,7 @@ export class FavoritesService {
       where: { id: parishId },
       select: { id: true },
     });
-    if (!parish) throw new NotFoundException('Paroisse introuvable');
+    if (!parish) throw new NotFoundException(ERR.parishNotFound);
 
     const existing = await this.prisma.favoriteParish.findMany({
       where: { userId },
@@ -35,9 +35,7 @@ export class FavoritesService {
     });
     if (existing.some((f) => f.parishId === parishId)) return;
     if (existing.length >= MAX_FAVORITE_PARISHES) {
-      throw new ConflictException(
-        `Vous pouvez avoir ${MAX_FAVORITE_PARISHES} paroisses favorites au maximum`,
-      );
+      throw new ConflictException(ERR.favoritesLimit);
     }
     await this.prisma.favoriteParish.createMany({
       data: [{ userId, parishId }],

@@ -83,7 +83,7 @@ describe('Authentification (cookies httpOnly, refresh, reset, vérification)', (
         .send({ email: 'login@test.fr', password: 'faux-faux-faux' })
         .expect(401);
       expect(setCookieHeaders(ko)).toHaveLength(0);
-      expect(ko.body.message.message).toBe('Identifiants invalides');
+      expect(ko.body.message.message).toBe('invalidCredentials');
     });
 
     it('protège /auth/me : 401 sans cookie, profil avec cookie', async () => {

@@ -11,6 +11,7 @@ import { CelebrationItem } from '@/components/public/CelebrationItem';
 import { ParishResultCard } from '@/components/public/ParishResultCard';
 import { ParishTabs } from '@/components/public/ParishTabs';
 import { PublicHeader } from '@/components/public/PublicHeader';
+import userEvent from '@testing-library/user-event';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { ContactForm } from '@/components/public/ContactForm';
 import { formatDateLong, formatDateParts, formatDateTimeLong, formatTime } from '@/lib/format';
@@ -159,6 +160,21 @@ describe('formulaires en anglais', () => {
     );
     expect(screen.getByRole('button', { name: 'Sign in' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Show password' })).toBeInTheDocument();
+  });
+
+  it('connexion : les erreurs de validation (codes des schémas) sont en anglais', async () => {
+    render(<LoginForm />);
+    await userEvent.click(screen.getByRole('button', { name: 'Sign in' }));
+    expect(await screen.findByText('Invalid email address')).toBeInTheDocument();
+    expect(screen.getByText('Password is required')).toBeInTheDocument();
+  });
+
+  it('connexion : les mêmes erreurs restent en français en français', async () => {
+    setTestLocale('fr');
+    render(<LoginForm />);
+    await userEvent.click(screen.getByRole('button', { name: 'Se connecter' }));
+    expect(await screen.findByText('Email invalide')).toBeInTheDocument();
+    expect(screen.getByText('Mot de passe requis')).toBeInTheDocument();
   });
 
   it('contact : sujets traduits', () => {

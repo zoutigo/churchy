@@ -156,6 +156,29 @@ test.describe('langues : français / anglais', () => {
     await expect(page.getByRole('article').filter({ hasText: parish.name })).toBeVisible();
   });
 
+  test('les erreurs de validation et de l’API sont dans la langue de la page', async ({ page }) => {
+    // Validation côté navigateur (codes des schémas partagés)
+    await page.goto('/en/login');
+    await page.getByRole('button', { name: 'Sign in' }).click();
+    await expect(page.getByText('Invalid email address')).toBeVisible();
+    await expect(page.getByText('Password is required')).toBeVisible();
+
+    // Réponse de l'API (code d'erreur traduit par le client)
+    await page.getByLabel('Email').fill(uniqueEmail('inconnu'));
+    await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
+    await page.getByRole('button', { name: 'Sign in' }).click();
+    await expect(page.getByText('Invalid credentials').first()).toBeVisible();
+
+    // Et la même page en français
+    await page.goto('/fr/connexion');
+    await page.getByRole('button', { name: 'Se connecter' }).click();
+    await expect(page.getByText('Email invalide')).toBeVisible();
+    await page.getByLabel('Email').fill(uniqueEmail('inconnu'));
+    await page.getByLabel('Mot de passe', { exact: true }).fill(PASSWORD);
+    await page.getByRole('button', { name: 'Se connecter' }).click();
+    await expect(page.getByText('Identifiants invalides').first()).toBeVisible();
+  });
+
   test('chaque page paroisse déclare sa version dans l’autre langue (canonical, hreflang)', async ({
     page,
   }) => {

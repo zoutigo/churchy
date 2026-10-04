@@ -59,8 +59,12 @@ describe('resolveSchedule', () => {
   });
 
   it.each([
-    ['passé', { kind: 'dates', dates: [{ date: '2026-10-02', time: '10:00' }] }, 'passée'],
-    ['trop loin', { kind: 'dates', dates: [{ date: '2027-10-04', time: '10:00' }] }, 'un an'],
+    ['passé', { kind: 'dates', dates: [{ date: '2026-10-02', time: '10:00' }] }, 'schedulePast'],
+    [
+      'trop loin',
+      { kind: 'dates', dates: [{ date: '2027-10-04', time: '10:00' }] },
+      'scheduleTooFar',
+    ],
     [
       'récurrence sans jour correspondant',
       {
@@ -70,7 +74,7 @@ describe('resolveSchedule', () => {
         time: '10:00',
         weekdays: [0],
       },
-      'Aucune date',
+      'scheduleEmpty',
     ],
   ] as const)(
     'refuse un planning invalide : %s, sous le champ « schedule »',

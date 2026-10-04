@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from '@/i18n/link';
 import { z } from 'zod';
+import { ERR } from '@churchy/shared';
 import { resetPasswordSchema } from '@churchy/shared';
 import { authApi } from '@/lib/api/auth.api';
 import { AuthLink } from '@/components/auth/AuthCard';
@@ -22,11 +23,11 @@ import { handleSubmitError } from '@/lib/forms/submit-error';
 export const resetFormSchema = z
   .object({
     password: resetPasswordSchema.shape.password,
-    confirmPassword: z.string().min(1, 'Confirmez le mot de passe'),
+    confirmPassword: z.string().min(1, ERR.confirmPasswordRequired),
   })
   .refine((data) => data.password === data.confirmPassword, {
     path: ['confirmPassword'],
-    message: 'Les mots de passe ne correspondent pas',
+    message: ERR.passwordsMismatch,
   });
 
 type ResetFormValues = z.infer<typeof resetFormSchema>;

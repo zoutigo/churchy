@@ -5,6 +5,8 @@
  * Le même code sert à l'API (création) et au web (aperçu des dates générées).
  */
 
+import type { ErrorCode } from './constants/error-codes.constants';
+
 export interface ScheduleDate {
   /** Jour local, « AAAA-MM-JJ ». */
   date: string;
@@ -213,11 +215,12 @@ export function checkScheduleWindow(
   return null;
 }
 
-export const SCHEDULE_WINDOW_MESSAGES: Record<ScheduleWindowError, string> = {
-  EMPTY: 'Aucune date ne correspond à ce planning',
-  PAST: 'Impossible de programmer une date passée',
-  TOO_FAR: 'Impossible de programmer au-delà d’un an',
-  TOO_MANY: `Trop de dates (${MAX_OCCURRENCES_PER_REQUEST} maximum)`,
+/** Codes d'erreur (traduits par `errorText`) de chaque refus de planning. */
+export const SCHEDULE_WINDOW_MESSAGES: Record<ScheduleWindowError, ErrorCode> = {
+  EMPTY: 'scheduleEmpty',
+  PAST: 'schedulePast',
+  TOO_FAR: 'scheduleTooFar',
+  TOO_MANY: 'scheduleTooMany',
 };
 
 /** Fuseaux proposés dans le formulaire de paroisse (ceux des pays proposés), triés. */

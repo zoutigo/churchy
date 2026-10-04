@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import type { CreateAnnouncementDto } from '@churchy/shared';
 import { sanitizeRichText } from '../../common/rich-text';
 import { PrismaService } from '../../prisma/prisma.service';
+import { ERR } from '@churchy/shared';
 
 @Injectable()
 export class AnnouncementsService {
@@ -23,7 +24,7 @@ export class AnnouncementsService {
   /** Le couple (id, parishId) garantit qu'on ne supprime pas l'annonce d'une autre paroisse. */
   async remove(parishId: string, id: string) {
     const { count } = await this.prisma.announcement.deleteMany({ where: { id, parishId } });
-    if (count === 0) throw new NotFoundException('Annonce introuvable');
+    if (count === 0) throw new NotFoundException(ERR.announcementNotFound);
     return { deleted: true };
   }
 }

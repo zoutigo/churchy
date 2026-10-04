@@ -3,7 +3,7 @@ import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { createActivitySchema } from '@churchy/shared';
+import { ERR, createActivitySchema } from '@churchy/shared';
 import { activitiesApi } from '@/lib/api/activities.api';
 import { localInputToIso } from '@/lib/datetime';
 import { Button } from '@/components/ui/button';
@@ -22,7 +22,7 @@ import { notify } from '@/lib/notify';
 
 /** Le champ date du navigateur donne une heure locale sans fuseau : convertie en ISO à l'envoi. */
 const formSchema = createActivitySchema.extend({
-  startsAt: z.string().min(1, 'Date et heure requises'),
+  startsAt: z.string().min(1, ERR.dateTimeRequired),
 });
 type FormValues = z.infer<typeof formSchema>;
 

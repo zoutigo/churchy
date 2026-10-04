@@ -146,7 +146,7 @@ describe('AuthService', () => {
     it('refuse un utilisateur inconnu avec le même message qu’un mauvais mot de passe', async () => {
       prisma.user.findUnique.mockResolvedValue(null);
       await expect(service.login({ email: dto.email, password: 'x' })).rejects.toThrow(
-        'Identifiants invalides',
+        'invalidCredentials',
       );
     });
 

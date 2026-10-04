@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/commo
 import { sanitizeRichText } from '../../common/rich-text';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { CreateContentDto, UpdateContentDto } from '@churchy/shared';
+import { ERR } from '@churchy/shared';
 
 @Injectable()
 export class ContentsService {
@@ -26,14 +27,14 @@ export class ContentsService {
       where: { id },
       include: { createdBy: { select: { id: true, firstName: true, lastName: true } } },
     });
-    if (!content) throw new NotFoundException('Contenu introuvable');
+    if (!content) throw new NotFoundException(ERR.contentNotFound);
     return content;
   }
 
   async update(id: string, dto: UpdateContentDto, userId: string) {
     const content = await this.findById(id);
     if (content.createdById !== userId) {
-      throw new ForbiddenException('Seul le créateur peut modifier ce contenu');
+      throw new ForbiddenException(ERR.creatorOnlyEdit);
     }
     return this.prisma.content.update({
       where: { id },
@@ -44,7 +45,7 @@ export class ContentsService {
   async remove(id: string, userId: string) {
     const content = await this.findById(id);
     if (content.createdById !== userId) {
-      throw new ForbiddenException('Seul le créateur peut supprimer ce contenu');
+      throw new ForbiddenException(ERR.creatorOnlyDelete);
     }
     await this.prisma.content.delete({ where: { id } });
   }
