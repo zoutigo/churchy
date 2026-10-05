@@ -15,7 +15,7 @@ import { splitLocale, toInternalPath, toLocalizedPath } from '@/i18n/paths';
  * préfixe (`/`, ancien lien partagé) est redirigée vers la langue du cookie, sinon le français :
  * on ne lit pas `Accept-Language`. Le tableau de bord (`/dashboard`) n'a pas de préfixe.
  */
-const AUTH_ONLY_PAGES = ['/login', '/register', '/forgot-password'];
+const AUTH_ONLY_PAGES = ['/login', '/register', '/forgot-password', '/forgot-pin'];
 const handleI18n = createIntlMiddleware(routing);
 
 const preferredLocale = (request: NextRequest): Locale => {

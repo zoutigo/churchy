@@ -17,6 +17,12 @@ const envSchema = z
      * Nombre de reverse proxies devant l'API (0 = aucun, connexion directe). Si > 0, l'IP du client
      * est lue dans X-Forwarded-For : sans cela, la limitation par IP voit l'IP du proxy pour tout le monde.
      */
+    /** ID client OAuth Google (public). Absent : la connexion Google est désactivée (et son bouton masqué). */
+    GOOGLE_CLIENT_ID: z
+      .string()
+      .trim()
+      .optional()
+      .transform((v) => (v ? v : undefined)),
     TRUST_PROXY_HOPS: z.coerce.number().int().min(0).default(0),
   })
   .superRefine((env, ctx) => {

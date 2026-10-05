@@ -60,7 +60,13 @@ function extractFieldErrors(body: { message?: unknown }): Record<string, string[
 /** Routes pour lesquelles un 401 est une réponse normale : inutile (ou impossible) de rafraîchir. */
 const NO_REFRESH = new Set([
   '/auth/login',
+  '/auth/login/phone',
   '/auth/register',
+  '/auth/register/phone',
+  '/auth/google',
+  '/auth/google/link',
+  '/auth/forgot-pin',
+  '/auth/reset-pin',
   '/auth/refresh',
   '/auth/logout',
   '/auth/forgot-password',

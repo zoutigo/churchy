@@ -9,7 +9,8 @@ const logout = vi.fn();
 let user: {
   firstName: string;
   lastName: string;
-  email: string;
+  email: string | null;
+  phone?: string | null;
   emailVerified: boolean;
 } | null;
 vi.mock('next/navigation', () => ({
@@ -58,6 +59,29 @@ describe('Header', () => {
 
     expect(await screen.findByText('jean@paroisse.fr')).toBeInTheDocument();
     expect(screen.getByText('Email non confirmé')).toBeInTheDocument();
+  });
+
+  it('compte par téléphone sans email : montre le numéro, sans « Email non confirmé »', async () => {
+    user = {
+      firstName: 'Marie',
+      lastName: 'Ngono',
+      email: null,
+      phone: '+237677123456',
+      emailVerified: false,
+    };
+    render(<Header />);
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Menu utilisateur' }));
+    expect(await screen.findByText('+237 6 77 12 34 56')).toBeInTheDocument();
+    expect(screen.queryByText('Email non confirmé')).not.toBeInTheDocument();
+  });
+
+  it('le menu mène à la page Sécurité', async () => {
+    render(<Header />);
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Menu utilisateur' }));
+    expect(await screen.findByRole('menuitem', { name: /Sécurité du compte/ })).toHaveAttribute(
+      'href',
+      '/dashboard/security',
+    );
   });
 
   it('se déconnecte via le menu puis retourne à la page de connexion', async () => {

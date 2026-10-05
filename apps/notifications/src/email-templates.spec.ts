@@ -3,6 +3,7 @@ import {
   emailVerificationEmail,
   escapeHtml,
   passwordResetEmail,
+  pinResetEmail,
 } from './email-templates';
 
 const payload = {
@@ -23,6 +24,7 @@ describe('email templates', () => {
   it.each([
     ['vérification', emailVerificationEmail],
     ['réinitialisation', passwordResetEmail],
+    ['réinitialisation du PIN', pinResetEmail],
   ])('email de %s : sujet, texte et HTML contiennent le lien', (_label, build) => {
     const mail = build(payload);
     expect(mail.subject).toMatch(/Churchy/);
@@ -107,5 +109,31 @@ describe('contactMessageEmail', () => {
   it('empêche l’injection d’en-tête par un saut de ligne dans le nom', () => {
     const mail = contactMessageEmail({ ...message, name: 'Marie\r\nBcc: x@y.z' });
     expect(mail.subject).not.toMatch(/[\r\n]/);
+  });
+});
+
+describe('email de réinitialisation du PIN', () => {
+  it('parle de PIN (pas de mot de passe), en français', () => {
+    const mail = pinResetEmail(payload);
+    expect(mail.subject).toBe('Réinitialisation de votre PIN — Churchy');
+    expect(mail.text).toContain('nouveau PIN');
+    expect(mail.text).not.toMatch(/mot de passe/);
+  });
+
+  it('en anglais, avec le lien de la langue', () => {
+    const mail = pinResetEmail({
+      ...payload,
+      locale: 'en',
+      url: 'http://x.test/en/reset-pin?token=a',
+    });
+    expect(mail.subject).toBe('Reset your PIN — Churchy');
+    expect(mail.html).toContain('<html lang="en">');
+    expect(mail.html).toContain('Choose a new PIN');
+    expect(mail.text).not.toMatch(/Bonjour|PIN reste/);
+  });
+
+  it('échappe le prénom', () => {
+    const mail = pinResetEmail({ ...payload, firstName: '<b>x</b>' });
+    expect(mail.html).not.toContain('<b>x</b>');
   });
 });

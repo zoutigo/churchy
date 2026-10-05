@@ -13,6 +13,9 @@ RUN npm ci
 # Inlinée dans le JavaScript du navigateur au build : à fournir en build arg.
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+# URL publique du site (sitemap, hreflang, Open Graph) : même principe.
+ARG NEXT_PUBLIC_SITE_URL
+ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
 
 COPY packages packages
 COPY apps/web apps/web

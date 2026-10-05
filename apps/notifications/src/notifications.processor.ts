@@ -7,9 +7,16 @@ import {
   authLinkEmailPayloadSchema,
   celebrationPublishedPayloadSchema,
   contactMessagePayloadSchema,
+  smsPayloadSchema,
 } from '@churchy/contracts';
-import { contactMessageEmail, emailVerificationEmail, passwordResetEmail } from './email-templates';
+import {
+  contactMessageEmail,
+  emailVerificationEmail,
+  passwordResetEmail,
+  pinResetEmail,
+} from './email-templates';
 import { MailService } from './mail.service';
+import { SmsService } from './sms.service';
 
 /**
  * Consommateur de la file `notifications` (microservice autonome, sans HTTP).
@@ -19,7 +26,10 @@ import { MailService } from './mail.service';
 export class NotificationsProcessor extends WorkerHost {
   private readonly logger = new Logger(NotificationsProcessor.name);
 
-  constructor(private readonly mail: MailService) {
+  constructor(
+    private readonly mail: MailService,
+    private readonly sms: SmsService,
+  ) {
     super();
   }
 
@@ -41,6 +51,16 @@ export class NotificationsProcessor extends WorkerHost {
       case NotificationJob.PASSWORD_RESET_REQUESTED: {
         const payload = authLinkEmailPayloadSchema.parse(job.data);
         await this.mail.send(payload.email, passwordResetEmail(payload));
+        return;
+      }
+      case NotificationJob.PIN_RESET_REQUESTED: {
+        const payload = authLinkEmailPayloadSchema.parse(job.data);
+        await this.mail.send(payload.email, pinResetEmail(payload));
+        return;
+      }
+      case NotificationJob.SMS_REQUESTED: {
+        const payload = smsPayloadSchema.parse(job.data);
+        await this.sms.send(payload.to, payload.body);
         return;
       }
       case NotificationJob.CONTACT_MESSAGE_RECEIVED: {

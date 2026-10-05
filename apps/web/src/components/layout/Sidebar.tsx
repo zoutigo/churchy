@@ -2,21 +2,44 @@
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/link';
 import { usePathname } from '@/i18n/link';
-import { LayoutDashboard, Church, Star } from 'lucide-react';
+import { LayoutDashboard, Church, ShieldCheck, Star, UserCog } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { href: '/dashboard', key: 'dashboard', exact: true, icon: LayoutDashboard },
   { href: '/dashboard/parishes', key: 'parishes', exact: false, icon: Church },
   { href: '/favoris', key: 'favorites', exact: false, icon: Star },
+  { href: '/dashboard/security', key: 'security', exact: false, icon: ShieldCheck },
+  {
+    href: '/dashboard/admin/pin-reset',
+    key: 'pinReset',
+    exact: false,
+    icon: UserCog,
+    platformOnly: true,
+  },
 ] as const;
 
-/** Entrées de navigation du tableau de bord (partagées avec la barre mobile). */
-export const dashboardNav = navItems;
+type NavItem = {
+  href: string;
+  key: string;
+  exact: boolean;
+  icon: typeof Church;
+  platformOnly?: boolean;
+};
+
+/** Entrées de navigation du tableau de bord visibles par l'utilisateur (partagées avec la barre mobile). */
+export function useDashboardNav(): NavItem[] {
+  const { user } = useAuth();
+  return (navItems as readonly NavItem[]).filter(
+    (item) => !item.platformOnly || user?.role === 'SUPER_ADMIN',
+  );
+}
 
 export function Sidebar() {
   const t = useTranslations('layout.nav');
   const pathname = usePathname();
+  const items = useDashboardNav();
 
   return (
     <aside className="hidden md:flex w-60 shrink-0 bg-churchy-700 h-full flex-col">
@@ -30,7 +53,7 @@ export function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 p-3 space-y-1">
-        {navItems.map((item) => {
+        {items.map((item) => {
           const active = item.exact ? pathname === item.href : pathname.startsWith(item.href);
           const Icon = item.icon;
           return (

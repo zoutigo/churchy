@@ -13,6 +13,7 @@ export const isLocale = (value: unknown): value is Locale =>
 export const AUTH_LINK_PATHS = {
   'reset-password': { fr: '/reinitialisation', en: '/reset-password' },
   'verify-email': { fr: '/verification-email', en: '/verify-email' },
+  'reset-pin': { fr: '/reinitialisation-pin', en: '/reset-pin' },
 } as const satisfies Record<string, Record<Locale, string>>;
 
 export type AuthLinkKind = keyof typeof AUTH_LINK_PATHS;

@@ -1,6 +1,6 @@
 import { useTranslations } from 'next-intl';
 import { AuthCard, AuthLink } from '@/components/auth/AuthCard';
-import { RegisterForm } from '@/components/auth/RegisterForm';
+import { RegisterPanel } from '@/components/auth/RegisterPanel';
 
 export default function RegisterPage() {
   const t = useTranslations('auth.register');
@@ -12,7 +12,7 @@ export default function RegisterPage() {
         link: (chunks) => <AuthLink href="/login">{chunks}</AuthLink>,
       })}
     >
-      <RegisterForm />
+      <RegisterPanel />
     </AuthCard>
   );
 }

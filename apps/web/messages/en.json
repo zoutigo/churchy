@@ -724,6 +724,7 @@
     "emailPlaceholder": "you@parish.org",
     "password": "Password",
     "passwordHint": "At least 8 characters",
+    "confirmPassword": "Confirm password",
     "showPassword": "Show password",
     "hidePassword": "Hide password",
     "login": {
@@ -735,7 +736,8 @@
       "forgot": "Forgot your password?",
       "submit": "Sign in",
       "submitting": "Signing in...",
-      "errorFallback": "Invalid credentials"
+      "errorFallback": "Invalid credentials",
+      "resetPinDone": "Your PIN has been updated. Sign in with the new one."
     },
     "register": {
       "title": "Create an account",
@@ -789,6 +791,66 @@
       "resend": "Resend the link",
       "sending": "Sending...",
       "error": "Could not send, please try again in a moment."
+    },
+    "method": {
+      "label": "Sign-in method",
+      "email": "Email",
+      "phone": "Phone"
+    },
+    "google": {
+      "or": "or",
+      "unavailable": "Google is temporarily unavailable. Use another method.",
+      "error": "Could not sign in with Google",
+      "linkTitle": "An account already exists",
+      "linkText": "A Churchy account already exists for {email}. Enter its password to link your Google account.",
+      "linkSubmit": "Link and sign in",
+      "linking": "Linking...",
+      "cancel": "Cancel",
+      "linked": "Google account linked",
+      "linkError": "Could not link the Google account"
+    },
+    "phone": {
+      "label": "Phone number",
+      "country": "Country"
+    },
+    "pin": {
+      "label": "PIN",
+      "hint": "6 digits, avoid sequences like 123456",
+      "confirm": "Confirm PIN",
+      "show": "Show PIN",
+      "hide": "Hide PIN"
+    },
+    "loginPhone": {
+      "forgot": "Forgot PIN?",
+      "errorFallback": "Unable to sign in"
+    },
+    "registerPhone": {
+      "errorFallback": "Unable to create the account",
+      "note": "You can add an email address later, from “Security”."
+    },
+    "forgotPin": {
+      "title": "Forgot PIN",
+      "subtitle": "Enter your phone number",
+      "back": "Back to sign in",
+      "submit": "Send the link",
+      "submitting": "Sending...",
+      "errorFallback": "Unable to send the link",
+      "toast": "Request recorded",
+      "sentTitle": "Request recorded",
+      "sentText": "If this number has an account with a confirmed email address, a reset link has just been sent there.",
+      "noEmail": "Without a confirmed email address, contact the Churchy team: an administrator can give you a link after checking your identity.",
+      "another": "Use another number"
+    },
+    "resetPin": {
+      "title": "New PIN",
+      "subtitle": "Choose a 6-digit PIN",
+      "missingToken": "Invalid link: the token is missing.",
+      "newLink": "Request a new link",
+      "newPin": "New PIN",
+      "submit": "Save PIN",
+      "saving": "Saving...",
+      "done": "PIN updated",
+      "errorFallback": "Unable to update the PIN"
     }
   },
   "layout": {
@@ -796,12 +858,15 @@
       "dashboard": "Dashboard",
       "parishes": "Parishes",
       "favorites": "My favorites",
-      "label": "Dashboard navigation"
+      "label": "Dashboard navigation",
+      "security": "Security",
+      "pinReset": "Reset a PIN"
     },
     "userMenu": "User menu",
     "emailUnverified": "Email not confirmed",
     "myParishes": "My parishes",
-    "logout": "Sign out"
+    "logout": "Sign out",
+    "security": "Account security"
   },
   "dashboard": {
     "loadError": "Could not load the data",
@@ -1363,6 +1428,98 @@
       "format": "Unsupported format (PNG, JPEG, WebP or GIF)",
       "canvas": "Image processing unavailable",
       "tooHeavy": "Image too heavy, even compressed"
+    }
+  },
+  "security": {
+    "title": "Account security",
+    "subtitle": "Manage how you sign in to Churchy.",
+    "methods": {
+      "title": "Your sign-in methods",
+      "password": "Email + password",
+      "pin": "Phone + PIN",
+      "google": "Google",
+      "on": "enabled",
+      "off": "not enabled"
+    },
+    "proof": {
+      "password": "Current password",
+      "pin": "Current PIN"
+    },
+    "email": {
+      "title": "Email and password",
+      "desc": "Your email is used to sign in, recover access and receive security links.",
+      "label": "Email address",
+      "add": "Add the email",
+      "adding": "Adding...",
+      "addError": "Unable to add the email",
+      "added": "Email added",
+      "addedText": "A confirmation link has just been sent to you.",
+      "verified": "confirmed",
+      "unverified": "to be confirmed"
+    },
+    "password": {
+      "title": "Password",
+      "has": "A password is set.",
+      "none": "No password yet: you can create one.",
+      "needEmail": "Add an email address first to be able to create a password.",
+      "new": "New password",
+      "create": "Create the password",
+      "change": "Change the password",
+      "saving": "Saving...",
+      "created": "Password created",
+      "changed": "Password updated",
+      "sessionsNote": "Your other devices are signed out.",
+      "error": "Unable to save the password"
+    },
+    "pin": {
+      "title": "Phone and PIN",
+      "desc": "Sign in with your number and a 6-digit PIN.",
+      "registered": "Registered number:",
+      "create": "Enable phone sign-in",
+      "creating": "Enabling...",
+      "created": "Phone sign-in enabled",
+      "createdText": "You can now sign in with your number and PIN.",
+      "createError": "Unable to enable phone sign-in",
+      "current": "Current PIN",
+      "new": "New PIN",
+      "change": "Change the PIN",
+      "saving": "Saving...",
+      "changed": "PIN updated",
+      "sessionsNote": "Your other devices are signed out.",
+      "changeError": "Unable to update the PIN"
+    },
+    "google": {
+      "title": "Google",
+      "desc": "Sign in with one click using your Google account.",
+      "none": "No Google account is linked.",
+      "linked": "A Google account is linked.",
+      "onlyMethod": "Google is your only way to sign in. Create a password to be able to unlink it.",
+      "confirm": "Confirm to link this Google account:",
+      "link": "Link Google",
+      "unlink": "Unlink Google",
+      "cancel": "Cancel",
+      "linkedToast": "Google account linked",
+      "unlinked": "Google account unlinked",
+      "error": "Unable to link Google"
+    }
+  },
+  "admin": {
+    "pinReset": {
+      "title": "Reset a PIN",
+      "subtitle": "For someone who lost their PIN and has no confirmed email address.",
+      "forbidden": "This page is reserved for platform administrators.",
+      "formTitle": "Account",
+      "formDesc": "Check the person's identity before handing over the link.",
+      "create": "Create the link",
+      "creating": "Creating...",
+      "created": "Link created",
+      "error": "Unable to create the link",
+      "result": "Link for <strong>{name}</strong>, valid until {date}. It works only once.",
+      "linkLabel": "Reset link",
+      "copy": "Copy",
+      "copied": "Link copied",
+      "copyFailed": "Copy failed: select the link by hand",
+      "warning": "Give this link only to the person concerned, through a safe channel."
     }
   }
 }

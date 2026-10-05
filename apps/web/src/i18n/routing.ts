@@ -56,5 +56,7 @@ export const routing = defineRouting({
     '/forgot-password': { fr: '/mot-de-passe-oublie', en: '/forgot-password' },
     '/reset-password': { fr: '/reinitialisation', en: '/reset-password' },
     '/verify-email': { fr: '/verification-email', en: '/verify-email' },
+    '/forgot-pin': { fr: '/pin-oublie', en: '/forgot-pin' },
+    '/reset-pin': { fr: '/reinitialisation-pin', en: '/reset-pin' },
   },
 });

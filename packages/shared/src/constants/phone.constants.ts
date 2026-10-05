@@ -105,3 +105,60 @@ export function phonePlaceholder(country: string | undefined | null): string {
   const f = phoneFormatOf(country);
   return f ? f.example : '+33 1 23 45 67 89';
 }
+
+// --- Numéro de compte (connexion par téléphone) : toujours au format international E.164 ----------
+
+/**
+ * Forme canonique d'un numéro international saisi par un utilisateur : « +237677123456 ».
+ * Espaces, points, tirets et parenthèses sont ignorés ; « 00 » devient « + ». Chaîne vide si le numéro
+ * ne commence ni par « + » ni par « 00 » (un numéro de compte porte toujours son indicatif).
+ */
+export function normalizeInternationalPhone(input: string): string {
+  const trimmed = input.trim();
+  const international = trimmed.startsWith('+')
+    ? trimmed
+    : trimmed.startsWith('00')
+      ? `+${trimmed.slice(2)}`
+      : '';
+  if (!international) return '';
+  return `+${digitsOf(international)}`;
+}
+
+const SORTED_FORMATS = Object.values(PHONE_FORMATS).sort(
+  (a, b) => digitsOf(b.dial).length - digitsOf(a.dial).length,
+);
+
+/** Formats dont l'indicatif est le début du numéro (E.164 normalisé). */
+const formatsOf = (e164: string): PhoneFormat[] => {
+  const digits = e164.slice(1);
+  const longest = SORTED_FORMATS.find((f) => digits.startsWith(digitsOf(f.dial)));
+  if (!longest) return [];
+  const dial = digitsOf(longest.dial);
+  return SORTED_FORMATS.filter((f) => digitsOf(f.dial) === dial);
+};
+
+/**
+ * Vrai pour un numéro E.164 plausible (8 à 15 chiffres, indicatif sans zéro de tête). Si l'indicatif est celui
+ * d'un pays connu, le nombre de chiffres doit aussi correspondre à ce pays.
+ */
+export function isValidInternationalPhone(e164: string): boolean {
+  if (!/^\+[1-9]\d{7,14}$/.test(e164)) return false;
+  const formats = formatsOf(e164);
+  if (formats.length === 0) return true;
+  const national = e164.slice(1).length - digitsOf(formats[0].dial).length;
+  return formats.some((f) => expectedDigits(f) === national);
+}
+
+/** Numéro E.164 présentable (« +237 6 77 12 34 56 ») ; tel quel si le pays est inconnu. */
+export function formatInternationalPhone(e164: string): string {
+  if (!/^\+\d+$/.test(e164)) return e164;
+  const [format] = formatsOf(e164);
+  if (!format) return e164;
+  const national = e164.slice(1 + digitsOf(format.dial).length);
+  return `${format.dial} ${group(national, format.groups)}`;
+}
+
+/** Numéro partiellement masqué pour les journaux (« +237 ••• 56 »). */
+export function maskPhoneForLogs(e164: string): string {
+  return e164.length <= 6 ? '••••' : `${e164.slice(0, 4)}•••${e164.slice(-2)}`;
+}

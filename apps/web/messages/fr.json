@@ -726,6 +726,7 @@
     "emailPlaceholder": "vous@paroisse.fr",
     "password": "Mot de passe",
     "passwordHint": "8 caractères minimum",
+    "confirmPassword": "Confirmer le mot de passe",
     "showPassword": "Afficher le mot de passe",
     "hidePassword": "Masquer le mot de passe",
     "login": {
@@ -737,7 +738,8 @@
       "forgot": "Mot de passe oublié ?",
       "submit": "Se connecter",
       "submitting": "Connexion...",
-      "errorFallback": "Identifiants invalides"
+      "errorFallback": "Identifiants invalides",
+      "resetPinDone": "Votre PIN a été modifié. Connectez-vous avec le nouveau."
     },
     "register": {
       "title": "Créer un compte",
@@ -791,6 +793,66 @@
       "resend": "Renvoyer le lien",
       "sending": "Envoi...",
       "error": "Envoi impossible, réessayez dans un instant."
+    },
+    "method": {
+      "label": "Mode de connexion",
+      "email": "Email",
+      "phone": "Téléphone"
+    },
+    "google": {
+      "or": "ou",
+      "unavailable": "Google est momentanément indisponible. Utilisez un autre mode.",
+      "error": "Connexion avec Google impossible",
+      "linkTitle": "Un compte existe déjà",
+      "linkText": "Un compte Churchy existe déjà avec l’adresse {email}. Saisissez son mot de passe pour y lier votre compte Google.",
+      "linkSubmit": "Lier et me connecter",
+      "linking": "Liaison...",
+      "cancel": "Annuler",
+      "linked": "Compte Google lié",
+      "linkError": "Impossible de lier le compte Google"
+    },
+    "phone": {
+      "label": "Numéro de téléphone",
+      "country": "Pays"
+    },
+    "pin": {
+      "label": "PIN",
+      "hint": "6 chiffres, évitez les suites comme 123456",
+      "confirm": "Confirmer le PIN",
+      "show": "Afficher le PIN",
+      "hide": "Masquer le PIN"
+    },
+    "loginPhone": {
+      "forgot": "PIN oublié ?",
+      "errorFallback": "Connexion impossible"
+    },
+    "registerPhone": {
+      "errorFallback": "Impossible de créer le compte",
+      "note": "Vous pourrez ajouter une adresse email plus tard, depuis « Sécurité »."
+    },
+    "forgotPin": {
+      "title": "PIN oublié",
+      "subtitle": "Saisissez votre numéro de téléphone",
+      "back": "Retour à la connexion",
+      "submit": "Envoyer le lien",
+      "submitting": "Envoi...",
+      "errorFallback": "Impossible d’envoyer le lien",
+      "toast": "Demande enregistrée",
+      "sentTitle": "Demande enregistrée",
+      "sentText": "Si ce numéro a un compte avec une adresse email confirmée, un lien de réinitialisation vient d’y être envoyé.",
+      "noEmail": "Sans adresse email confirmée, contactez l’équipe Churchy : un administrateur pourra vous remettre un lien après vérification de votre identité.",
+      "another": "Utiliser un autre numéro"
+    },
+    "resetPin": {
+      "title": "Nouveau PIN",
+      "subtitle": "Choisissez un PIN à 6 chiffres",
+      "missingToken": "Lien invalide : le jeton est manquant.",
+      "newLink": "Demander un nouveau lien",
+      "newPin": "Nouveau PIN",
+      "submit": "Enregistrer le PIN",
+      "saving": "Enregistrement...",
+      "done": "PIN modifié",
+      "errorFallback": "Impossible de modifier le PIN"
     }
   },
   "layout": {
@@ -798,12 +860,15 @@
       "dashboard": "Tableau de bord",
       "parishes": "Paroisses",
       "favorites": "Mes favoris",
-      "label": "Navigation du tableau de bord"
+      "label": "Navigation du tableau de bord",
+      "security": "Sécurité",
+      "pinReset": "Réinitialiser un PIN"
     },
     "userMenu": "Menu utilisateur",
     "emailUnverified": "Email non confirmé",
     "myParishes": "Mes paroisses",
-    "logout": "Se déconnecter"
+    "logout": "Se déconnecter",
+    "security": "Sécurité du compte"
   },
   "dashboard": {
     "loadError": "Impossible de charger les données",
@@ -1365,6 +1430,98 @@
       "format": "Format non pris en charge (PNG, JPEG, WebP ou GIF)",
       "canvas": "Traitement d’image indisponible",
       "tooHeavy": "Image trop lourde, même compressée"
+    }
+  },
+  "security": {
+    "title": "Sécurité du compte",
+    "subtitle": "Gérez comment vous vous connectez à Churchy.",
+    "methods": {
+      "title": "Vos moyens de connexion",
+      "password": "Email + mot de passe",
+      "pin": "Téléphone + PIN",
+      "google": "Google",
+      "on": "activé",
+      "off": "non activé"
+    },
+    "proof": {
+      "password": "Mot de passe actuel",
+      "pin": "PIN actuel"
+    },
+    "email": {
+      "title": "Email et mot de passe",
+      "desc": "L’email sert à vous connecter, à récupérer l’accès et à recevoir les liens de sécurité.",
+      "label": "Adresse email",
+      "add": "Ajouter l’email",
+      "adding": "Ajout...",
+      "addError": "Impossible d’ajouter l’email",
+      "added": "Email ajouté",
+      "addedText": "Un lien de confirmation vient de vous être envoyé.",
+      "verified": "confirmé",
+      "unverified": "à confirmer"
+    },
+    "password": {
+      "title": "Mot de passe",
+      "has": "Un mot de passe est défini.",
+      "none": "Aucun mot de passe : vous pouvez en créer un.",
+      "needEmail": "Ajoutez d’abord une adresse email pour pouvoir créer un mot de passe.",
+      "new": "Nouveau mot de passe",
+      "create": "Créer le mot de passe",
+      "change": "Changer le mot de passe",
+      "saving": "Enregistrement...",
+      "created": "Mot de passe créé",
+      "changed": "Mot de passe modifié",
+      "sessionsNote": "Vos autres appareils sont déconnectés.",
+      "error": "Impossible d’enregistrer le mot de passe"
+    },
+    "pin": {
+      "title": "Téléphone et PIN",
+      "desc": "Connectez-vous avec votre numéro et un PIN à 6 chiffres.",
+      "registered": "Numéro enregistré :",
+      "create": "Activer la connexion par téléphone",
+      "creating": "Activation...",
+      "created": "Connexion par téléphone activée",
+      "createdText": "Vous pouvez maintenant vous connecter avec votre numéro et votre PIN.",
+      "createError": "Impossible d’activer la connexion par téléphone",
+      "current": "PIN actuel",
+      "new": "Nouveau PIN",
+      "change": "Changer le PIN",
+      "saving": "Enregistrement...",
+      "changed": "PIN modifié",
+      "sessionsNote": "Vos autres appareils sont déconnectés.",
+      "changeError": "Impossible de modifier le PIN"
+    },
+    "google": {
+      "title": "Google",
+      "desc": "Connectez-vous en un clic avec votre compte Google.",
+      "none": "Aucun compte Google n’est lié.",
+      "linked": "Un compte Google est lié.",
+      "onlyMethod": "Google est votre seul moyen de connexion. Créez un mot de passe pour pouvoir le délier.",
+      "confirm": "Confirmez pour lier ce compte Google :",
+      "link": "Lier Google",
+      "unlink": "Délier Google",
+      "cancel": "Annuler",
+      "linkedToast": "Compte Google lié",
+      "unlinked": "Compte Google délié",
+      "error": "Impossible de lier Google"
+    }
+  },
+  "admin": {
+    "pinReset": {
+      "title": "Réinitialiser un PIN",
+      "subtitle": "Pour une personne qui a perdu son PIN et n’a pas d’adresse email confirmée.",
+      "forbidden": "Cette page est réservée aux administrateurs de la plateforme.",
+      "formTitle": "Compte concerné",
+      "formDesc": "Vérifiez l’identité de la personne avant de lui remettre le lien.",
+      "create": "Créer le lien",
+      "creating": "Création...",
+      "created": "Lien créé",
+      "error": "Impossible de créer le lien",
+      "result": "Lien pour <strong>{name}</strong>, valable jusqu’au {date}. Il ne fonctionne qu’une fois.",
+      "linkLabel": "Lien de réinitialisation",
+      "copy": "Copier",
+      "copied": "Lien copié",
+      "copyFailed": "Copie impossible : sélectionnez le lien à la main",
+      "warning": "Transmettez ce lien uniquement à la personne concernée, par un canal sûr."
     }
   }
 }

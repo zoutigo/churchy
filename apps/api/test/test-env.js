@@ -9,3 +9,5 @@ process.env.NODE_ENV = 'test';
 process.env.AUTH_THROTTLE_LIMIT ??= '10000';
 process.env.THROTTLE_LIMIT ??= '100000';
 process.env.FRONTEND_URL = 'http://localhost:3210';
+// Identifiant client Google fictif : les tests remplacent le vérificateur (jamais d'appel à Google).
+process.env.GOOGLE_CLIENT_ID = 'test-client-id.apps.googleusercontent.com';

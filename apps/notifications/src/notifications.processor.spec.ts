@@ -2,6 +2,7 @@ import { Logger } from '@nestjs/common';
 import type { Job } from 'bullmq';
 import { NotificationJob } from '@churchy/contracts';
 import { MailService } from './mail.service';
+import { SmsService } from './sms.service';
 import { NotificationsProcessor } from './notifications.processor';
 
 const job = (name: string, data: unknown) => ({ name, data }) as unknown as Job;
@@ -22,13 +23,18 @@ describe('NotificationsProcessor', () => {
     expiresAt: '2026-10-01T10:00:00.000Z',
   };
   let send: jest.Mock;
+  let smsSend: jest.Mock;
   let processor: NotificationsProcessor;
   let log: jest.SpyInstance;
   let warn: jest.SpyInstance;
 
   beforeEach(() => {
     send = jest.fn().mockResolvedValue(undefined);
-    processor = new NotificationsProcessor({ send } as unknown as MailService);
+    smsSend = jest.fn().mockResolvedValue(undefined);
+    processor = new NotificationsProcessor(
+      { send } as unknown as MailService,
+      { send: smsSend } as unknown as SmsService,
+    );
     log = jest.spyOn(Logger.prototype, 'log').mockImplementation(() => undefined);
     warn = jest.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
   });
@@ -73,6 +79,17 @@ describe('NotificationsProcessor', () => {
       );
     });
 
+    it('envoie l’email de réinitialisation du PIN avec le lien', async () => {
+      await processor.process(job(NotificationJob.PIN_RESET_REQUESTED, linkEmail));
+      expect(send).toHaveBeenCalledWith(
+        'jean@paroisse.fr',
+        expect.objectContaining({
+          subject: expect.stringContaining('PIN'),
+          text: expect.stringContaining(linkEmail.url),
+        }),
+      );
+    });
+
     it('rejette un payload invalide sans rien envoyer', async () => {
       await expect(
         processor.process(
@@ -87,6 +104,32 @@ describe('NotificationsProcessor', () => {
       await expect(
         processor.process(job(NotificationJob.PASSWORD_RESET_REQUESTED, linkEmail)),
       ).rejects.toThrow('SMTP indisponible');
+    });
+  });
+
+  describe('sms.requested', () => {
+    it('remet le SMS au fournisseur', async () => {
+      await processor.process(
+        job(NotificationJob.SMS_REQUESTED, { to: '+237677123456', body: 'Code 123456' }),
+      );
+      expect(smsSend).toHaveBeenCalledWith('+237677123456', 'Code 123456');
+      expect(send).not.toHaveBeenCalled();
+    });
+
+    it('rejette un numéro non international sans rien envoyer', async () => {
+      await expect(
+        processor.process(job(NotificationJob.SMS_REQUESTED, { to: '0677123456', body: 'x' })),
+      ).rejects.toThrow();
+      expect(smsSend).not.toHaveBeenCalled();
+    });
+
+    it('laisse remonter l’échec du fournisseur pour que BullMQ réessaie', async () => {
+      smsSend.mockRejectedValue(new Error('opérateur indisponible'));
+      await expect(
+        processor.process(
+          job(NotificationJob.SMS_REQUESTED, { to: '+237677123456', body: 'Code 123456' }),
+        ),
+      ).rejects.toThrow('opérateur indisponible');
     });
   });
 

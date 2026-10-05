@@ -60,6 +60,10 @@ describe('disallowedPaths', () => {
         '/en/reset-password',
         '/fr/favoris',
         '/en/favorites',
+        '/fr/pin-oublie',
+        '/en/forgot-pin',
+        '/fr/reinitialisation-pin',
+        '/en/reset-pin',
       ]),
     );
   });

@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { EmailVerificationBanner } from './EmailVerificationBanner';
 
 const resendVerification = vi.hoisted(() => vi.fn());
-let user: { email: string; emailVerified: boolean } | null;
+let user: { email: string | null; emailVerified: boolean } | null;
 vi.mock('@/lib/api/auth.api', () => ({ authApi: { resendVerification } }));
 vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user }) }));
 
@@ -12,6 +12,12 @@ describe('EmailVerificationBanner', () => {
   beforeEach(() => {
     resendVerification.mockReset();
     user = { email: 'jean@paroisse.fr', emailVerified: false };
+  });
+
+  it('ne s’affiche pas pour un compte par téléphone sans email (rien à confirmer)', () => {
+    user = { email: null, emailVerified: false };
+    const { container } = render(<EmailVerificationBanner />);
+    expect(container).toBeEmptyDOMElement();
   });
 
   it('ne s’affiche pas pour un email déjà confirmé ni hors connexion', () => {

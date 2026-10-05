@@ -5,6 +5,7 @@ import {
   AuthLinkEmailPayload,
   CelebrationPublishedPayload,
   ContactMessagePayload,
+  SmsPayload,
   NotificationJob,
   QUEUES,
 } from '@churchy/contracts';
@@ -41,6 +42,22 @@ export class NotificationsService {
       payload,
       NotificationsService.AUTH_EMAIL_JOB_OPTIONS,
     );
+  }
+
+  pinResetRequested(payload: AuthLinkEmailPayload) {
+    return this.queue.add(
+      NotificationJob.PIN_RESET_REQUESTED,
+      payload,
+      NotificationsService.AUTH_EMAIL_JOB_OPTIONS,
+    );
+  }
+
+  /** SMS (numéro = donnée personnelle, texte = possible code) : rien n'est conservé une fois envoyé. */
+  smsRequested(payload: SmsPayload) {
+    return this.queue.add(NotificationJob.SMS_REQUESTED, payload, {
+      removeOnComplete: true,
+      removeOnFail: { age: 3600 },
+    });
   }
 
   /** Message d'un visiteur anonyme : données personnelles, donc conservées le moins longtemps possible. */

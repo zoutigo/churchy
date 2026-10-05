@@ -8,15 +8,12 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { randomUUID } from 'node:crypto';
-import type { User } from '@prisma/client';
 import {
   DEFAULT_LOCALE,
-  isLocale,
   type AuthUserDto,
   type Locale,
   type LoginDto,
   type RegisterDto,
-  type UserRole,
   ERR,
   authLinkPath,
   type AuthLinkKind,
@@ -26,13 +23,22 @@ import { env } from '../../config/env';
 import { PrismaService } from '../../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import type { Session } from './auth-cookies';
+import { AuthSecurityService, type RequestContext } from './auth-security.service';
+import { USER_AUTH_INCLUDE, localeOf, toAuthUserDto, type UserWithAuth } from './auth-user';
 import { generateToken, hashToken } from './token.util';
+
+export { toAuthUserDto };
 
 const BCRYPT_ROUNDS = 10;
 /** Hash factice : comparé quand l'email est inconnu, pour que le temps de réponse ne le révèle pas. */
 const DUMMY_HASH = bcrypt.hashSync('dummy-password-for-timing', BCRYPT_ROUNDS);
 
-const PASSWORD_RESET_TTL_MS = 60 * 60 * 1000;
+type LinkTokenType = 'PASSWORD_RESET' | 'EMAIL_VERIFICATION' | 'PIN_RESET';
+
+export const PASSWORD_RESET_TTL_MS = 60 * 60 * 1000;
+export const PIN_RESET_TTL_MS = 60 * 60 * 1000;
+/** Lien remis par un administrateur : il le transmet à la personne, qui peut ne pas l'ouvrir tout de suite. */
+export const ADMIN_PIN_RESET_TTL_MS = 24 * 60 * 60 * 1000;
 const EMAIL_VERIFICATION_TTL_MS = 24 * 60 * 60 * 1000;
 /** Une réutilisation de refresh token dans ce délai est traitée comme une course, pas comme un vol. */
 const REFRESH_REUSE_GRACE_MS = 10_000;
@@ -40,18 +46,6 @@ const REFRESH_REUSE_GRACE_MS = 10_000;
 export interface AuthResult {
   user: AuthUserDto;
   session: Session;
-}
-
-export function toAuthUserDto(user: User): AuthUserDto {
-  return {
-    id: user.id,
-    email: user.email,
-    firstName: user.firstName,
-    lastName: user.lastName,
-    role: user.role as UserRole,
-    emailVerified: user.emailVerifiedAt !== null,
-    locale: isLocale(user.locale) ? user.locale : DEFAULT_LOCALE,
-  };
 }
 
 @Injectable()
@@ -62,9 +56,10 @@ export class AuthService {
     private prisma: PrismaService,
     private jwt: JwtService,
     private notifications: NotificationsService,
+    private security: AuthSecurityService,
   ) {}
 
-  async register(dto: RegisterDto): Promise<AuthResult> {
+  async register(dto: RegisterDto, context?: RequestContext): Promise<AuthResult> {
     const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
     if (existing) throw new ConflictException(ERR.emailAlreadyUsed);
 
@@ -76,24 +71,60 @@ export class AuthService {
         lastName: dto.lastName,
         locale: dto.locale ?? DEFAULT_LOCALE,
       },
+      include: USER_AUTH_INCLUDE,
     });
 
     await this.sendEmailVerification(user);
+    await this.security.audit({
+      event: 'REGISTER',
+      status: 'SUCCESS',
+      userId: user.id,
+      principal: dto.email,
+      context,
+    });
     return { user: toAuthUserDto(user), session: await this.issueSession(user) };
   }
 
-  async login(dto: LoginDto): Promise<AuthResult> {
-    const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
+  async login(dto: LoginDto, context?: RequestContext): Promise<AuthResult> {
+    await this.security.assertNotBlocked('PASSWORD_LOGIN', dto.email);
+    const user = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+      include: USER_AUTH_INCLUDE,
+    });
+    // Compte sans mot de passe (téléphone, Google) : même durée et même réponse qu'un mauvais mot de passe.
     const valid = await bcrypt.compare(dto.password, user?.passwordHash ?? DUMMY_HASH);
-    if (!user || !valid) throw new UnauthorizedException(ERR.invalidCredentials);
+    if (!user || !user.passwordHash || !valid) {
+      await this.security.recordFailure('PASSWORD_LOGIN', dto.email);
+      await this.security.audit({
+        event: 'LOGIN_PASSWORD',
+        status: 'FAILURE',
+        userId: user?.id,
+        principal: dto.email,
+        reasonCode: 'INVALID_CREDENTIALS',
+        context,
+      });
+      throw new UnauthorizedException(ERR.invalidCredentials);
+    }
 
+    await this.security.recordSuccess('PASSWORD_LOGIN', dto.email);
+    await this.security.audit({
+      event: 'LOGIN_PASSWORD',
+      status: 'SUCCESS',
+      userId: user.id,
+      principal: dto.email,
+      context,
+    });
     return { user: toAuthUserDto(user), session: await this.issueSession(user) };
   }
 
   /** Mémorise la langue préférée du compte. */
   async updateLocale(userId: string, locale: Locale): Promise<AuthUserDto> {
     return toAuthUserDto(
-      await this.prisma.user.update({ where: { id: userId }, data: { locale } }),
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { locale },
+        include: USER_AUTH_INCLUDE,
+      }),
     );
   }
 
@@ -103,7 +134,7 @@ export class AuthService {
 
     const record = await this.prisma.refreshToken.findUnique({
       where: { tokenHash: hashToken(rawToken) },
-      include: { user: true },
+      include: { user: { include: USER_AUTH_INCLUDE } },
     });
     if (!record) throw new UnauthorizedException(ERR.sessionInvalid);
 
@@ -159,10 +190,10 @@ export class AuthService {
       PASSWORD_RESET_TTL_MS,
     );
     await this.enqueueSafely('passwordResetRequested', {
-      email: user.email,
+      email,
       firstName: user.firstName,
       url,
-      locale: isLocale(user.locale) ? user.locale : DEFAULT_LOCALE,
+      locale: localeOf(user),
       expiresAt,
     });
   }
@@ -196,14 +227,17 @@ export class AuthService {
     ]);
   }
 
-  async resendEmailVerification(user: User): Promise<void> {
-    if (user.emailVerifiedAt) return;
+  async resendEmailVerification(user: UserWithAuth): Promise<void> {
+    if (!user.email || user.emailVerifiedAt) return;
     await this.sendEmailVerification(user);
   }
 
   // --- interne -------------------------------------------------------------------------------
 
-  private async issueSession(user: User, familyId: string = randomUUID()): Promise<Session> {
+  async issueSession(
+    user: { id: string; email: string | null },
+    familyId: string = randomUUID(),
+  ): Promise<Session> {
     const refreshToken = generateToken();
     const refreshExpiresAt = new Date(Date.now() + env.REFRESH_TOKEN_TTL_DAYS * 86_400_000);
     await this.prisma.refreshToken.create({
@@ -214,11 +248,20 @@ export class AuthService {
         expiresAt: refreshExpiresAt,
       },
     });
-    const accessToken = this.jwt.sign({ sub: user.id, email: user.email });
+    const accessToken = this.jwt.sign({
+      sub: user.id,
+      ...(user.email ? { email: user.email } : {}),
+    });
     return { accessToken, refreshToken, refreshExpiresAt };
   }
 
-  private async sendEmailVerification(user: User) {
+  async sendEmailVerification(user: {
+    id: string;
+    email: string | null;
+    firstName: string;
+    locale: string;
+  }) {
+    if (!user.email) return;
     const { url, expiresAt } = await this.createLinkToken(
       user,
       'EMAIL_VERIFICATION',
@@ -229,15 +272,15 @@ export class AuthService {
       email: user.email,
       firstName: user.firstName,
       url,
-      locale: isLocale(user.locale) ? user.locale : DEFAULT_LOCALE,
+      locale: localeOf(user),
       expiresAt,
     });
   }
 
   /** Crée un jeton à usage unique (les précédents encore valides du même type sont invalidés). */
-  private async createLinkToken(
-    user: User,
-    type: 'PASSWORD_RESET' | 'EMAIL_VERIFICATION',
+  async createLinkToken(
+    user: { id: string; locale: string },
+    type: LinkTokenType,
     path: AuthLinkKind,
     ttlMs: number,
   ) {
@@ -256,7 +299,7 @@ export class AuthService {
     };
   }
 
-  private async findUsableAuthToken(token: string, type: 'PASSWORD_RESET' | 'EMAIL_VERIFICATION') {
+  async findUsableAuthToken(token: string, type: LinkTokenType) {
     const record = await this.prisma.authToken.findUnique({
       where: { tokenHash: hashToken(token) },
     });
@@ -267,8 +310,8 @@ export class AuthService {
   }
 
   /** L'email est un effet de bord : son échec ne doit pas faire échouer la requête. */
-  private async enqueueSafely(
-    method: 'passwordResetRequested' | 'emailVerificationRequested',
+  async enqueueSafely(
+    method: 'passwordResetRequested' | 'emailVerificationRequested' | 'pinResetRequested',
     payload: AuthLinkEmailPayload,
   ) {
     try {
