@@ -204,6 +204,7 @@ test.describe('langues : français / anglais', () => {
       await page.getByLabel('Last name', { exact: true }).fill('Doe');
       await page.getByLabel('Email').fill(uniqueEmail('i18n-en'));
       await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
+      await page.getByLabel('Confirm password', { exact: true }).fill(PASSWORD);
       await page.getByRole('button', { name: 'Create my account' }).click();
       await expect(page).toHaveURL(/\/dashboard$/);
       expect(await accountLocale(page)).toBe('en');
@@ -268,6 +269,7 @@ test.describe('langues : français / anglais', () => {
       await page.getByLabel('Last name', { exact: true }).fill('Doe');
       await page.getByLabel('Email').fill(uniqueEmail('i18n-shared'));
       await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
+      await page.getByLabel('Confirm password', { exact: true }).fill(PASSWORD);
       await page.getByRole('button', { name: 'Create my account' }).click();
       await expect(page).toHaveURL(/\/dashboard$/);
 
