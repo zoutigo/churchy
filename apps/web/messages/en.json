@@ -724,6 +724,7 @@
     "emailPlaceholder": "you@parish.org",
     "password": "Password",
     "passwordHint": "At least 8 characters",
+    "confirmPassword": "Confirm password",
     "showPassword": "Show password",
     "hidePassword": "Hide password",
     "login": {

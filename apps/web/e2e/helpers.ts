@@ -41,6 +41,7 @@ export async function registerViaUi(page: Page, email: string, firstName = 'Jean
   await page.getByLabel('Nom', { exact: true }).fill('Dupont');
   await page.getByLabel('Email').fill(email);
   await page.getByLabel('Mot de passe', { exact: true }).fill(PASSWORD);
+  await page.getByLabel('Confirmer le mot de passe', { exact: true }).fill(PASSWORD);
   await page.getByRole('button', { name: 'Créer mon compte' }).click();
   await expect(page).toHaveURL(/\/dashboard$/);
 }

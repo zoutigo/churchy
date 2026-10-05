@@ -726,6 +726,7 @@
     "emailPlaceholder": "vous@paroisse.fr",
     "password": "Mot de passe",
     "passwordHint": "8 caractères minimum",
+    "confirmPassword": "Confirmer le mot de passe",
     "showPassword": "Afficher le mot de passe",
     "hidePassword": "Masquer le mot de passe",
     "login": {

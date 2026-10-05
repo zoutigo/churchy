@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { useLocale } from 'next-intl';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from '@/i18n/link';
-import { isLocale, registerSchema, type RegisterDto } from '@churchy/shared';
+import { isLocale, registerFormSchema, type RegisterFormValues } from '@churchy/shared';
 import { useAuth } from '@/hooks/useAuth';
 import {
   Form,
@@ -25,13 +25,13 @@ export function RegisterForm() {
   const { register, loading } = useAuth();
   const locale = useLocale();
 
-  const form = useForm<RegisterDto>({
-    resolver: zodResolver(registerSchema),
-    defaultValues: { email: '', password: '', firstName: '', lastName: '' },
+  const form = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerFormSchema),
+    defaultValues: { email: '', password: '', confirmPassword: '', firstName: '', lastName: '' },
     mode: 'onChange',
   });
 
-  async function onSubmit(data: RegisterDto) {
+  async function onSubmit({ confirmPassword: _confirm, ...data }: RegisterFormValues) {
     try {
       // La langue de l'interface devient la langue du compte.
       await register({ ...data, ...(isLocale(locale) ? { locale } : {}) });
@@ -111,6 +111,19 @@ export function RegisterForm() {
                   autoComplete="new-password"
                   {...field}
                 />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="confirmPassword"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t('confirmPassword')}</FormLabel>
+              <FormControl>
+                <PasswordInput autoComplete="new-password" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

@@ -11,6 +11,14 @@ export const registerSchema = z.object({
   locale: z.enum(LOCALES).optional(),
 });
 
+/** Formulaire d'inscription : le même schéma que l'API, plus la confirmation du mot de passe (jamais envoyée). */
+export const registerFormSchema = registerSchema
+  .extend({ confirmPassword: z.string().min(1, ERR.confirmPasswordRequired) })
+  .refine((data) => data.password === data.confirmPassword, {
+    path: ['confirmPassword'],
+    message: ERR.passwordsMismatch,
+  });
+
 export const loginSchema = z.object({
   email: z.string().trim().toLowerCase().email(ERR.emailInvalid),
   password: z.string().min(1, ERR.passwordRequired),
@@ -19,6 +27,7 @@ export const loginSchema = z.object({
 export const updateLocaleSchema = z.object({ locale: z.enum(LOCALES) });
 
 export type RegisterDto = z.infer<typeof registerSchema>;
+export type RegisterFormValues = z.infer<typeof registerFormSchema>;
 export type LoginDto = z.infer<typeof loginSchema>;
 
 export const forgotPasswordSchema = z.object({
