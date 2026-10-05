@@ -24,6 +24,8 @@ const PRIVATE_PATHS = [
   '/forgot-password',
   '/reset-password',
   '/verify-email',
+  '/forgot-pin',
+  '/reset-pin',
   '/favoris',
 ];
 

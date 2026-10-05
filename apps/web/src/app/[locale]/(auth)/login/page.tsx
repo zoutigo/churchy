@@ -1,7 +1,7 @@
 import { useTranslations } from 'next-intl';
 import { CheckCircle2, Clock } from 'lucide-react';
 import { AuthCard, AuthLink } from '@/components/auth/AuthCard';
-import { LoginForm } from '@/components/auth/LoginForm';
+import { LoginPanel } from '@/components/auth/LoginPanel';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { safeNextPath } from '@/lib/auth/session';
 
@@ -28,10 +28,15 @@ export default function LoginPage({ searchParams }: Props) {
       {searchParams.reset && (
         <Alert variant="success">
           <CheckCircle2 size={16} />
-          <AlertDescription>{t('resetDone')}</AlertDescription>
+          <AlertDescription>
+            {searchParams.reset === 'pin' ? t('resetPinDone') : t('resetDone')}
+          </AlertDescription>
         </Alert>
       )}
-      <LoginForm next={safeNextPath(searchParams.next)} />
+      <LoginPanel
+        next={safeNextPath(searchParams.next)}
+        initialMethod={searchParams.reset === 'pin' ? 'phone' : 'email'}
+      />
     </AuthCard>
   );
 }

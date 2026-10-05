@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, render, screen, waitFor } from '@testing-library/react';
+import { UserRole } from '@churchy/shared';
 import { SESSION_EXPIRED_EVENT } from '@/lib/auth/session';
 import { AuthProvider, useAuthContext } from './AuthProvider';
 
@@ -9,6 +10,10 @@ const api = vi.hoisted(() => ({
   register: vi.fn(),
   logout: vi.fn(),
   updateLocale: vi.fn(),
+  loginPhone: vi.fn(),
+  registerPhone: vi.fn(),
+  google: vi.fn(),
+  googleLink: vi.fn(),
 }));
 vi.mock('@/lib/api/auth.api', () => ({ authApi: api }));
 
@@ -17,9 +22,11 @@ const user = {
   email: 'jean@paroisse.fr',
   firstName: 'Jean',
   lastName: 'Dupont',
-  role: 'USER',
+  role: UserRole.USER,
+  phone: null,
   emailVerified: false,
   locale: 'fr' as const,
+  methods: { password: true, pin: false, google: false },
 };
 
 let ctx: ReturnType<typeof useAuthContext>;
@@ -199,5 +206,108 @@ describe('AuthProvider', () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     expect(() => render(<Probe />)).toThrow(/AuthProvider/);
     spy.mockRestore();
+  });
+
+  describe('téléphone + PIN et Google', () => {
+    const phoneUser = { ...user, email: null, phone: '+237677123456' };
+
+    it('loginPhone : renseigne l’utilisateur (compte sans email)', async () => {
+      api.loginPhone.mockResolvedValue({ user: phoneUser });
+      mount();
+      await waitFor(() => expect(screen.getByTestId('state')).toHaveTextContent('anonymous'));
+      await act(async () => {
+        await ctx.loginPhone({ phone: '+237677123456', pin: '482915' });
+      });
+      expect(api.loginPhone).toHaveBeenCalledWith({ phone: '+237677123456', pin: '482915' });
+      expect(ctx.user?.phone).toBe('+237677123456');
+      expect(ctx.loading).toBe(false);
+    });
+
+    it('loginPhone : propage l’erreur et reste anonyme', async () => {
+      api.loginPhone.mockRejectedValue(new Error('Identifiants invalides'));
+      mount();
+      await waitFor(() => expect(screen.getByTestId('state')).toHaveTextContent('anonymous'));
+      await expect(
+        act(async () => {
+          await ctx.loginPhone({ phone: '+237677123456', pin: '000001' });
+        }),
+      ).rejects.toThrow('Identifiants invalides');
+      expect(ctx.user).toBeNull();
+      expect(ctx.loading).toBe(false);
+    });
+
+    it('registerPhone : ouvre la session', async () => {
+      api.registerPhone.mockResolvedValue({ user: phoneUser });
+      mount();
+      await waitFor(() => expect(screen.getByTestId('state')).toHaveTextContent('anonymous'));
+      await act(async () => {
+        await ctx.registerPhone({
+          phone: '+237677123456',
+          pin: '482915',
+          firstName: 'Marie',
+          lastName: 'Ngono',
+        });
+      });
+      expect(ctx.user?.id).toBe('u1');
+    });
+
+    it('loginGoogle : ouvre la session quand le compte est connu', async () => {
+      api.google.mockResolvedValue({ status: 'ok', user });
+      mount();
+      await waitFor(() => expect(screen.getByTestId('state')).toHaveTextContent('anonymous'));
+      let result: unknown;
+      await act(async () => {
+        result = await ctx.loginGoogle({ idToken: 't' });
+      });
+      expect(result).toEqual({ user });
+      expect(ctx.user?.email).toBe('jean@paroisse.fr');
+    });
+
+    it('loginGoogle : un compte existe déjà → pas de session, la liaison est demandée', async () => {
+      api.google.mockResolvedValue({ status: 'link_required', email: 'jean@paroisse.fr' });
+      mount();
+      await waitFor(() => expect(screen.getByTestId('state')).toHaveTextContent('anonymous'));
+      let result: unknown;
+      await act(async () => {
+        result = await ctx.loginGoogle({ idToken: 't' });
+      });
+      expect(result).toEqual({ linkRequired: 'jean@paroisse.fr' });
+      expect(ctx.user).toBeNull();
+    });
+
+    it('linkGoogleWithPassword : ouvre la session', async () => {
+      api.googleLink.mockResolvedValue({ user });
+      mount();
+      await waitFor(() => expect(screen.getByTestId('state')).toHaveTextContent('anonymous'));
+      await act(async () => {
+        await ctx.linkGoogleWithPassword({ idToken: 't', password: 'password123' });
+      });
+      expect(ctx.user?.id).toBe('u1');
+    });
+
+    it('applyUser : met à jour le compte courant (page Sécurité)', async () => {
+      setSessionCookie();
+      api.me.mockResolvedValue(user);
+      mount();
+      await waitFor(() => expect(screen.getByTestId('state')).toHaveTextContent('user:'));
+      act(() => ctx.applyUser({ ...user, methods: { password: true, pin: true, google: false } }));
+      expect(ctx.user?.methods.pin).toBe(true);
+    });
+
+    it('une nouvelle connexion par téléphone réinitialise « session expirée »', async () => {
+      setSessionCookie();
+      api.me.mockResolvedValue(user);
+      api.loginPhone.mockResolvedValue({ user: phoneUser });
+      mount();
+      await waitFor(() => expect(screen.getByTestId('state')).toHaveTextContent('user:'));
+      act(() => {
+        window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
+      });
+      expect(screen.getByTestId('expired')).toHaveTextContent('true');
+      await act(async () => {
+        await ctx.loginPhone({ phone: '+237677123456', pin: '482915' });
+      });
+      expect(screen.getByTestId('expired')).toHaveTextContent('false');
+    });
   });
 });

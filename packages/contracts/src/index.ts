@@ -10,6 +10,8 @@ export const NotificationJob = {
   CELEBRATION_PUBLISHED: 'celebration.published',
   EMAIL_VERIFICATION_REQUESTED: 'auth.email-verification-requested',
   PASSWORD_RESET_REQUESTED: 'auth.password-reset-requested',
+  PIN_RESET_REQUESTED: 'auth.pin-reset-requested',
+  SMS_REQUESTED: 'sms.requested',
   CONTACT_MESSAGE_RECEIVED: 'contact.message-received',
 } as const;
 
@@ -49,3 +51,16 @@ export const contactMessagePayloadSchema = z.object({
 });
 
 export type ContactMessagePayload = z.infer<typeof contactMessagePayloadSchema>;
+
+/**
+ * SMS à envoyer (code de récupération, etc.). Le worker le remet au fournisseur configuré (`SMS_PROVIDER`).
+ * Aucun producteur ne l'utilise encore : en attente d'un contrat avec un opérateur.
+ */
+export const smsPayloadSchema = z.object({
+  /** Numéro international (E.164). */
+  to: z.string().regex(/^\+[1-9]\d{7,14}$/),
+  body: z.string().min(1).max(480),
+  locale: z.enum(['fr', 'en']).default('fr'),
+});
+
+export type SmsPayload = z.infer<typeof smsPayloadSchema>;

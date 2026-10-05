@@ -34,13 +34,23 @@ describe('middleware : session', () => {
     '/fr/connexion',
     '/fr/inscription',
     '/fr/mot-de-passe-oublie',
+    '/fr/pin-oublie',
     '/en/login',
     '/en/register',
     '/en/forgot-password',
+    '/en/forgot-pin',
   ])('renvoie un utilisateur connecté de %s vers le dashboard', (path) => {
     const res = middleware(request(path, SESSION));
     expect(redirectTarget(res)?.pathname).toBe('/dashboard');
   });
+
+  it.each(['/fr/reinitialisation-pin?token=abc', '/en/reset-pin?token=abc'])(
+    'laisse un utilisateur connecté ouvrir %s (lien remis par un administrateur)',
+    (path) => {
+      const res = middleware(request(path, SESSION));
+      expect(res.headers.get('location')).toBeNull();
+    },
+  );
 
   it('ne redirige pas /fr/connexion?expired=1 même avec un cookie périmé (évite une boucle)', () => {
     const res = middleware(request('/fr/connexion?expired=1', SESSION));

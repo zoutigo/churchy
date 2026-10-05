@@ -44,8 +44,37 @@ Routes (`apps/api/src/modules/auth`) : `register`, `login`, `refresh`, `logout` 
 Les routes sensibles sont limitées (`AUTH_THROTTLE_LIMIT`, 10/min/IP par défaut) ; helmet est actif ; CORS
 n'autorise que `FRONTEND_URL`, avec credentials.
 
+### Modes de connexion (email, téléphone + PIN, Google)
+Un compte peut cumuler plusieurs moyens ; `AuthUserDto.methods` = `{ password, pin, google }`, `email` et `phone` peuvent être `null`
+(`User.email` et `passwordHash` sont facultatifs : un compte par téléphone ou Google n'a ni l'un ni l'autre au départ).
+- **Email + mot de passe** : l'inscription demande une confirmation (`registerFormSchema`, jamais envoyée à l'API).
+- **Téléphone + PIN à 6 chiffres** (`PhoneAuthService`, table `UserPhoneCredential`) : `POST /auth/register/phone`, `/auth/login/phone`,
+  `/auth/forgot-pin`, `/auth/reset-pin`. Numéro normalisé en E.164 (`phoneSchema`, `normalizeInternationalPhone`), PIN haché (bcrypt) et refusé s'il est
+  trop simple (`isWeakPin` : 000000, 123456…). **Le numéro n'est pas vérifié** (`verifiedAt` vide : pas encore de SMS) ; la connexion fonctionne quand même.
+- **Verrouillage et audit** (`AuthSecurityService`) : échecs comptés par clé hachée (`AuthRateLimit`), atomiquement ; 5 échecs de PIN ou de preuve, 10 de mot de passe →
+  verrou de 15 min (429 `tooManyAttempts`, même réponse pour un numéro inconnu). Journal `AuthAuditLog` (numéro masqué, jamais de secret).
+- **Récupération du PIN** : pas de SMS pour l'instant. (1) lien envoyé à l'**email vérifié** du compte (job `auth.pin-reset-requested`, page `/reset-pin?token=`,
+  même réponse que le compte existe ou non) ; (2) sans email : un **administrateur de la plateforme** (`User.role === 'SUPER_ADMIN'`, `PlatformAdminGuard` : les
+  rôles de plateforme seront étendus au prochain chantier) obtient un lien de 24 h par `POST /admin/auth/pin-reset-link` (page `/dashboard/admin/pin-reset`).
+  Un PIN réinitialisé déconnecte toutes les sessions.
+- **SMS (préparé, inactif)** : contrat `sms.requested` (`smsPayloadSchema`), `NotificationsService.smsRequested`, worker `SmsService` + `SMS_PROVIDER` (`log` seul pour
+  l'instant, nom inconnu = refus au démarrage). Aucun producteur : brancher Orange/MTN = écrire un `SmsProvider`, puis un code à usage unique pour la récupération.
+- **Google** (`GoogleAuthService`) : le web obtient un `idToken` (Google Identity Services ; script chargé seulement si `GET /auth/providers` annonce Google), l'API le
+  **vérifie toujours** (`google-auth-library`, audience = `GOOGLE_CLIENT_ID` ; vérificateur remplaçable dans les tests) — ne jamais croire un identifiant envoyé par le client.
+  Compte lié (`UserAuthIdentity`, clé = `sub`) → connexion ; aucun compte → création (email confirmé) ; **un compte email confirmé existe → jamais de fusion silencieuse** :
+  réponse `link_required`, `POST /auth/google/link` exige le mot de passe (sans mot de passe : se connecter d'abord, lier depuis « Sécurité »). Si l'email du compte existant
+  n'a **jamais été confirmé**, Google (qui le certifie) reprend le compte : mot de passe, PIN et sessions posés par un éventuel usurpateur sont supprimés.
+  `GOOGLE_CLIENT_ID` vide = fonction désactivée (503, bouton masqué).
+- **Sécurité du compte** (`AccountService`, page `/dashboard/security`) : ajouter un email (compte par téléphone), créer/changer le mot de passe, activer/changer le PIN,
+  lier/délier Google (jamais le dernier moyen). Toute modification sensible exige une **preuve** (mot de passe actuel, sinon PIN actuel ; rien pour un compte uniquement
+  Google) et, pour un mot de passe ou un PIN, coupe les autres sessions et en ouvre une neuve. Routes `PUT /auth/me/{email,password,phone-pin,google}`, `PATCH /auth/me/pin`, `POST /auth/me/google/unlink`.
+- **Web** : `/login` et `/register` = Google (si activé) + onglets Email | Téléphone (`LoginPanel`, `RegisterPanel`) ; `PhoneNumberField` (pays + masque, valeur
+  internationale), `PinInput` (chiffres seulement, pas de `maxLength` : il tronquerait un collage « 482 915 »). Pages `/forgot-pin`, `/reset-pin` (segments traduits, `AUTH_LINK_PATHS`).
+- Limites connues : un numéro non vérifié peut être saisi par un tiers (le propriétaire réel sera bloqué à l'inscription tant qu'il n'y a pas de SMS) ; l'ajout de membres
+  d'une paroisse se fait toujours par **email** (un compte sans email ne peut pas encore être invité) ; le PIN n'est pas « poivré » (le verrouillage est la protection principale).
+
 **Configuration** (`apps/api/src/config/env.ts`, validée au démarrage, aucune valeur de secours) :
-`JWT_SECRET` obligatoire (16 car. min., refusé en production s'il ressemble à un exemple),
+`GOOGLE_CLIENT_ID` (facultatif), `JWT_SECRET` obligatoire (16 car. min., refusé en production s'il ressemble à un exemple),
 `ACCESS_TOKEN_TTL_SECONDS`, `REFRESH_TOKEN_TTL_DAYS`, `FRONTEND_URL`, `AUTH_THROTTLE_LIMIT`, `THROTTLE_LIMIT`.
 En production : `NODE_ENV=production` (cookies `Secure`), web et API sur le même domaine racine (cookies
 `SameSite=Lax`), et `trust proxy` si l'API est derrière un reverse proxy (limitation par IP).

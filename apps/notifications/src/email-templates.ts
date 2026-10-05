@@ -50,6 +50,16 @@ const AUTH_TEXTS = {
       ignore:
         "Si vous n'avez pas demandé cette réinitialisation, ignorez ce message : votre mot de passe reste inchangé.",
     },
+    pinReset: {
+      subject: 'Réinitialisation de votre PIN — Churchy',
+      title: 'Réinitialisation de votre PIN',
+      intro:
+        "vous avez demandé à réinitialiser le PIN de connexion par téléphone. Si ce n'est pas vous, ignorez ce message : votre PIN reste inchangé.",
+      cta: 'Choisir un nouveau PIN',
+      textIntro: 'Pour choisir un nouveau PIN, ouvrez ce lien :',
+      ignore:
+        "Si vous n'avez pas demandé cette réinitialisation, ignorez ce message : votre PIN reste inchangé.",
+    },
   },
   en: {
     hello: (name: string) => `Hello ${name}`,
@@ -73,6 +83,15 @@ const AUTH_TEXTS = {
       textIntro: 'To choose a new password, open this link:',
       ignore:
         "If you didn't request this reset, ignore this message: your password stays unchanged.",
+    },
+    pinReset: {
+      subject: 'Reset your PIN — Churchy',
+      title: 'Reset your PIN',
+      intro:
+        "you asked to reset your phone sign-in PIN. If this wasn't you, ignore this message: your PIN stays unchanged.",
+      cta: 'Choose a new PIN',
+      textIntro: 'To choose a new PIN, open this link:',
+      ignore: "If you didn't request this reset, ignore this message: your PIN stays unchanged.",
     },
   },
 } as const;
@@ -101,7 +120,10 @@ function layout(
 </body></html>`;
 }
 
-function authEmail(kind: 'verification' | 'reset', p: AuthLinkEmailPayload): EmailContent {
+function authEmail(
+  kind: 'verification' | 'reset' | 'pinReset',
+  p: AuthLinkEmailPayload,
+): EmailContent {
   const lang = p.locale ?? 'fr';
   const t = AUTH_TEXTS[lang];
   const k = t[kind];
@@ -122,6 +144,7 @@ function authEmail(kind: 'verification' | 'reset', p: AuthLinkEmailPayload): Ema
 
 export const emailVerificationEmail = (p: AuthLinkEmailPayload) => authEmail('verification', p);
 export const passwordResetEmail = (p: AuthLinkEmailPayload) => authEmail('reset', p);
+export const pinResetEmail = (p: AuthLinkEmailPayload) => authEmail('pinReset', p);
 
 const CONTACT_TOPIC_LABELS: Record<ContactMessagePayload['topic'], string> = {
   QUESTION: 'Question',

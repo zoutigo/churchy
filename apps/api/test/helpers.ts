@@ -1,15 +1,18 @@
-import { INestApplication } from '@nestjs/common';
-import { Test } from '@nestjs/testing';
+import { INestApplication, UnauthorizedException } from '@nestjs/common';
+import { Test, type TestingModuleBuilder } from '@nestjs/testing';
 import { Queue } from 'bullmq';
 import request from 'supertest';
 import { QUEUES } from '@churchy/contracts';
 import { AppModule } from '../src/app.module';
+import { GoogleTokenVerifier, type GoogleProfile } from '../src/modules/auth/google-token.verifier';
 import { configureApp } from '../src/app.setup';
 
 export const PASSWORD = 'password123';
 
-export async function createTestApp(): Promise<INestApplication> {
-  const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
+export async function createTestApp(
+  customize: (builder: TestingModuleBuilder) => TestingModuleBuilder = (b) => b,
+): Promise<INestApplication> {
+  const moduleRef = await customize(Test.createTestingModule({ imports: [AppModule] })).compile();
   const app = moduleRef.createNestApplication();
   configureApp(app);
   await app.init();
@@ -72,3 +75,38 @@ export const onDays = (...days: number[]) => ({
   kind: 'dates' as const,
   dates: days.map((d) => ({ date: dayFromNow(d), time: '10:00' })),
 });
+
+/**
+ * Faux vérificateur Google : le « jeton » est le profil en JSON (ou « invalid »). Les tests n'appellent jamais
+ * Google, mais passent par tout le reste du flux réel (base, cookies, journal).
+ */
+export class FakeGoogleVerifier extends GoogleTokenVerifier {
+  constructor(private configured = true) {
+    super();
+  }
+  isConfigured() {
+    return this.configured;
+  }
+  async verify(idToken: string): Promise<GoogleProfile> {
+    if (idToken === 'invalid') throw new UnauthorizedException('googleTokenInvalid');
+    return JSON.parse(idToken) as GoogleProfile;
+  }
+}
+
+export const googleToken = (profile: Partial<GoogleProfile> & { sub: string; email: string }) =>
+  JSON.stringify({ emailVerified: true, firstName: 'Jean', lastName: 'Dupont', ...profile });
+
+/** Ouvre une session par téléphone et renvoie l'agent (qui garde les cookies). */
+export async function registerPhoneAgent(
+  app: INestApplication,
+  phone: string,
+  pin = '482915',
+  extra: Record<string, unknown> = {},
+): Promise<Agent> {
+  const agent = newAgent(app);
+  await agent
+    .post('/api/auth/register/phone')
+    .send({ phone, pin, firstName: 'Jean', lastName: 'Dupont', ...extra })
+    .expect(201);
+  return agent;
+}

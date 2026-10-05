@@ -47,8 +47,10 @@ enum CelebrationStatus {
 
 model User {
   id              String    @id @default(cuid())
-  email           String    @unique
-  passwordHash    String
+  /// Absent d'un compte créé par téléphone tant qu'aucun email n'a été ajouté.
+  email           String?   @unique
+  /// Absent d'un compte créé par téléphone + PIN ou par Google.
+  passwordHash    String?
   firstName       String
   lastName        String
   role            UserRole  @default(USER)
@@ -60,6 +62,9 @@ model User {
 
   refreshTokens        RefreshToken[]
   authTokens           AuthToken[]
+  phoneCredential      UserPhoneCredential?
+  identities           UserAuthIdentity[]
+  auditLogs            AuthAuditLog[]
   parishMembers        ParishMember[]
   favoriteParishes     FavoriteParish[]
   createdContents      Content[]
@@ -88,6 +93,106 @@ model RefreshToken {
 enum AuthTokenType {
   PASSWORD_RESET
   EMAIL_VERIFICATION
+  PIN_RESET
+}
+
+enum AuthProvider {
+  GOOGLE
+}
+
+enum AuthRateLimitPurpose {
+  PASSWORD_LOGIN
+  PHONE_LOGIN
+  ACCOUNT_PROOF
+}
+
+enum AuthAuditEvent {
+  REGISTER
+  LOGIN_PASSWORD
+  LOGIN_PHONE
+  LOGIN_GOOGLE
+  PIN_SET
+  PIN_CHANGED
+  PIN_RESET_REQUESTED
+  PIN_RESET_ISSUED_BY_ADMIN
+  PIN_RESET_COMPLETED
+  PASSWORD_SET
+  EMAIL_ADDED
+  GOOGLE_LINKED
+  GOOGLE_UNLINKED
+  ACCOUNT_TAKEOVER_CLEARED
+}
+
+enum AuthAuditStatus {
+  SUCCESS
+  FAILURE
+  BLOCKED
+}
+
+/// Connexion par téléphone + PIN. `verifiedAt` reste vide tant que la possession du numéro n'est pas
+/// prouvée (par SMS, quand un opérateur sera branché) : la connexion fonctionne sans.
+model UserPhoneCredential {
+  id         String    @id @default(cuid())
+  userId     String    @unique
+  /// Numéro international normalisé (« +237677123456 »).
+  phoneE164  String    @unique
+  pinHash    String
+  verifiedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+/// Compte d'un fournisseur d'identité (Google) lié à un utilisateur. `providerAccountId` = `sub` du jeton.
+model UserAuthIdentity {
+  id                String       @id @default(cuid())
+  userId            String
+  provider          AuthProvider
+  providerAccountId String
+  email             String?
+  createdAt         DateTime     @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@unique([userId, provider])
+}
+
+/// Compteur d'échecs de connexion par clé (numéro, email, compte) : verrouillage temporaire anti force brute.
+/// La clé est hachée : on ne garde pas le numéro ou l'email en clair ici.
+model AuthRateLimit {
+  id            String               @id @default(cuid())
+  purpose       AuthRateLimitPurpose
+  keyHash       String
+  failedCount   Int                  @default(0)
+  blockedUntil  DateTime?
+  lastFailedAt  DateTime?
+  lastSuccessAt DateTime?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+
+  @@unique([purpose, keyHash])
+  @@index([blockedUntil])
+}
+
+/// Journal des événements d'authentification (succès, échecs, blocages). `principal` est masqué.
+model AuthAuditLog {
+  id         String          @id @default(cuid())
+  userId     String?
+  event      AuthAuditEvent
+  status     AuthAuditStatus
+  provider   AuthProvider?
+  principal  String?
+  ipAddress  String?
+  userAgent  String?
+  reasonCode String?
+  createdAt  DateTime        @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([event, status, createdAt])
 }
 
 /// Jeton à usage unique (réinitialisation de mot de passe, vérification d'email), stocké haché.

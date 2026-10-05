@@ -2,7 +2,8 @@
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/link';
 import { useRouter } from '@/i18n/link';
-import { ChevronDown, Church, LogOut } from 'lucide-react';
+import { ChevronDown, Church, LogOut, ShieldCheck } from 'lucide-react';
+import { formatInternationalPhone } from '@churchy/shared';
 import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 import { useAuth } from '@/hooks/useAuth';
 import {
@@ -53,8 +54,10 @@ export function Header() {
               <p className="font-medium">
                 {user.firstName} {user.lastName}
               </p>
-              <p className="text-xs font-normal text-muted-foreground">{user.email}</p>
-              {!user.emailVerified && (
+              <p className="text-xs font-normal text-muted-foreground">
+                {user.email ?? (user.phone ? formatInternationalPhone(user.phone) : '')}
+              </p>
+              {user.email && !user.emailVerified && (
                 <p className="text-xs font-normal text-amber-600">{t('emailUnverified')}</p>
               )}
             </DropdownMenuLabel>
@@ -63,6 +66,12 @@ export function Header() {
               <Link href="/dashboard/parishes" className="cursor-pointer">
                 <Church size={15} className="mr-2" />
                 {t('myParishes')}
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/dashboard/security" className="cursor-pointer">
+                <ShieldCheck size={15} className="mr-2" />
+                {t('security')}
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={handleLogout} className="cursor-pointer">

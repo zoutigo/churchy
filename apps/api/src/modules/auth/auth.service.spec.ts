@@ -8,6 +8,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { AuthSecurityService } from './auth-security.service';
 import { AuthService } from './auth.service';
 import { hashToken } from './token.util';
 
@@ -28,6 +29,8 @@ const dbUser = (over: Record<string, unknown> = {}) => ({
   passwordHash: 'hash',
   emailVerifiedAt: null,
   locale: 'fr',
+  phoneCredential: null,
+  identities: [],
   ...over,
 });
 
@@ -36,6 +39,7 @@ describe('AuthService', () => {
   let prisma: PrismaMock;
   let jwt: { sign: Fn };
   let notifications: { emailVerificationRequested: Fn; passwordResetRequested: Fn };
+  let security: { assertNotBlocked: Fn; recordFailure: Fn; recordSuccess: Fn; audit: Fn };
   let service: AuthService;
 
   beforeEach(() => {
@@ -59,10 +63,17 @@ describe('AuthService', () => {
       emailVerificationRequested: jest.fn().mockResolvedValue(undefined),
       passwordResetRequested: jest.fn().mockResolvedValue(undefined),
     };
+    security = {
+      assertNotBlocked: jest.fn().mockResolvedValue(undefined),
+      recordFailure: jest.fn().mockResolvedValue(undefined),
+      recordSuccess: jest.fn().mockResolvedValue(undefined),
+      audit: jest.fn().mockResolvedValue(undefined),
+    };
     service = new AuthService(
       prisma as unknown as PrismaService,
       jwt as unknown as JwtService,
       notifications as unknown as NotificationsService,
+      security as unknown as AuthSecurityService,
     );
   });
 
@@ -132,6 +143,7 @@ describe('AuthService', () => {
       expect(prisma.user.update).toHaveBeenCalledWith({
         where: { id: 'u1' },
         data: { locale: 'en' },
+        include: expect.anything(),
       });
       expect(user.locale).toBe('en');
     });
@@ -170,6 +182,47 @@ describe('AuthService', () => {
       // Seul le hash du refresh token est stocké.
       expect(stored.tokenHash).toBe(hashToken(session.refreshToken));
       expect(stored.tokenHash).not.toBe(session.refreshToken);
+    });
+
+    it('compte l’échec, le journalise et ne dit pas pourquoi', async () => {
+      prisma.user.findUnique.mockResolvedValue(
+        dbUser({ passwordHash: await bcrypt.hash('autre', 4) }),
+      );
+      await expect(service.login({ email: dto.email, password: 'faux' })).rejects.toThrow(
+        'invalidCredentials',
+      );
+      expect(security.recordFailure).toHaveBeenCalledWith('PASSWORD_LOGIN', dto.email);
+      expect(security.audit).toHaveBeenCalledWith(
+        expect.objectContaining({ event: 'LOGIN_PASSWORD', status: 'FAILURE' }),
+      );
+      expect(security.recordSuccess).not.toHaveBeenCalled();
+    });
+
+    it('un compte sans mot de passe (téléphone, Google) est refusé comme un mauvais mot de passe', async () => {
+      prisma.user.findUnique.mockResolvedValue(dbUser({ passwordHash: null }));
+      await expect(service.login({ email: dto.email, password: 'password123' })).rejects.toThrow(
+        'invalidCredentials',
+      );
+      expect(security.recordFailure).toHaveBeenCalled();
+    });
+
+    it('refuse sans même vérifier le mot de passe quand l’email est verrouillé', async () => {
+      security.assertNotBlocked.mockRejectedValue(new Error('tooManyAttempts'));
+      await expect(service.login({ email: dto.email, password: 'password123' })).rejects.toThrow(
+        'tooManyAttempts',
+      );
+      expect(prisma.user.findUnique).not.toHaveBeenCalled();
+    });
+
+    it('remet le compteur à zéro après un succès', async () => {
+      prisma.user.findUnique.mockResolvedValue(
+        dbUser({ passwordHash: await bcrypt.hash(dto.password, 4) }),
+      );
+      await service.login({ email: dto.email, password: dto.password });
+      expect(security.recordSuccess).toHaveBeenCalledWith('PASSWORD_LOGIN', dto.email);
+      expect(security.audit).toHaveBeenCalledWith(
+        expect.objectContaining({ event: 'LOGIN_PASSWORD', status: 'SUCCESS', userId: 'u1' }),
+      );
     });
   });
 

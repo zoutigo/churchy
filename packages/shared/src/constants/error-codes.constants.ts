@@ -148,6 +148,85 @@ const CATALOG = {
     fr: 'Vous pouvez avoir {max} paroisses favorites au maximum',
     en: 'You can have at most {max} favourite parishes',
   },
+  // Connexion par téléphone + PIN, Google, sécurité du compte
+  phoneRequired: { fr: 'Numéro de téléphone requis', en: 'Phone number is required' },
+  phoneAlreadyUsed: {
+    fr: 'Ce numéro est déjà utilisé',
+    en: 'This phone number is already in use',
+  },
+  pinRequired: { fr: 'Code PIN requis', en: 'PIN is required' },
+  pinInvalid: {
+    fr: 'Le PIN doit contenir exactement 6 chiffres',
+    en: 'The PIN must be exactly 6 digits',
+  },
+  pinTooWeak: {
+    fr: 'PIN trop simple (évitez 123456 ou 000000)',
+    en: 'PIN is too simple (avoid 123456 or 000000)',
+  },
+  confirmPinRequired: { fr: 'Confirmez le PIN', en: 'Confirm the PIN' },
+  pinsMismatch: { fr: 'Les PIN ne correspondent pas', en: 'PINs do not match' },
+  tooManyAttempts: {
+    fr: 'Trop de tentatives. Réessayez dans quelques minutes.',
+    en: 'Too many attempts. Try again in a few minutes.',
+  },
+  currentSecretRequired: {
+    fr: 'Saisissez votre mot de passe ou votre PIN actuel',
+    en: 'Enter your current password or PIN',
+  },
+  currentSecretInvalid: {
+    fr: 'Mot de passe ou PIN actuel incorrect',
+    en: 'Current password or PIN is incorrect',
+  },
+  pinAlreadySet: {
+    fr: 'Un PIN est déjà défini sur ce compte',
+    en: 'A PIN is already set on this account',
+  },
+  noPinSet: { fr: "Aucun PIN n'est défini sur ce compte", en: 'No PIN is set on this account' },
+  emailRequired: {
+    fr: "Ajoutez d'abord une adresse email à votre compte",
+    en: 'Add an email address to your account first',
+  },
+  emailAlreadySet: {
+    fr: 'Ce compte a déjà une adresse email',
+    en: 'This account already has an email address',
+  },
+  lastLoginMethod: {
+    fr: 'Impossible : ce serait votre dernier moyen de connexion',
+    en: 'Not possible: this is your last sign-in method',
+  },
+  googleNotConfigured: {
+    fr: "La connexion avec Google n'est pas disponible",
+    en: 'Sign-in with Google is not available',
+  },
+  googleTokenInvalid: {
+    fr: 'Connexion Google refusée. Réessayez.',
+    en: 'Google sign-in was rejected. Try again.',
+  },
+  googleEmailUnverified: {
+    fr: "L'adresse email de ce compte Google n'est pas vérifiée",
+    en: "This Google account's email address is not verified",
+  },
+  googleAlreadyLinked: {
+    fr: 'Un compte Google est déjà lié',
+    en: 'A Google account is already linked',
+  },
+  googleLinkedElsewhere: {
+    fr: 'Ce compte Google est déjà lié à un autre compte Churchy',
+    en: 'This Google account is already linked to another Churchy account',
+  },
+  googleNotLinked: { fr: "Aucun compte Google n'est lié", en: 'No Google account is linked' },
+  googleLinkLoginFirst: {
+    fr: "Un compte existe déjà avec cet email mais sans mot de passe : connectez-vous d'abord par votre autre moyen, puis liez Google depuis « Sécurité ».",
+    en: 'An account already exists with this email but has no password: sign in with your other method first, then link Google from "Security".',
+  },
+  forbiddenPlatform: {
+    fr: 'Réservé aux administrateurs de la plateforme',
+    en: 'Reserved for platform administrators',
+  },
+  userNotFoundByPhone: {
+    fr: 'Aucun compte avec ce numéro',
+    en: 'No account with this phone number',
+  },
   // Client
   networkUnreachable: {
     fr: 'Impossible de joindre le serveur. Vérifiez votre connexion.',

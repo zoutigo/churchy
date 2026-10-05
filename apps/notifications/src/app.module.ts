@@ -3,6 +3,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { QUEUES } from '@churchy/contracts';
 import { createSmtpTransport, MAIL_TRANSPORT, MailService } from './mail.service';
 import { NotificationsProcessor } from './notifications.processor';
+import { createSmsProvider, SMS_PROVIDER, SmsService, type SmsProvider } from './sms.service';
 
 @Module({
   imports: [
@@ -21,6 +22,12 @@ import { NotificationsProcessor } from './notifications.processor';
       provide: MailService,
       inject: [MAIL_TRANSPORT],
       useFactory: (transport: ReturnType<typeof createSmtpTransport>) => new MailService(transport),
+    },
+    { provide: SMS_PROVIDER, useFactory: () => createSmsProvider() },
+    {
+      provide: SmsService,
+      inject: [SMS_PROVIDER],
+      useFactory: (provider: SmsProvider) => new SmsService(provider),
     },
     NotificationsProcessor,
   ],

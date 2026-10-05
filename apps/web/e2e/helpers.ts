@@ -18,7 +18,10 @@ async function withQueue<T>(fn: (queue: Queue) => Promise<T>): Promise<T> {
   }
 }
 
-type AuthEmailJob = 'auth.email-verification-requested' | 'auth.password-reset-requested';
+type AuthEmailJob =
+  | 'auth.email-verification-requested'
+  | 'auth.password-reset-requested'
+  | 'auth.pin-reset-requested';
 
 /** Lien contenu dans le dernier email de ce type envoyé à cette adresse. */
 export async function latestEmailLink(email: string, jobName: AuthEmailJob): Promise<string> {
@@ -163,3 +166,66 @@ export async function latestContactJob(email: string) {
 /** Vrai si la page déborde horizontalement (le défilement horizontal est un défaut sur mobile). */
 export const hasHorizontalOverflow = (page: Page) =>
   page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
+
+/** Numéro camerounais unique : « national » à saisir dans le champ, « e164 » tel que stocké par l'API. */
+export function uniquePhone() {
+  const digits = `6${String(Math.floor(Math.random() * 1e8)).padStart(8, '0')}`;
+  return { national: digits, e164: `+237${digits}` };
+}
+
+export const PIN = '482915';
+
+/** Inscription par téléphone via l'interface (onglet « Téléphone » de /inscription). */
+export async function registerPhoneViaUi(
+  page: Page,
+  phone = uniquePhone(),
+  { firstName = 'Marie', pin = PIN }: { firstName?: string; pin?: string } = {},
+) {
+  await page.goto('/fr/inscription');
+  await page.getByRole('tab', { name: 'Téléphone' }).click();
+  await page.getByLabel('Prénom').fill(firstName);
+  await page.getByLabel('Nom', { exact: true }).fill('Ngono');
+  await page.getByLabel('Numéro de téléphone').fill(phone.national);
+  await page.getByLabel('PIN', { exact: true }).fill(pin);
+  await page.getByLabel('Confirmer le PIN').fill(pin);
+  await page.getByRole('button', { name: 'Créer mon compte' }).click();
+  await expect(page).toHaveURL(/\/dashboard$/);
+  return phone;
+}
+
+/** Connexion par téléphone via l'interface. */
+export async function loginPhoneViaUi(
+  page: Page,
+  phone: { national: string },
+  pin = PIN,
+  next?: string,
+) {
+  await page.goto(next ? `/fr/connexion?next=${encodeURIComponent(next)}` : '/fr/connexion');
+  await page.getByRole('tab', { name: 'Téléphone' }).click();
+  await page.getByLabel('Numéro de téléphone').fill(phone.national);
+  await page.getByLabel('PIN', { exact: true }).fill(pin);
+  await page.getByRole('button', { name: 'Se connecter' }).click();
+}
+
+/** Passe un compte en administrateur de la plateforme (aucune route d'API ne le permet, volontairement). */
+export async function makeSuperAdmin(email: string) {
+  const { PrismaClient } = await import('@prisma/client');
+  const prisma = new PrismaClient({
+    datasourceUrl:
+      process.env.TEST_DATABASE_URL ??
+      'postgresql://postgres:password@localhost:5433/churchy_test?schema=public',
+  });
+  try {
+    await prisma.user.update({ where: { email }, data: { role: 'SUPER_ADMIN' } });
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
+/** Largeur de page : aucun défilement horizontal ne doit apparaître (mobile surtout). */
+export async function expectNoHorizontalScroll(page: Page) {
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  );
+  expect(overflow).toBeLessThanOrEqual(1);
+}

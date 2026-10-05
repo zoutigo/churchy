@@ -1,6 +1,15 @@
 'use client';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import type { AuthUserDto, Locale, LoginDto, RegisterDto } from '@churchy/shared';
+import type {
+  AuthUserDto,
+  GoogleAuthDto,
+  GoogleLinkDto,
+  Locale,
+  LoginDto,
+  LoginPhoneDto,
+  RegisterDto,
+  RegisterPhoneDto,
+} from '@churchy/shared';
 import { authApi } from '@/lib/api/auth.api';
 import { hasSessionFlag, SESSION_EXPIRED_EVENT } from '@/lib/auth/session';
 
@@ -16,6 +25,14 @@ export interface AuthContextValue {
   loggedOut: boolean;
   login: (dto: LoginDto) => Promise<AuthUserDto>;
   register: (dto: RegisterDto) => Promise<AuthUserDto>;
+  loginPhone: (dto: LoginPhoneDto) => Promise<AuthUserDto>;
+  registerPhone: (dto: RegisterPhoneDto) => Promise<AuthUserDto>;
+  /** Connexion Google : `null` = un compte existe déjà avec cet email, la liaison demande son mot de passe. */
+  loginGoogle: (dto: GoogleAuthDto) => Promise<{ user: AuthUserDto } | { linkRequired: string }>;
+  /** Lie Google à un compte existant (mot de passe) puis ouvre la session. */
+  linkGoogleWithPassword: (dto: GoogleLinkDto) => Promise<AuthUserDto>;
+  /** Met à jour l'utilisateur courant après une modification de son compte (page Sécurité). */
+  applyUser: (user: AuthUserDto) => void;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   /** Enregistre la langue préférée du compte (base de données). */
@@ -91,6 +108,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [withLoading],
   );
 
+  const openSession = useCallback((user: AuthUserDto) => {
+    setSessionExpired(false);
+    setLoggedOut(false);
+    setUser(user);
+    return user;
+  }, []);
+
+  const loginPhone = useCallback(
+    (dto: LoginPhoneDto) =>
+      withLoading(async () => openSession((await authApi.loginPhone(dto)).user)),
+    [withLoading, openSession],
+  );
+
+  const registerPhone = useCallback(
+    (dto: RegisterPhoneDto) =>
+      withLoading(async () => openSession((await authApi.registerPhone(dto)).user)),
+    [withLoading, openSession],
+  );
+
+  const loginGoogle = useCallback(
+    (dto: GoogleAuthDto) =>
+      withLoading(async () => {
+        const res = await authApi.google(dto);
+        if (res.status === 'link_required') return { linkRequired: res.email };
+        return { user: openSession(res.user) };
+      }),
+    [withLoading, openSession],
+  );
+
+  const linkGoogleWithPassword = useCallback(
+    (dto: GoogleLinkDto) =>
+      withLoading(async () => openSession((await authApi.googleLink(dto)).user)),
+    [withLoading, openSession],
+  );
+
   const logout = useCallback(
     () =>
       withLoading(async () => {
@@ -119,6 +171,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       loggedOut,
       login,
       register,
+      loginPhone,
+      registerPhone,
+      loginGoogle,
+      linkGoogleWithPassword,
+      applyUser: setUser,
       logout,
       refreshUser,
       setLocale,
@@ -131,6 +188,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       loggedOut,
       login,
       register,
+      loginPhone,
+      registerPhone,
+      loginGoogle,
+      linkGoogleWithPassword,
       logout,
       refreshUser,
       setLocale,

@@ -5,6 +5,7 @@ import {
   authLinkEmailPayloadSchema,
   celebrationPublishedPayloadSchema,
   contactMessagePayloadSchema,
+  smsPayloadSchema,
 } from './index';
 
 describe('noms de files et de jobs', () => {
@@ -89,5 +90,19 @@ describe('contactMessagePayloadSchema', () => {
     expect(contactMessagePayloadSchema.safeParse({ ...valid, topic: 'SPAM' }).success).toBe(false);
     expect(contactMessagePayloadSchema.safeParse({ ...valid, email: 'nope' }).success).toBe(false);
     expect(contactMessagePayloadSchema.safeParse({ ...valid, message: '' }).success).toBe(false);
+  });
+});
+
+describe('smsPayloadSchema', () => {
+  const valid = { to: '+237677123456', body: 'Code 123456' };
+
+  it('accepte un numéro international, français par défaut', () => {
+    expect(smsPayloadSchema.parse(valid).locale).toBe('fr');
+  });
+
+  it('rejette un numéro national, un texte vide ou trop long', () => {
+    expect(smsPayloadSchema.safeParse({ ...valid, to: '0677123456' }).success).toBe(false);
+    expect(smsPayloadSchema.safeParse({ ...valid, body: '' }).success).toBe(false);
+    expect(smsPayloadSchema.safeParse({ ...valid, body: 'x'.repeat(481) }).success).toBe(false);
   });
 });

@@ -15,7 +15,7 @@ export function EmailVerificationBanner() {
   const { user } = useAuth();
   const [status, setStatus] = useState<Status>('idle');
 
-  if (!user || user.emailVerified) return null;
+  if (!user || !user.email || user.emailVerified) return null;
 
   async function resend() {
     setStatus('sending');
