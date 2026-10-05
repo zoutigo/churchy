@@ -83,6 +83,8 @@ Validées au démarrage par `src/config/env.ts` (l'API refuse de démarrer si la
 - `DATABASE_URL` — PostgreSQL connection string
 - `JWT_SECRET` — **obligatoire**, 16 caractères minimum, aucune valeur de secours (`openssl rand -hex 32`) ;
   refusé en production s'il ressemble à un exemple
+- `PIN_PEPPER` — poivre des PIN (HMAC avant bcrypt), 32 caractères minimum (`openssl rand -hex 32`) ; **obligatoire en production**,
+  facultatif en dev/test ; le perdre invalide tous les PIN
 - `ACCESS_TOKEN_TTL_SECONDS` — durée du JWT d'accès (défaut : 900)
 - `REFRESH_TOKEN_TTL_DAYS` — durée de la session (défaut : 30)
 - `PORT` — Port (défaut: 3201)

@@ -24,6 +24,7 @@ import {
   type AuthResult,
 } from './auth.service';
 import { USER_AUTH_INCLUDE, localeOf, toAuthUserDto } from './auth-user';
+import { hashPin, pinHashNeedsUpgrade, verifyPin } from './pin-hash';
 
 const BCRYPT_ROUNDS = 10;
 /** Comparé quand le numéro est inconnu : le temps de réponse ne révèle pas s'il a un compte. */
@@ -42,11 +43,11 @@ export class PhoneAuthService {
   ) {}
 
   hashPin(pin: string): Promise<string> {
-    return bcrypt.hash(pin, BCRYPT_ROUNDS);
+    return hashPin(pin);
   }
 
   verifyPin(pin: string, hash: string | undefined): Promise<boolean> {
-    return bcrypt.compare(pin, hash ?? DUMMY_PIN_HASH);
+    return verifyPin(pin, hash ?? DUMMY_PIN_HASH);
   }
 
   /** Crée un compte sans email ni mot de passe. Le numéro reste « non vérifié » (pas encore de SMS). */
@@ -106,6 +107,13 @@ export class PhoneAuthService {
     }
 
     await this.security.recordSuccess('PHONE_LOGIN', dto.phone);
+    // PIN enregistré avant l'introduction du poivre : on le reprotège maintenant qu'on connaît sa valeur.
+    if (pinHashNeedsUpgrade(credential.pinHash)) {
+      await this.prisma.userPhoneCredential.update({
+        where: { id: credential.id },
+        data: { pinHash: await this.hashPin(dto.pin) },
+      });
+    }
     await this.security.audit({
       event: 'LOGIN_PHONE',
       status: 'SUCCESS',

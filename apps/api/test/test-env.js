@@ -11,3 +11,5 @@ process.env.THROTTLE_LIMIT ??= '100000';
 process.env.FRONTEND_URL = 'http://localhost:3210';
 // Identifiant client Google fictif : les tests remplacent le vérificateur (jamais d'appel à Google).
 process.env.GOOGLE_CLIENT_ID = 'test-client-id.apps.googleusercontent.com';
+// Poivre des PIN : les tests fonctionnels exercent le chemin poivré (comme en production).
+process.env.PIN_PEPPER = 'test-pepper-test-pepper-test-pepper-01';

@@ -49,7 +49,7 @@ Un compte peut cumuler plusieurs moyens ; `AuthUserDto.methods` = `{ password, p
 (`User.email` et `passwordHash` sont facultatifs : un compte par téléphone ou Google n'a ni l'un ni l'autre au départ).
 - **Email + mot de passe** : l'inscription demande une confirmation (`registerFormSchema`, jamais envoyée à l'API).
 - **Téléphone + PIN à 6 chiffres** (`PhoneAuthService`, table `UserPhoneCredential`) : `POST /auth/register/phone`, `/auth/login/phone`,
-  `/auth/forgot-pin`, `/auth/reset-pin`. Numéro normalisé en E.164 (`phoneSchema`, `normalizeInternationalPhone`), PIN haché (bcrypt) et refusé s'il est
+  `/auth/forgot-pin`, `/auth/reset-pin`. Numéro normalisé en E.164 (`phoneSchema`, `normalizeInternationalPhone`), PIN poivré puis haché (`pin-hash.ts` : HMAC-SHA256 avec `PIN_PEPPER`, bcrypt, préfixe `p1$` ; un haché d'avant le poivre reste valable et est refait à la connexion réussie ; poivre perdu = tous les PIN invalides) et refusé s'il est
   trop simple (`isWeakPin` : 000000, 123456…). **Le numéro n'est pas vérifié** (`verifiedAt` vide : pas encore de SMS) ; la connexion fonctionne quand même.
 - **Verrouillage et audit** (`AuthSecurityService`) : échecs comptés par clé hachée (`AuthRateLimit`), atomiquement ; 5 échecs de PIN ou de preuve, 10 de mot de passe →
   verrou de 15 min (429 `tooManyAttempts`, même réponse pour un numéro inconnu). Journal `AuthAuditLog` (numéro masqué, jamais de secret).
@@ -71,10 +71,10 @@ Un compte peut cumuler plusieurs moyens ; `AuthUserDto.methods` = `{ password, p
 - **Web** : `/login` et `/register` = Google (si activé) + onglets Email | Téléphone (`LoginPanel`, `RegisterPanel`) ; `PhoneNumberField` (pays + masque, valeur
   internationale), `PinInput` (chiffres seulement, pas de `maxLength` : il tronquerait un collage « 482 915 »). Pages `/forgot-pin`, `/reset-pin` (segments traduits, `AUTH_LINK_PATHS`).
 - Limites connues : un numéro non vérifié peut être saisi par un tiers (le propriétaire réel sera bloqué à l'inscription tant qu'il n'y a pas de SMS) ; l'ajout de membres
-  d'une paroisse se fait toujours par **email** (un compte sans email ne peut pas encore être invité) ; le PIN n'est pas « poivré » (le verrouillage est la protection principale).
+  d'une paroisse se fait toujours par **email** (un compte sans email ne peut pas encore être invité) ; le PIN à 6 chiffres reste faible face à une attaque en ligne (le verrouillage est la protection principale).
 
 **Configuration** (`apps/api/src/config/env.ts`, validée au démarrage, aucune valeur de secours) :
-`GOOGLE_CLIENT_ID` (facultatif), `JWT_SECRET` obligatoire (16 car. min., refusé en production s'il ressemble à un exemple),
+`GOOGLE_CLIENT_ID` (facultatif), `PIN_PEPPER` (poivre des PIN, 32 car. min., **obligatoire en production**), `JWT_SECRET` obligatoire (16 car. min., refusé en production s'il ressemble à un exemple),
 `ACCESS_TOKEN_TTL_SECONDS`, `REFRESH_TOKEN_TTL_DAYS`, `FRONTEND_URL`, `AUTH_THROTTLE_LIMIT`, `THROTTLE_LIMIT`.
 En production : `NODE_ENV=production` (cookies `Secure`), web et API sur le même domaine racine (cookies
 `SameSite=Lax`), et `trust proxy` si l'API est derrière un reverse proxy (limitation par IP).
