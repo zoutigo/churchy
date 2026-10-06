@@ -104,6 +104,8 @@ describe('annonces dans le tableau de bord', () => {
     render(<AnnouncementsPage params={{ parishId: 'p1' }} />);
     expect(await screen.findByText('Messe de rentrée')).toBeInTheDocument();
     expect(screen.getByText('Paroissiens seulement')).toBeInTheDocument();
+    // Le sous-titre ne prétend plus que tout est public (le paroissien voit du contenu réservé).
+    expect(screen.getByText(/publiques ou réservées aux paroissiens/)).toBeInTheDocument();
     await waitFor(() => expect(membership).toHaveBeenCalled());
     expect(screen.queryByRole('button', { name: /Ajouter|Nouvelle/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Supprimer/ })).not.toBeInTheDocument();

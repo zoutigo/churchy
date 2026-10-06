@@ -1376,7 +1376,7 @@
     "newTitle": "New announcement",
     "newDesc": "Visible on the parish's public page",
     "title": "Announcements",
-    "desc": "News published on the parish's public page",
+    "desc": "News for the faithful, public or reserved for members",
     "add": "+ New announcement",
     "empty": "No announcement yet.",
     "deleted": "Announcement deleted"
