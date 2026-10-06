@@ -28,7 +28,7 @@ aléatoire : `openssl rand -hex 32`), `apps/web/.env.local.example` → `.env.lo
 web 3200 · api 3201 (Swagger: /api/docs) · postgres 5433 · redis 6380 · SMTP Mailpit 1025 ·
 **Mailpit (emails reçus) http://localhost:8025**.
 **Postgres, Redis et Mailpit ne sont publiés que sur `127.0.0.1`** (`docker-compose.yml`) : jamais sur toutes les interfaces (mot de passe de dev `password` : une base ouverte a déjà été piratée par un mineur de crypto). Garder `127.0.0.1:` devant chaque port publié.
-**Sauvegarde de la base de dev** : `~/scripts/backup_churchy_dev.sh` (cron 1 h 30, dumps de `churchy_db` et `churchy_test` dans `~/backups/churchy-dev/`, 7 jours). Après un `git pull` qui ajooute une migration : `npx prisma migrate deploy` dans `apps/api` (sinon l'API répond 500 sur les tables manquantes). Tests fonctionnels : web 3210 · api 3211.
+**Sauvegarde de la base de dev** : `~/scripts/backup_churchy_dev.sh` (cron 1 h 30, dumps de `churchy_db` et `churchy_test` dans `~/backups/churchy-dev/`, 7 jours). Après un `git pull` qui ajoute une migration : `npx prisma migrate deploy` dans `apps/api` (sinon l'API répond 500 sur les tables manquantes). Tests fonctionnels : web 3210 · api 3211.
 
 ## Authentification
 Session par **cookies**, jamais de jeton lisible par le JavaScript du site :
