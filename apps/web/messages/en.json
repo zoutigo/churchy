@@ -936,6 +936,10 @@
         "activities": {
           "title": "Activities",
           "text": "Gatherings and events"
+        },
+        "members": {
+          "title": "Members",
+          "text": "Followers, parishioners, duties"
         }
       },
       "readOnlyHint": "Managing the parish (public information, members) is reserved for its administrators."
@@ -1631,5 +1635,42 @@
     "members": "Members only",
     "membersHint": "Reserved for members: followers and the public cannot see it.",
     "badgeMembers": "Members only"
+  },
+  "parishMembers": {
+    "title": "Members",
+    "desc": "The parish’s followers and parishioners: first name, last name and join date only (never an email or phone number).",
+    "searchLabel": "Search for a member",
+    "searchPlaceholder": "First or last name",
+    "filterLabel": "Filter by status",
+    "allStatuses": "All statuses",
+    "count": "{count, plural, one {# member} other {# members}}",
+    "empty": "No member matches.",
+    "emptyParish": "Nobody has joined this parish yet.",
+    "loadError": "Could not load the members",
+    "joined": "Since {date}",
+    "you": "you",
+    "columns": {
+      "name": "Member",
+      "status": "Status",
+      "duties": "Duties",
+      "actions": "Actions"
+    },
+    "statusLabel": "Status of {name}",
+    "dutyLabel": "{duty}: {name}",
+    "dutiesHint": "Duties are given to a parishioner.",
+    "noDuties": "No duties",
+    "statusChanged": "{name} is now {status}.",
+    "dutiesChanged": "{name}’s duties were updated.",
+    "updateError": "Could not update this member",
+    "remove": "Remove",
+    "removeLabel": "Remove {name}",
+    "removeConfirm": "Confirm removal",
+    "cancel": "Cancel",
+    "removed": "{name} was removed from the parish.",
+    "removeError": "Could not remove this member",
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {page} of {pages}",
+    "forbidden": "This page is reserved for the parish administrators."
   }
 }

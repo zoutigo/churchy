@@ -58,13 +58,16 @@ describe('vue d’une paroisse dans le tableau de bord', () => {
     membership.mockResolvedValue({ status: 'PARISHIONER', duties: ['READER'] });
     render(<ParishDetailPage params={{ parishId: 'p1' }} />);
     await waitFor(() => expect(sectionLinks()).toHaveLength(5));
+    // L'écran des membres est réservé à qui gère la paroisse.
+    expect(sectionLinks()).not.toContain('/dashboard/parishes/p1/members');
     expect(screen.queryByRole('button', { name: 'Modifier' })).not.toBeInTheDocument();
   });
 
   it('administrateur : tout, y compris la modification', async () => {
     membership.mockResolvedValue({ status: 'PARISH_ADMIN', duties: [] });
     render(<ParishDetailPage params={{ parishId: 'p1' }} />);
-    await waitFor(() => expect(sectionLinks()).toHaveLength(5));
+    await waitFor(() => expect(sectionLinks()).toContain('/dashboard/parishes/p1/members'));
+    expect(sectionLinks()).toHaveLength(6);
     expect(await screen.findByRole('button', { name: 'Modifier' })).toBeInTheDocument();
     expect(screen.queryByText(/réservée à ses administrateurs/)).not.toBeInTheDocument();
   });
@@ -73,7 +76,8 @@ describe('vue d’une paroisse dans le tableau de bord', () => {
     auth = { user: { id: 'u1', role: 'SUPER_ADMIN' }, initializing: false };
     membership.mockResolvedValue({ status: null, duties: [] });
     render(<ParishDetailPage params={{ parishId: 'p1' }} />);
-    await waitFor(() => expect(sectionLinks()).toHaveLength(5));
+    await waitFor(() => expect(sectionLinks()).toContain('/dashboard/parishes/p1/members'));
+    expect(sectionLinks()).toHaveLength(6);
   });
 
   it('ADMIN de plateforme sans appartenance : lecture des données internes, pas de modification', async () => {
@@ -81,6 +85,7 @@ describe('vue d’une paroisse dans le tableau de bord', () => {
     membership.mockResolvedValue({ status: null, duties: [] });
     render(<ParishDetailPage params={{ parishId: 'p1' }} />);
     await waitFor(() => expect(sectionLinks()).toHaveLength(5));
+    expect(sectionLinks()).not.toContain('/dashboard/parishes/p1/members');
     expect(screen.queryByRole('button', { name: 'Modifier' })).not.toBeInTheDocument();
   });
 });

@@ -938,6 +938,10 @@
         "activities": {
           "title": "Activités",
           "text": "Rencontres et événements"
+        },
+        "members": {
+          "title": "Membres",
+          "text": "Fidèles, paroissiens, responsabilités"
         }
       },
       "readOnlyHint": "La gestion de la paroisse (informations publiques, membres) est réservée à ses administrateurs."
@@ -1633,5 +1637,42 @@
     "members": "Paroissiens seulement",
     "membersHint": "Réservé aux paroissiens : les fidèles et le public ne le voient pas.",
     "badgeMembers": "Paroissiens seulement"
+  },
+  "parishMembers": {
+    "title": "Membres",
+    "desc": "Les fidèles et paroissiens de la paroisse : nom, prénom et date d’arrivée seulement (jamais d’email ni de téléphone).",
+    "searchLabel": "Rechercher un membre",
+    "searchPlaceholder": "Nom ou prénom",
+    "filterLabel": "Filtrer par statut",
+    "allStatuses": "Tous les statuts",
+    "count": "{count, plural, one {# membre} other {# membres}}",
+    "empty": "Aucun membre ne correspond.",
+    "emptyParish": "Personne n’a encore rejoint cette paroisse.",
+    "loadError": "Impossible de charger les membres",
+    "joined": "Depuis le {date}",
+    "you": "vous",
+    "columns": {
+      "name": "Membre",
+      "status": "Statut",
+      "duties": "Responsabilités",
+      "actions": "Actions"
+    },
+    "statusLabel": "Statut de {name}",
+    "dutyLabel": "{duty} : {name}",
+    "dutiesHint": "Les responsabilités se donnent à un paroissien.",
+    "noDuties": "Aucune responsabilité",
+    "statusChanged": "{name} est maintenant {status}.",
+    "dutiesChanged": "Responsabilités de {name} mises à jour.",
+    "updateError": "Impossible de modifier ce membre",
+    "remove": "Retirer",
+    "removeLabel": "Retirer {name}",
+    "removeConfirm": "Confirmer le retrait",
+    "cancel": "Annuler",
+    "removed": "{name} a été retiré de la paroisse.",
+    "removeError": "Impossible de retirer ce membre",
+    "previous": "Précédent",
+    "next": "Suivant",
+    "pageOf": "Page {page} sur {pages}",
+    "forbidden": "Cette page est réservée aux administrateurs de la paroisse."
   }
 }

@@ -120,6 +120,9 @@ qui touche une ressource de paroisse doit porter `@ParishAccess` (test d'autoris
 - **Gestion par l'admin** (`parish.manage`, `/parishes/:id/members`) : `GET ?q=&status=&page=` (30 par page ; **nom, prénom, date, statut, responsabilités — jamais d'email ni de téléphone**),
   `PATCH /:userId` (`{ status?, duties? }` : promotion fidèle → paroissien **immédiate**, sans invitation, plusieurs admins), `DELETE /:userId` (retrait sans blocage sauf dernier admin).
   L'ancien ajout par email n'existe plus (peu d'emails au Cameroun). Les paroissiens ne se voient pas entre eux. Favoris et statut de fidèle sont indépendants.
+- **Écran des membres** (web, `/dashboard/parishes/[id]/members`, `ParishMembers` ; le lien « Membres » de la vue de la paroisse n'apparaît qu'avec `parish.manage`) : recherche par nom (délai de 300 ms),
+  filtre de statut, pagination ; une **carte** par membre sur mobile et tablette, un **tableau** dès `lg`. Statut = liste déroulante (promotion immédiate), responsabilités = cases (proposées seulement à un
+  paroissien), retrait en deux temps (« Retirer » puis « Confirmer le retrait »). Mise à jour **optimiste** avec retour arrière si l'API refuse (dernier administrateur : toast d'erreur). Jamais d'email ni de téléphone à l'écran.
 - Migration `parish_status_duties` : ancien `PARISH_ADMIN` → admin ; `PREPARER` → paroissien + Préparateur + Rédacteur (il écrivait aussi les annonces) ; `READER` → paroissien + Lecteur ; `VIEWER` → paroissien.
 - Web : `FollowButton` (en-tête du mini-site d'une paroisse) — visiteur → `/login?next=` puis retour ; boîte de dialogue qui annonce « l'administrateur verra votre nom et prénom, pas votre email ni
   téléphone » + lien vers la confidentialité ; fidèle : « Ne plus suivre » ; paroissien : « Me retirer (redevenir fidèle) » ; admin : pas de retrait ici. `enums.parishStatus` / `enums.parishDuty`
@@ -328,21 +331,6 @@ toucher à leurs conf nginx / conteneurs**. Modèle repris de scolive/tigilabs :
 - Sélecteurs Playwright : préférer `getByRole` / `getByLabel(…, { exact: true })` (le bouton « Afficher le mot de passe » partage des mots avec le libellé du champ).
 - Piège Vitest : `beforeEach(() => mock.mockReset())` renvoie la fonction mock, que Vitest appelle ensuite comme nettoyage ; utiliser des accolades.
 - En CI : `npx playwright install chromium` et `PW_CHANNEL=chromium`.
-
-## Chantier en cours : rôles et permissions (à effacer au fur et à mesure)
-Cette section est la référence du chantier. **Cocher la checklist à chaque étape** ; quand un lot est terminé, déplacer ses règles
-vers les sections permanentes (Authentification, Autorisations par paroisse…) et **supprimer** le lot d'ici. Supprimer la section entière à la fin.
-
-**Décisions restantes (lot 4)**
-- Écran des membres (admin) : nom, prénom, date, statut, responsabilités (ni email ni téléphone), recherche, promotion immédiate, attribution des responsabilités, retrait ; l'API existe (`/parishes/:id/members`).
-  Texte à ajouter : un fidèle/paroissien qui se retire redevient fidèle ; l'admin peut retirer sans blocage ; le dernier admin reste.
-
-**Checklist** (chaque lot : tests unitaires + e2e API + Playwright 3 viewports + essais réels navigateur et API, précommit, push, CI `dev` vert)
-- [x] Lot 1 — rôles plateforme (terminé, effacé de cette liste ; règles dans « Rôles de plateforme »)
-- [x] Lot 2 — rôles de paroisse (terminé : migration, API fidèle/membres/responsabilités, visibilité, bouton « Devenir fidèle », confidentialité ; règles dans « Autorisations par paroisse »)
-  - reste au lot 4 : **l'écran** d'administration des membres (liste, promotion, responsabilités, retrait) — l'API est déjà en place
-- [x] Lot 3 — vue lecture seule d'une paroisse dans `/dashboard` (terminé ; règles dans « Autorisations par paroisse », Web)
-- [ ] Lot 4 — liste des fidèles, promotion, retrait, quitter
 
 ## Règles de travail (obligatoires)
 

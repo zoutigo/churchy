@@ -26,6 +26,7 @@ const SECTIONS: { key: string; permission: ParishPermission }[] = [
   { key: 'celebrations', permission: 'parish.internal.read' },
   { key: 'announcements', permission: 'parish.view' },
   { key: 'activities', permission: 'parish.view' },
+  { key: 'members', permission: 'parish.manage' },
 ];
 
 export default function ParishDetailPage({ params }: Props) {
