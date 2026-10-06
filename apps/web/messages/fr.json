@@ -906,10 +906,10 @@
       "createTitle": "Créer une paroisse",
       "createDesc": "Ces informations alimentent la page publique de la paroisse",
       "title": "Mes paroisses",
-      "desc": "Gérez vos espaces paroissiaux",
+      "desc": "Les paroisses que vous gérez ou que vous suivez",
       "new": "+ Nouvelle paroisse",
       "empty": "Aucune paroisse pour l’instant.",
-      "emptyHint": "Créez votre première paroisse ci-dessus."
+      "emptyHint": "Suivez une paroisse depuis sa page publique, ou créez la vôtre."
     },
     "parish": {
       "fallbackName": "Paroisse",
@@ -939,7 +939,8 @@
           "title": "Activités",
           "text": "Rencontres et événements"
         }
-      }
+      },
+      "readOnlyHint": "La gestion de la paroisse (informations publiques, membres) est réservée à ses administrateurs."
     }
   },
   "parishSummary": {

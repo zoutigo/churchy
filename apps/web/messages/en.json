@@ -904,10 +904,10 @@
       "createTitle": "Create a parish",
       "createDesc": "This information feeds the parish's public page",
       "title": "My parishes",
-      "desc": "Manage your parish spaces",
+      "desc": "The parishes you manage or follow",
       "new": "+ New parish",
       "empty": "No parish yet.",
-      "emptyHint": "Create your first parish above."
+      "emptyHint": "Follow a parish from its public page, or create your own."
     },
     "parish": {
       "fallbackName": "Parish",
@@ -937,7 +937,8 @@
           "title": "Activities",
           "text": "Gatherings and events"
         }
-      }
+      },
+      "readOnlyHint": "Managing the parish (public information, members) is reserved for its administrators."
     }
   },
   "parishSummary": {

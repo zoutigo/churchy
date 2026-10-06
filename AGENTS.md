@@ -124,6 +124,10 @@ qui touche une ressource de paroisse doit porter `@ParishAccess` (test d'autoris
 - Web : `FollowButton` (en-tête du mini-site d'une paroisse) — visiteur → `/login?next=` puis retour ; boîte de dialogue qui annonce « l'administrateur verra votre nom et prénom, pas votre email ni
   téléphone » + lien vers la confidentialité ; fidèle : « Ne plus suivre » ; paroissien : « Me retirer (redevenir fidèle) » ; admin : pas de retrait ici. `enums.parishStatus` / `enums.parishDuty`
   (`useLabels`). La politique de confidentialité a une section « Devenir fidèle d'une paroisse ».
+- **Vue d'une paroisse dans `/dashboard`** (`/dashboard/parishes/[id]`, « Mes paroisses » liste gérées **et** suivies, avec le statut) : `useParishAccess(parishId)` lit `GET …/membership` et
+  expose `can(permission)` (même `hasParishPermission` que l'API ; SUPER_ADMIN tout ; ADMIN/MODERATOR de plateforme sans appartenance : lecture seulement). Le web ne fait que **proposer** :
+  sections Bibliothèque/Modèles/Célébrations = `parish.internal.read`, Annonces/Activités = `parish.view`, « Modifier » = `parish.manage`, ajout/suppression d'annonces et d'activités = `parish.announcements.write`.
+  En-tête : `FollowButton` + `FavoriteButton` + lien vers le site public ; un non-admin voit un bandeau « réservée à ses administrateurs ». Un paroissien voit les annonces « Paroissiens seulement » dans la liste (l'API les renvoie).
 
 **Web** : `AuthProvider` (contexte) + `useAuth`, `middleware.ts` (redirige les pages privées sans session vers
 `/login?next=…` ; `next` est validé par `safeNextPath`), `AuthGuard` (filet côté client), client API
@@ -329,9 +333,7 @@ toucher à leurs conf nginx / conteneurs**. Modèle repris de scolive/tigilabs :
 Cette section est la référence du chantier. **Cocher la checklist à chaque étape** ; quand un lot est terminé, déplacer ses règles
 vers les sections permanentes (Authentification, Autorisations par paroisse…) et **supprimer** le lot d'ici. Supprimer la section entière à la fin.
 
-**Décisions restantes (lots 3 et 4)**
-- Vue lecture seule d'une paroisse dans `/dashboard` : mini-site public + Devenir fidèle / Quitter + favori + lien « Gérer » pour admin/équipe. « Mes paroisses » liste les paroisses où l'on est fidèle
-  (statut affiché) ; un paroissien y voit aussi les annonces/activités « Paroissiens seulement » (l'API `GET /parishes/:id/announcements|activities` les renvoie déjà selon le statut).
+**Décisions restantes (lot 4)**
 - Écran des membres (admin) : nom, prénom, date, statut, responsabilités (ni email ni téléphone), recherche, promotion immédiate, attribution des responsabilités, retrait ; l'API existe (`/parishes/:id/members`).
   Texte à ajouter : un fidèle/paroissien qui se retire redevient fidèle ; l'admin peut retirer sans blocage ; le dernier admin reste.
 
@@ -339,7 +341,7 @@ vers les sections permanentes (Authentification, Autorisations par paroisse…) 
 - [x] Lot 1 — rôles plateforme (terminé, effacé de cette liste ; règles dans « Rôles de plateforme »)
 - [x] Lot 2 — rôles de paroisse (terminé : migration, API fidèle/membres/responsabilités, visibilité, bouton « Devenir fidèle », confidentialité ; règles dans « Autorisations par paroisse »)
   - reste au lot 4 : **l'écran** d'administration des membres (liste, promotion, responsabilités, retrait) — l'API est déjà en place
-- [ ] Lot 3 — vue lecture seule d'une paroisse (favoris, Mes paroisses)
+- [x] Lot 3 — vue lecture seule d'une paroisse dans `/dashboard` (terminé ; règles dans « Autorisations par paroisse », Web)
 - [ ] Lot 4 — liste des fidèles, promotion, retrait, quitter
 
 ## Règles de travail (obligatoires)

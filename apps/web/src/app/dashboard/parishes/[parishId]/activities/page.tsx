@@ -2,6 +2,7 @@
 import { useTranslations } from 'next-intl';
 import { useAppLocale } from '@/i18n/locale';
 import { useCallback, useEffect, useState } from 'react';
+import { useParishAccess } from '@/hooks/useParishAccess';
 import { activitiesApi, type Activity } from '@/lib/api/activities.api';
 import { CreateActivityForm } from '@/components/news/CreateActivityForm';
 import { DeleteButton } from '@/components/news/DeleteButton';
@@ -25,6 +26,8 @@ export default function Page({ params }: Props) {
   const tv = useTranslations('visibilityField');
   const locale = useAppLocale();
   const { parishId } = params;
+  const { can } = useParishAccess(parishId);
+  const canWrite = can('parish.announcements.write');
   const [items, setItems] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -62,7 +65,9 @@ export default function Page({ params }: Props) {
       <PageHeader
         title={t('title')}
         description={t('desc')}
-        action={<Button onClick={() => setShowForm(true)}>{t('add')}</Button>}
+        action={
+          canWrite ? <Button onClick={() => setShowForm(true)}>{t('add')}</Button> : undefined
+        }
       />
 
       {error ? (
@@ -94,18 +99,20 @@ export default function Page({ params }: Props) {
                   })}
                 </p>
               </div>
-              <DeleteButton
-                label={item.title}
-                onConfirm={async () => {
-                  try {
-                    await activitiesApi.remove(parishId, item.id);
-                    notify.success(t('deleted'), tcn('quoted', { title: item.title }));
-                    await load();
-                  } catch (err: unknown) {
-                    notify.error(tcn('deleteFailed'), errorMessage(err, tcn('retryLater')));
-                  }
-                }}
-              />
+              {canWrite && (
+                <DeleteButton
+                  label={item.title}
+                  onConfirm={async () => {
+                    try {
+                      await activitiesApi.remove(parishId, item.id);
+                      notify.success(t('deleted'), tcn('quoted', { title: item.title }));
+                      await load();
+                    } catch (err: unknown) {
+                      notify.error(tcn('deleteFailed'), errorMessage(err, tcn('retryLater')));
+                    }
+                  }}
+                />
+              )}
             </li>
           ))}
         </ul>
