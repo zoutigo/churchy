@@ -6,7 +6,8 @@ import { adminPinResetSchema, type AdminPinResetDto, type PinResetLinkDto } from
 import { env } from '../../config/env';
 import { CurrentUser, type AuthUser } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { PlatformAdminGuard } from '../../common/guards/platform-admin.guard';
+import { PlatformPermissionGuard } from '../../common/guards/platform-permission.guard';
+import { RequirePlatformPermission } from '../../common/decorators/platform-permission.decorator';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
 import { PhoneAuthService } from './phone-auth.service';
 
@@ -14,7 +15,8 @@ import { PhoneAuthService } from './phone-auth.service';
 @ApiTags('admin')
 @ApiBearerAuth()
 @Controller('admin/auth')
-@UseGuards(JwtAuthGuard, PlatformAdminGuard)
+@UseGuards(JwtAuthGuard, PlatformPermissionGuard)
+@RequirePlatformPermission('platform.pin-reset')
 export class AdminAuthController {
   constructor(private phoneAuth: PhoneAuthService) {}
 

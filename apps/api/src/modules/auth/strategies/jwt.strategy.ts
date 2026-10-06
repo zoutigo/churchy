@@ -1,4 +1,5 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { ERR } from '@churchy/shared';
 import { PassportStrategy } from '@nestjs/passport';
 import type { Request } from 'express';
 import { ExtractJwt, Strategy } from 'passport-jwt';
@@ -27,6 +28,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       include: USER_AUTH_INCLUDE,
     });
     if (!user) throw new UnauthorizedException();
+    // Compte suspendu : refusé tout de suite, même avec un jeton encore valide.
+    if (user.suspendedAt) throw new UnauthorizedException(ERR.accountSuspended);
     return user;
   }
 }

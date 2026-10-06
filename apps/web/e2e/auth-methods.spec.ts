@@ -371,8 +371,9 @@ for (const [device, viewport] of Object.entries(VIEWPORTS)) {
     test('un utilisateur ordinaire ne voit ni le lien ni la page', async ({ page }) => {
       await registerViaUi(page, uniqueEmail('notadmin'));
       await expect(page.getByRole('link', { name: 'Réinitialiser un PIN' })).toHaveCount(0);
-      await page.goto('/dashboard/admin/pin-reset');
-      await expect(page.getByText('réservée aux administrateurs de la plateforme')).toBeVisible();
+      // Hors plateforme : renvoyé à son espace, sans voir la page.
+      await page.goto('/platform/pin-reset');
+      await expect(page).toHaveURL(/\/dashboard$/);
       await expect(page.getByLabel('Numéro de téléphone')).toHaveCount(0);
     });
 
@@ -391,7 +392,9 @@ for (const [device, viewport] of Object.entries(VIEWPORTS)) {
       await registerViaUi(page, adminEmail);
       await makeSuperAdmin(adminEmail);
       await page.reload();
+      // L'ancienne adresse redirige vers l'espace plateforme.
       await page.goto('/dashboard/admin/pin-reset');
+      await expect(page).toHaveURL(/\/platform\/pin-reset$/);
       await page.getByLabel('Numéro de téléphone').fill(phone.national);
       await page.getByRole('button', { name: 'Créer le lien' }).click();
       const result = page.getByTestId('pin-reset-result');
@@ -415,7 +418,7 @@ for (const [device, viewport] of Object.entries(VIEWPORTS)) {
       const adminEmail = uniqueEmail('platformadmin2');
       await registerViaUi(page, adminEmail);
       await makeSuperAdmin(adminEmail);
-      await page.goto('/dashboard/admin/pin-reset');
+      await page.goto('/platform/pin-reset');
       await page.getByLabel('Numéro de téléphone').fill(uniquePhone().national);
       await page.getByRole('button', { name: 'Créer le lien' }).click();
       await expect(

@@ -5,6 +5,7 @@ import { useRouter } from '@/i18n/link';
 import { ChevronDown, Church, LogOut, ShieldCheck } from 'lucide-react';
 import { formatInternationalPhone } from '@churchy/shared';
 import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
+import { PlatformSwitch } from '@/components/platform/PlatformSwitch';
 import { useAuth } from '@/hooks/useAuth';
 import {
   DropdownMenu,
@@ -31,6 +32,7 @@ export function Header() {
 
   return (
     <header className="h-14 border-b border-churchy-200 bg-white flex items-center justify-end gap-3 px-4 sm:px-6 shrink-0 shadow-sm">
+      <PlatformSwitch />
       <LanguageSwitcher />
       {user && (
         <DropdownMenu>

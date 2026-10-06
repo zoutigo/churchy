@@ -2,7 +2,8 @@
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/link';
 import { usePathname } from '@/i18n/link';
-import { LayoutDashboard, Church, ShieldCheck, Star, UserCog } from 'lucide-react';
+import { LayoutDashboard, Church, ShieldCheck, Star, UserCog, Users, Shield } from 'lucide-react';
+import { hasPlatformPermission, type PlatformPermission } from '@churchy/shared';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 
@@ -11,13 +12,6 @@ const navItems = [
   { href: '/dashboard/parishes', key: 'parishes', exact: false, icon: Church },
   { href: '/dashboard/favorites', key: 'favorites', exact: false, icon: Star },
   { href: '/dashboard/security', key: 'security', exact: false, icon: ShieldCheck },
-  {
-    href: '/dashboard/admin/pin-reset',
-    key: 'pinReset',
-    exact: false,
-    icon: UserCog,
-    platformOnly: true,
-  },
 ] as const;
 
 type NavItem = {
@@ -25,30 +19,72 @@ type NavItem = {
   key: string;
   exact: boolean;
   icon: typeof Church;
-  platformOnly?: boolean;
+  /** Espace plateforme : permission exigée pour voir l'entrée. */
+  permission?: PlatformPermission;
 };
+
+/** Espace de l'application : le tableau de bord de l'utilisateur ou la plateforme. */
+export type NavArea = 'dashboard' | 'platform';
+
+const platformItems: readonly NavItem[] = [
+  { href: '/platform', key: 'home', exact: true, icon: Shield, permission: 'platform.access' },
+  {
+    href: '/platform/users',
+    key: 'users',
+    exact: false,
+    icon: Users,
+    permission: 'platform.users.read',
+  },
+  {
+    href: '/platform/pin-reset',
+    key: 'pinReset',
+    exact: false,
+    icon: UserCog,
+    permission: 'platform.pin-reset',
+  },
+];
 
 /** Entrées de navigation du tableau de bord visibles par l'utilisateur (partagées avec la barre mobile). */
 export function useDashboardNav(): NavItem[] {
+  return [...(navItems as readonly NavItem[])];
+}
+
+/** Entrées de l'espace plateforme que les permissions de l'utilisateur autorisent. */
+export function usePlatformNav(): NavItem[] {
   const { user } = useAuth();
-  return (navItems as readonly NavItem[]).filter(
-    (item) => !item.platformOnly || user?.role === 'SUPER_ADMIN',
+  return platformItems.filter(
+    (item) => item.permission && hasPlatformPermission(user?.role, item.permission),
   );
 }
 
-export function Sidebar() {
-  const t = useTranslations('layout.nav');
+/** Entrées et textes d'un espace (partagés par la barre latérale et la barre mobile). */
+export function useNav(area: NavArea) {
+  const dashboard = useDashboardNav();
+  const platform = usePlatformNav();
+  return area === 'platform'
+    ? { items: platform, namespace: 'platform.nav', home: '/platform' }
+    : { items: dashboard, namespace: 'layout.nav', home: '/dashboard' };
+}
+
+export function Sidebar({ area = 'dashboard' }: { area?: NavArea }) {
   const pathname = usePathname();
-  const items = useDashboardNav();
+  const { items, namespace, home } = useNav(area);
+  const t = useTranslations(namespace);
+  const tPlatform = useTranslations('platform');
 
   return (
     <aside className="hidden md:flex w-60 shrink-0 bg-churchy-700 h-full flex-col">
       {/* Logo */}
       <div className="p-5 border-b border-churchy-500/40">
-        <Link href="/dashboard" className="flex items-center gap-2 group">
+        <Link href={home} className="flex items-center gap-2 group">
           <span className="text-churchy-300 text-lg">✦</span>
           <span className="font-playfair text-xl font-bold text-white tracking-wider">Churchy</span>
         </Link>
+        {area === 'platform' && (
+          <span className="mt-2 inline-block rounded-full bg-amber-500 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-white">
+            {tPlatform('badge')}
+          </span>
+        )}
       </div>
 
       {/* Navigation */}

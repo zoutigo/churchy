@@ -3,13 +3,13 @@ import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/link';
 import { usePathname } from '@/i18n/link';
 import { cn } from '@/lib/utils';
-import { useDashboardNav } from './Sidebar';
+import { useNav, type NavArea } from './Sidebar';
 
 /** Navigation du tableau de bord sur mobile (la barre latérale n'apparaît qu'à partir de `md`). */
-export function MobileNav() {
-  const t = useTranslations('layout.nav');
+export function MobileNav({ area = 'dashboard' }: { area?: NavArea }) {
   const pathname = usePathname();
-  const items = useDashboardNav();
+  const { items, namespace } = useNav(area);
+  const t = useTranslations(namespace);
   return (
     <nav
       aria-label={t('label')}

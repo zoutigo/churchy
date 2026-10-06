@@ -44,6 +44,19 @@ describe('PhoneLoginForm', () => {
     await waitFor(() => expect(push).toHaveBeenCalledWith('/dashboard/parishes'));
   });
 
+  it('un administrateur de plateforme arrive sur /platform ; un compte ordinaire sur /dashboard', async () => {
+    loginPhone.mockResolvedValue({ id: 'u1', role: 'MODERATOR' });
+    const { unmount } = render(<PhoneLoginForm />);
+    await fill();
+    await waitFor(() => expect(push).toHaveBeenCalledWith('/platform'));
+    unmount();
+    push.mockReset();
+    loginPhone.mockResolvedValue({ id: 'u2', role: 'USER' });
+    render(<PhoneLoginForm />);
+    await fill();
+    await waitFor(() => expect(push).toHaveBeenCalledWith('/dashboard'));
+  });
+
   it('numéro incomplet : erreur sous le champ et rien n’est envoyé', async () => {
     render(<PhoneLoginForm />);
     await fill('6771', '482915');

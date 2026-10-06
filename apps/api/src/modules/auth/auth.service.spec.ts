@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Logger,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -184,6 +185,16 @@ describe('AuthService', () => {
       expect(stored.tokenHash).not.toBe(session.refreshToken);
     });
 
+    it('refuse un compte suspendu avec le bon identifiant, sans ouvrir de session', async () => {
+      prisma.user.findUnique.mockResolvedValue(
+        dbUser({ passwordHash: await bcrypt.hash(dto.password, 4), suspendedAt: new Date() }),
+      );
+      await expect(
+        service.login({ email: dto.email, password: dto.password }),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+      expect(prisma.refreshToken.create).not.toHaveBeenCalled();
+    });
+
     it('compte l’échec, le journalise et ne dit pas pourquoi', async () => {
       prisma.user.findUnique.mockResolvedValue(
         dbUser({ passwordHash: await bcrypt.hash('autre', 4) }),
@@ -256,6 +267,14 @@ describe('AuthService', () => {
       const created = prisma.refreshToken.create.mock.calls[0][0].data;
       expect(created.familyId).toBe('fam1');
       expect(created.tokenHash).toBe(hashToken(session.refreshToken));
+    });
+
+    it('refuse de rafraîchir la session d’un compte suspendu', async () => {
+      prisma.refreshToken.findUnique.mockResolvedValue(
+        record({ user: dbUser({ suspendedAt: new Date() }) }),
+      );
+      await expect(service.refresh('raw')).rejects.toBeInstanceOf(ForbiddenException);
+      expect(prisma.refreshToken.create).not.toHaveBeenCalled();
     });
 
     it('refuse un jeton expiré', async () => {

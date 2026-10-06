@@ -23,6 +23,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     }),
   ],
   controllers: [AuthController, AdminAuthController],
+  exports: [AuthSecurityService],
   providers: [
     AuthService,
     AuthSecurityService,

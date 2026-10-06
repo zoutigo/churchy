@@ -74,6 +74,29 @@ describe('LoginForm', () => {
     await waitFor(() => expect(push).toHaveBeenCalledWith('/dashboard/parishes'));
   });
 
+  it.each(['SUPER_ADMIN', 'ADMIN', 'MODERATOR'])(
+    'un %s arrive sur la plateforme quand aucune destination n’est demandée',
+    async (role) => {
+      login.mockResolvedValue({ id: 'u1', role });
+      const user = userEvent.setup();
+      render(<LoginForm />);
+      await user.type(screen.getByLabelText('Email'), 'jean@paroisse.fr');
+      await user.type(screen.getByLabelText('Mot de passe'), 'secret123');
+      await user.click(screen.getByRole('button', { name: 'Se connecter' }));
+      await waitFor(() => expect(push).toHaveBeenCalledWith('/platform'));
+    },
+  );
+
+  it('un administrateur de plateforme garde le ?next= explicite', async () => {
+    login.mockResolvedValue({ id: 'u1', role: 'ADMIN' });
+    const user = userEvent.setup();
+    render(<LoginForm next="/dashboard/parishes" />);
+    await user.type(screen.getByLabelText('Email'), 'jean@paroisse.fr');
+    await user.type(screen.getByLabelText('Mot de passe'), 'secret123');
+    await user.click(screen.getByRole('button', { name: 'Se connecter' }));
+    await waitFor(() => expect(push).toHaveBeenCalledWith('/dashboard/parishes'));
+  });
+
   it('propose le lien « Mot de passe oublié ? »', () => {
     render(<LoginForm />);
     expect(screen.getByRole('link', { name: 'Mot de passe oublié ?' })).toHaveAttribute(

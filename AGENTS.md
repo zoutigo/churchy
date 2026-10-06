@@ -56,8 +56,8 @@ Un compte peut cumuler plusieurs moyens ; `AuthUserDto.methods` = `{ password, p
 - **Verrouillage et audit** (`AuthSecurityService`) : échecs comptés par clé hachée (`AuthRateLimit`), atomiquement ; 5 échecs de PIN ou de preuve, 10 de mot de passe →
   verrou de 15 min (429 `tooManyAttempts`, même réponse pour un numéro inconnu). Journal `AuthAuditLog` (numéro masqué, jamais de secret).
 - **Récupération du PIN** : pas de SMS pour l'instant. (1) lien envoyé à l'**email vérifié** du compte (job `auth.pin-reset-requested`, page `/reset-pin?token=`,
-  même réponse que le compte existe ou non) ; (2) sans email : un **administrateur de la plateforme** (`User.role === 'SUPER_ADMIN'`, `PlatformAdminGuard` : les
-  rôles de plateforme seront étendus au prochain chantier) obtient un lien de 24 h par `POST /admin/auth/pin-reset-link` (page `/dashboard/admin/pin-reset`).
+  même réponse que le compte existe ou non) ; (2) sans email : un **administrateur de la plateforme** (ADMIN ou SUPER_ADMIN, permission `platform.pin-reset`) obtient un lien de 24 h par
+  `POST /admin/auth/pin-reset-link` (page `/platform/pin-reset`).
   Un PIN réinitialisé déconnecte toutes les sessions.
 - **SMS (préparé, inactif)** : contrat `sms.requested` (`smsPayloadSchema`), `NotificationsService.smsRequested`, worker `SmsService` + `SMS_PROVIDER` (`log` seul pour
   l'instant, nom inconnu = refus au démarrage). Aucun producteur : brancher Orange/MTN = écrire un `SmsProvider`, puis un code à usage unique pour la récupération.
@@ -74,6 +74,28 @@ Un compte peut cumuler plusieurs moyens ; `AuthUserDto.methods` = `{ password, p
   internationale), `PinInput` (chiffres seulement, pas de `maxLength` : il tronquerait un collage « 482 915 »). Pages `/forgot-pin`, `/reset-pin` (segments traduits, `AUTH_LINK_PATHS`).
 - Limites connues : un numéro non vérifié peut être saisi par un tiers (le propriétaire réel sera bloqué à l'inscription tant qu'il n'y a pas de SMS) ; l'ajout de membres
   d'une paroisse se fait toujours par **email** (un compte sans email ne peut pas encore être invité) ; le PIN à 6 chiffres reste faible face à une attaque en ligne (le verrouillage est la protection principale).
+
+### Rôles de plateforme (`UserRole`)
+`SUPER_ADMIN > ADMIN > MODERATOR > USER`, **un seul rôle par compte**, rôles **fixes** : les permissions sont codées en dur dans
+`@churchy/shared` (`platform-permissions.constants.ts`, `PLATFORM_PERMISSIONS`, `hasPlatformPermission(role, 'platform.users.read')`) ; le code teste des
+**permissions**, jamais des noms de rôles. Les règles de hiérarchie sont les mêmes pour l'API (qui les impose) et le web (qui ne propose que ce qui est permis) :
+- `canChangePlatformRole(acteur, cible, nouveau)` : SUPER_ADMIN gère tout ; ADMIN gère seulement MODERATOR ↔ USER, jamais un ADMIN ni un SUPER_ADMIN (il ne crée pas d'ADMIN) ;
+  le **dernier SUPER_ADMIN actif** ne peut pas être retiré, même par lui-même (409 `platformLastSuperAdmin`, transaction sérialisable).
+- `canSuspendAccount(acteur, cible, estSoi)` : SUPER_ADMIN suspend tous sauf lui-même ; ADMIN suspend MODERATOR et USER ; MODERATOR et USER personne.
+- MODERATOR : accès à l'espace plateforme, messages de contact et contenus publics (permissions déclarées, outils à venir). ADMIN et MODERATOR lisent
+  (**GET/HEAD seulement**) les données internes de toute paroisse (`ParishRolesGuard`, `request.parishRole = 'PLATFORM_STAFF'`, notes internes comprises) ;
+  l'appartenance réelle à la paroisse passe d'abord (un ADMIN de plateforme qui est admin de sa paroisse garde l'écriture). SUPER_ADMIN passe partout, comme avant.
+- API (`apps/api/src/modules/platform`) : `GET /platform/users?q=&page=`, `PATCH /platform/users/:id/role`, `POST /platform/users/:id/suspend|reinstate`, gardées par
+  `PlatformPermissionGuard` + `@RequirePlatformPermission('…')` (sans décorateur le garde **refuse** : une route oubliée n'est jamais ouverte). Le rôle est lu **en base** à chaque requête
+  (`JwtStrategy`), pas dans le JWT : un rôle retiré ou un compte suspendu perd l'accès tout de suite. `POST /admin/auth/pin-reset-link` demande `platform.pin-reset` (ADMIN et SUPER_ADMIN).
+- **Suspension** (`User.suspendedAt`) : `JwtStrategy` refuse (401 `accountSuspended`), `AuthService.issueSession` — point de passage de toute connexion et de tout refresh — refuse (403), et la suspension
+  révoque tous les refresh tokens. Un changement de rôle révoque aussi les sessions de la personne. Les deux sont journalisés (`AuthAuditLog` : `PLATFORM_ROLE_CHANGED`, `ACCOUNT_SUSPENDED`,
+  `ACCOUNT_REINSTATED`, avec `actorId` et `detail` « ANCIEN>NOUVEAU »).
+- Web : `PlatformSwitch` (interrupteur « Mon espace | Plateforme », `role="switch"`, dans `Header`, visible avec `platform.access`) ; le mode se déduit de l'URL, rien n'est mémorisé.
+  `/platform` (comme `/dashboard` : sans préfixe de langue, `UNPREFIXED` de `i18n/paths.ts`, protégé par le middleware, `PlatformGuard` renvoie les comptes sans rôle à `/dashboard`) :
+  accueil, `/platform/users` (comptes, rôle, suspension en deux temps ; cartes sur mobile, tableau dès `md`), `/platform/pin-reset` (l'ancienne adresse `/dashboard/admin/pin-reset` redirige).
+  `Sidebar`/`MobileNav` prennent `area="platform"`, filtrés par permission. Après connexion (`afterLoginPath`) un compte de plateforme arrive **toujours sur `/platform`**, sauf `?next=` explicite.
+  Premier SUPER_ADMIN : changer `User.role` en base (aucune route ne le fait, volontairement). Pas encore d'UI d'administration au-delà des comptes et du PIN.
 
 **Configuration** (`apps/api/src/config/env.ts`, validée au démarrage, aucune valeur de secours) :
 `GOOGLE_CLIENT_ID` (facultatif), `PIN_PEPPER` (poivre des PIN, 32 car. min., **obligatoire en production**), `JWT_SECRET` obligatoire (16 car. min., refusé en production s'il ressemble à un exemple),
@@ -288,6 +310,28 @@ toucher à leurs conf nginx / conteneurs**. Modèle repris de scolive/tigilabs :
 - Sélecteurs Playwright : préférer `getByRole` / `getByLabel(…, { exact: true })` (le bouton « Afficher le mot de passe » partage des mots avec le libellé du champ).
 - Piège Vitest : `beforeEach(() => mock.mockReset())` renvoie la fonction mock, que Vitest appelle ensuite comme nettoyage ; utiliser des accolades.
 - En CI : `npx playwright install chromium` et `PW_CHANNEL=chromium`.
+
+## Chantier en cours : rôles et permissions (à effacer au fur et à mesure)
+Cette section est la référence du chantier. **Cocher la checklist à chaque étape** ; quand un lot est terminé, déplacer ses règles
+vers les sections permanentes (Authentification, Autorisations par paroisse…) et **supprimer** le lot d'ici. Supprimer la section entière à la fin.
+
+**Décisions**
+- Paroisse : statut `FAITHFUL` (Fidèle / Follower) → `PARISHIONER` (Paroissien / Member) → `PARISH_ADMIN`. Plusieurs admins, le dernier ne part pas.
+  Responsabilités d'équipe séparées du statut, cumulables : Préparateur, Lecteur, Rédacteur d'annonces/activités ; attribuées par l'admin à des paroissiens seulement.
+- Un fidèle ne voit que le public. Un paroissien voit en plus les annonces/activités « Paroissiens seulement » (nouvelle option de visibilité). Feuilles non publiées : responsabilité Lecteur ou plus.
+- Devenir fidèle : sans validation, connecté (visiteur → `/login?next=`), nom + prénom rattachés au **compte** (demandés une fois), 20 paroisses max, limité (throttle).
+  Phrase dans le formulaire : l'admin verra nom et prénom ; section dans la politique de confidentialité.
+- Promotion fidèle → paroissien : **immédiate** par l'admin (pas d'invitation). Un paroissien peut se retirer lui-même (redevient fidèle) ; un fidèle peut quitter ; l'admin peut retirer un membre (sans blocage).
+  L'ajout de membre par email est **supprimé** (la limite connue « compte sans email non invitable » disparaît).
+- L'admin voit nom, prénom, date, rôle (ni email ni téléphone) ; les paroissiens ne se voient pas entre eux. Favoris et statut de fidèle restent indépendants.
+- Vue lecture seule d'une paroisse dans `/dashboard` : mini-site public + Devenir fidèle / Quitter + favori + lien « Gérer » pour admin/équipe.
+- Migration (1 paroisse, 1 utilisateur en prod) : VIEWER → paroissien ; READER/PREPARER → paroissien + responsabilité. Premier SUPER_ADMIN : zoutigo@gmail.com (déjà créé).
+
+**Checklist** (chaque lot : tests unitaires + e2e API + Playwright 3 viewports + essais réels navigateur et API, précommit, push, CI `dev` vert)
+- [x] Lot 1 — rôles plateforme (terminé, effacé de cette liste ; règles dans « Rôles de plateforme »)
+- [ ] Lot 2 — rôles de paroisse (migration, fidèle, responsabilités, visibilité « Paroissiens seulement », confidentialité)
+- [ ] Lot 3 — vue lecture seule d'une paroisse (favoris, Mes paroisses)
+- [ ] Lot 4 — liste des fidèles, promotion, retrait, quitter
 
 ## Règles de travail (obligatoires)
 

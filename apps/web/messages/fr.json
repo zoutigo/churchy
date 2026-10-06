@@ -123,7 +123,11 @@
     "global": {
       "title": "Churchy est momentanément indisponible",
       "message": "Un problème inattendu est survenu. Réessayez dans un instant."
-    }
+    },
+    "platformNotFound": {
+      "message": "Cette page n’existe pas, ou vous n’y avez pas accès."
+    },
+    "platform": "Plateforme"
   },
   "enums": {
     "celebrationType": {
@@ -862,8 +866,7 @@
       "parishes": "Paroisses",
       "favorites": "Mes favoris",
       "label": "Navigation du tableau de bord",
-      "security": "Sécurité",
-      "pinReset": "Réinitialiser un PIN"
+      "security": "Sécurité"
     },
     "userMenu": "Menu utilisateur",
     "emailUnverified": "Email non confirmé",
@@ -1510,7 +1513,7 @@
     "pinReset": {
       "title": "Réinitialiser un PIN",
       "subtitle": "Pour une personne qui a perdu son PIN et n’a pas d’adresse email confirmée.",
-      "forbidden": "Cette page est réservée aux administrateurs de la plateforme.",
+      "forbidden": "Cette page est réservée aux équipes d’administration de la plateforme.",
       "formTitle": "Compte concerné",
       "formDesc": "Vérifiez l’identité de la personne avant de lui remettre le lien.",
       "create": "Créer le lien",
@@ -1524,5 +1527,65 @@
       "copyFailed": "Copie impossible : sélectionnez le lien à la main",
       "warning": "Transmettez ce lien uniquement à la personne concernée, par un canal sûr."
     }
+  },
+  "platform": {
+    "switch": {
+      "aria": "Basculer entre la plateforme et mon espace",
+      "platform": "Plateforme",
+      "mine": "Mon espace"
+    },
+    "badge": "Plateforme",
+    "nav": {
+      "label": "Navigation de la plateforme",
+      "home": "Accueil",
+      "users": "Comptes",
+      "pinReset": "Réinitialiser un PIN"
+    },
+    "roles": {
+      "SUPER_ADMIN": "Super administrateur",
+      "ADMIN": "Administrateur",
+      "MODERATOR": "Modérateur",
+      "USER": "Utilisateur"
+    },
+    "home": {
+      "title": "Plateforme",
+      "welcome": "Bienvenue dans l’espace d’administration de Churchy.",
+      "yourRole": "Votre rôle : <strong>{role}</strong>",
+      "soon": "Les outils d’administration arriveront ici au fil des prochaines versions.",
+      "backToMine": "Retourner à mon espace"
+    },
+    "users": {
+      "title": "Comptes",
+      "desc": "Rôles de plateforme et suspensions.",
+      "searchLabel": "Rechercher un compte",
+      "searchPlaceholder": "Nom, prénom ou email",
+      "count": "{count, plural, one {# compte} other {# comptes}}",
+      "empty": "Aucun compte ne correspond.",
+      "loadError": "Impossible de charger les comptes",
+      "columns": {
+        "name": "Compte",
+        "role": "Rôle",
+        "status": "État",
+        "actions": "Actions"
+      },
+      "noEmail": "Sans email",
+      "active": "Actif",
+      "suspended": "Suspendu",
+      "roleLabel": "Rôle de {name}",
+      "roleChanged": "Rôle modifié : {name} est maintenant {role}.",
+      "roleError": "Impossible de modifier le rôle",
+      "suspend": "Suspendre",
+      "suspendConfirm": "Confirmer la suspension",
+      "cancel": "Annuler",
+      "reinstate": "Rétablir",
+      "suspendedOk": "{name} est suspendu.",
+      "reinstatedOk": "{name} est rétabli.",
+      "suspendError": "Impossible de modifier la suspension",
+      "you": "vous",
+      "previous": "Précédent",
+      "next": "Suivant",
+      "pageOf": "Page {page} sur {pages}"
+    },
+    "forbidden": "Cet espace est réservé aux équipes de la plateforme."
   }
 }

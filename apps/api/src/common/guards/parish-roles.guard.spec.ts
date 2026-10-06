@@ -182,4 +182,50 @@ describe('ParishRolesGuard', () => {
       guard.canActivate(ctx({ id: 'u1', role: 'USER' }, { id: 'nope' })),
     ).rejects.toBeInstanceOf(NotFoundException);
   });
+
+  describe('ADMIN et MODERATOR de plateforme (lecture seule)', () => {
+    const request = (user: unknown, method: string) => {
+      const req = { user, params: { parishId: 'p1' }, method, parishRole: undefined as unknown };
+      const context = {
+        getHandler: () => 'handler',
+        getClass: () => 'class',
+        switchToHttp: () => ({ getRequest: () => req }),
+      } as unknown as ExecutionContext;
+      return { req, context };
+    };
+
+    beforeEach(() => {
+      metadata[PARISH_ROLES_KEY] = [ParishRole.PARISH_ADMIN, ParishRole.PREPARER];
+      prisma.parishMember.findUnique.mockResolvedValue(null);
+    });
+
+    it.each(['ADMIN', 'MODERATOR'])(
+      "%s lit une paroisse dont il n'est pas membre",
+      async (role) => {
+        const { req, context } = request({ id: 'u1', role }, 'GET');
+        await expect(guard.canActivate(context)).resolves.toBe(true);
+        expect(req.parishRole).toBe('PLATFORM_STAFF');
+      },
+    );
+
+    it.each(['POST', 'PATCH', 'PUT', 'DELETE'])(
+      "%s : refusé, jamais d'écriture",
+      async (method) => {
+        const { context } = request({ id: 'u1', role: 'ADMIN' }, method);
+        await expect(guard.canActivate(context)).rejects.toBeInstanceOf(ForbiddenException);
+      },
+    );
+
+    it('un compte ordinaire non membre reste refusé en lecture', async () => {
+      const { context } = request({ id: 'u1', role: 'USER' }, 'GET');
+      await expect(guard.canActivate(context)).rejects.toBeInstanceOf(ForbiddenException);
+    });
+
+    it("un ADMIN de plateforme qui est aussi admin de la paroisse garde l'écriture", async () => {
+      prisma.parishMember.findUnique.mockResolvedValue({ role: ParishRole.PARISH_ADMIN });
+      const { req, context } = request({ id: 'u1', role: 'ADMIN' }, 'PATCH');
+      await expect(guard.canActivate(context)).resolves.toBe(true);
+      expect(req.parishRole).toBe(ParishRole.PARISH_ADMIN);
+    });
+  });
 });

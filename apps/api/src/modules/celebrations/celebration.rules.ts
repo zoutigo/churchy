@@ -29,7 +29,11 @@ export function isEndingSoon(lastOccurrenceAt: Date | null, now: Date): boolean 
 
 /** Les notes internes sont réservées à ceux qui préparent (administrateurs et préparateurs). */
 export function canSeeInternalNotes(role: ParishRoleValue | undefined): boolean {
-  return role === 'SUPER_ADMIN' || (role !== undefined && EDITORS.includes(role));
+  return (
+    role === 'SUPER_ADMIN' ||
+    role === 'PLATFORM_STAFF' ||
+    (role !== undefined && EDITORS.includes(role))
+  );
 }
 
 /** Erreur de planning au même format que les erreurs Zod, pour s'afficher sous le champ. */

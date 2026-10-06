@@ -56,7 +56,7 @@ export function splitLocale(pathname: string): { locale: Locale | null; rest: st
  * Adresse interne d'un lien (`/paroisses/12?q=a#x`) → adresse visible (`/en/parishes/12?q=a#x`).
  * Le tableau de bord (`/dashboard`, sans préfixe), les URL externes et les ancres restent tels quels.
  */
-const UNPREFIXED = ['/dashboard'];
+const UNPREFIXED = ['/dashboard', '/platform'];
 
 /**
  * Paramètres de requête traduits. Le nom **interne** (celui qu'on écrit dans le code) est la clé ;

@@ -6,7 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { ParishRole, ERR } from '@churchy/shared';
+import { ParishRole, ERR, hasPlatformPermission } from '@churchy/shared';
 import {
   PARISH_ROLES_KEY,
   PARISH_SCOPE_KEY,
@@ -41,6 +41,15 @@ export class ParishRolesGuard implements CanActivate {
       where: { userId_parishId: { userId: user.id, parishId } },
     });
     if (!member || !requiredRoles.includes(member.role as ParishRole)) {
+      // Repli : ADMIN et MODERATOR de plateforme lisent (jamais n'écrivent) les données internes de toute paroisse
+      // dont ils ne sont pas membres avec le rôle voulu.
+      if (
+        hasPlatformPermission(user.role, 'platform.parishes.read') &&
+        ['GET', 'HEAD'].includes(request.method)
+      ) {
+        request.parishRole = 'PLATFORM_STAFF';
+        return true;
+      }
       throw new ForbiddenException(ERR.parishAccessDenied);
     }
     // Les services s'en servent pour masquer ce que certains rôles ne doivent pas voir (notes internes).

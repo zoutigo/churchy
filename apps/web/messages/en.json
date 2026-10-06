@@ -123,7 +123,11 @@
     "global": {
       "title": "Churchy is temporarily unavailable",
       "message": "An unexpected problem occurred. Please try again in a moment."
-    }
+    },
+    "platformNotFound": {
+      "message": "This page does not exist, or you do not have access to it."
+    },
+    "platform": "Platform"
   },
   "enums": {
     "celebrationType": {
@@ -860,8 +864,7 @@
       "parishes": "Parishes",
       "favorites": "My favorites",
       "label": "Dashboard navigation",
-      "security": "Security",
-      "pinReset": "Reset a PIN"
+      "security": "Security"
     },
     "userMenu": "User menu",
     "emailUnverified": "Email not confirmed",
@@ -1508,7 +1511,7 @@
     "pinReset": {
       "title": "Reset a PIN",
       "subtitle": "For someone who lost their PIN and has no confirmed email address.",
-      "forbidden": "This page is reserved for platform administrators.",
+      "forbidden": "This page is reserved for the platform administration team.",
       "formTitle": "Account",
       "formDesc": "Check the person's identity before handing over the link.",
       "create": "Create the link",
@@ -1522,5 +1525,65 @@
       "copyFailed": "Copy failed: select the link by hand",
       "warning": "Give this link only to the person concerned, through a safe channel."
     }
+  },
+  "platform": {
+    "switch": {
+      "aria": "Switch between the platform and my space",
+      "platform": "Platform",
+      "mine": "My space"
+    },
+    "badge": "Platform",
+    "nav": {
+      "label": "Platform navigation",
+      "home": "Home",
+      "users": "Accounts",
+      "pinReset": "Reset a PIN"
+    },
+    "roles": {
+      "SUPER_ADMIN": "Super administrator",
+      "ADMIN": "Administrator",
+      "MODERATOR": "Moderator",
+      "USER": "User"
+    },
+    "home": {
+      "title": "Platform",
+      "welcome": "Welcome to the Churchy administration area.",
+      "yourRole": "Your role: <strong>{role}</strong>",
+      "soon": "Administration tools will land here over the coming releases.",
+      "backToMine": "Back to my space"
+    },
+    "users": {
+      "title": "Accounts",
+      "desc": "Platform roles and suspensions.",
+      "searchLabel": "Search for an account",
+      "searchPlaceholder": "Name, first name or email",
+      "count": "{count, plural, one {# account} other {# accounts}}",
+      "empty": "No account matches.",
+      "loadError": "Unable to load accounts",
+      "columns": {
+        "name": "Account",
+        "role": "Role",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "noEmail": "No email",
+      "active": "Active",
+      "suspended": "Suspended",
+      "roleLabel": "Role of {name}",
+      "roleChanged": "Role updated: {name} is now {role}.",
+      "roleError": "Unable to change the role",
+      "suspend": "Suspend",
+      "suspendConfirm": "Confirm suspension",
+      "cancel": "Cancel",
+      "reinstate": "Reinstate",
+      "suspendedOk": "{name} is suspended.",
+      "reinstatedOk": "{name} is reinstated.",
+      "suspendError": "Unable to change the suspension",
+      "you": "you",
+      "previous": "Previous",
+      "next": "Next",
+      "pageOf": "Page {page} of {pages}"
+    },
+    "forbidden": "This area is reserved for the platform team."
   }
 }

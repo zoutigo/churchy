@@ -53,7 +53,7 @@ export async function loginViaUi(page: Page, email: string, password = PASSWORD,
   await page.goto(next ? `/fr/connexion?next=${encodeURIComponent(next)}` : '/fr/connexion');
   await page.getByLabel('Email').fill(email);
   await page.getByLabel('Mot de passe', { exact: true }).fill(password);
-  await page.getByRole('button', { name: 'Se connecter' }).click();
+  await page.getByRole('button', { name: 'Se connecter', exact: true }).click();
 }
 
 export async function logoutViaUi(page: Page) {
@@ -207,8 +207,11 @@ export async function loginPhoneViaUi(
   await page.getByRole('button', { name: 'Se connecter' }).click();
 }
 
-/** Passe un compte en administrateur de la plateforme (aucune route d'API ne le permet, volontairement). */
-export async function makeSuperAdmin(email: string) {
+/** Donne un rôle de plateforme à un compte (aucune route d'API ne crée un SUPER_ADMIN, volontairement). */
+export async function setPlatformRole(
+  email: string,
+  role: 'SUPER_ADMIN' | 'ADMIN' | 'MODERATOR' | 'USER',
+) {
   const { PrismaClient } = await import('@prisma/client');
   const prisma = new PrismaClient({
     datasourceUrl:
@@ -216,11 +219,14 @@ export async function makeSuperAdmin(email: string) {
       'postgresql://postgres:password@localhost:5433/churchy_test?schema=public',
   });
   try {
-    await prisma.user.update({ where: { email }, data: { role: 'SUPER_ADMIN' } });
+    await prisma.user.update({ where: { email }, data: { role } });
   } finally {
     await prisma.$disconnect();
   }
 }
+
+/** Passe un compte en super administrateur de la plateforme. */
+export const makeSuperAdmin = (email: string) => setPlatformRole(email, 'SUPER_ADMIN');
 
 /** Largeur de page : aucun défilement horizontal ne doit apparaître (mobile surtout). */
 export async function expectNoHorizontalScroll(page: Page) {

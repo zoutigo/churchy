@@ -42,6 +42,7 @@ describe('canSeeInternalNotes', () => {
     expect(canSeeInternalNotes(ParishRole.PARISH_ADMIN)).toBe(true);
     expect(canSeeInternalNotes(ParishRole.PREPARER)).toBe(true);
     expect(canSeeInternalNotes('SUPER_ADMIN')).toBe(true);
+    expect(canSeeInternalNotes('PLATFORM_STAFF')).toBe(true);
     expect(canSeeInternalNotes(ParishRole.READER)).toBe(false);
     expect(canSeeInternalNotes(ParishRole.VIEWER)).toBe(false);
     expect(canSeeInternalNotes(undefined)).toBe(false);

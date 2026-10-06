@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Copy, ShieldAlert } from 'lucide-react';
-import { adminPinResetSchema, type PinResetLinkDto } from '@churchy/shared';
+import { adminPinResetSchema, hasPlatformPermission, type PinResetLinkDto } from '@churchy/shared';
 import { useAuth } from '@/hooks/useAuth';
 import { authApi } from '@/lib/api/auth.api';
 import { handleSubmitError } from '@/lib/forms/submit-error';
@@ -39,7 +39,7 @@ export function PinResetAdmin() {
   });
 
   if (!user) return null;
-  if (user.role !== 'SUPER_ADMIN') {
+  if (!hasPlatformPermission(user.role, 'platform.pin-reset')) {
     return (
       <Alert variant="destructive" className="mx-auto max-w-xl">
         <ShieldAlert size={16} />

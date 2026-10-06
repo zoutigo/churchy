@@ -5,6 +5,7 @@ import { useRouter } from '@/i18n/link';
 import { useAppLocale } from '@/i18n/locale';
 import { useAuth } from '@/hooks/useAuth';
 import { authApi } from '@/lib/api/auth.api';
+import { afterLoginPath } from '@/lib/auth/session';
 import { errorMessage } from '@/lib/forms/submit-error';
 import { notify } from '@/lib/notify';
 import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
@@ -45,7 +46,7 @@ interface Props {
  * « Continuer avec Google » + séparateur « ou ». N'affiche rien tant que Google n'est pas configuré côté serveur.
  * Si un compte existe déjà avec la même adresse, on demande son mot de passe avant de lier (jamais de fusion silencieuse).
  */
-export function GoogleAuthSection({ next = '/dashboard', text }: Props) {
+export function GoogleAuthSection({ next, text }: Props) {
   const t = useTranslations('auth.google');
   const router = useRouter();
   const locale = useAppLocale();
@@ -61,7 +62,7 @@ export function GoogleAuthSection({ next = '/dashboard', text }: Props) {
           setLink({ idToken, email: result.linkRequired });
           return;
         }
-        router.push(next);
+        router.push(afterLoginPath(result.user, next));
         router.refresh();
       } catch (err: unknown) {
         notify.error(t('error'), errorMessage(err, t('error')));

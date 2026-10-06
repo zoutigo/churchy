@@ -223,6 +223,23 @@ const CATALOG = {
     fr: 'Réservé aux administrateurs de la plateforme',
     en: 'Reserved for platform administrators',
   },
+  accountSuspended: {
+    fr: 'Ce compte est suspendu',
+    en: 'This account is suspended',
+  },
+  platformRoleForbidden: {
+    fr: "Vous n'avez pas le droit de modifier ce rôle",
+    en: 'You are not allowed to change this role',
+  },
+  platformLastSuperAdmin: {
+    fr: 'Impossible : il doit rester au moins un super administrateur',
+    en: 'Not possible: at least one super administrator must remain',
+  },
+  platformSuspendForbidden: {
+    fr: "Vous n'avez pas le droit de suspendre ce compte",
+    en: 'You are not allowed to suspend this account',
+  },
+  platformUserNotFound: { fr: 'Compte introuvable', en: 'Account not found' },
   userNotFoundByPhone: {
     fr: 'Aucun compte avec ce numéro',
     en: 'No account with this phone number',

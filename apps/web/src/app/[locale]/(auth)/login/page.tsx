@@ -34,7 +34,7 @@ export default function LoginPage({ searchParams }: Props) {
         </Alert>
       )}
       <LoginPanel
-        next={safeNextPath(searchParams.next)}
+        next={searchParams.next ? safeNextPath(searchParams.next) : undefined}
         initialMethod={searchParams.reset === 'pin' ? 'phone' : 'email'}
       />
     </AuthCard>

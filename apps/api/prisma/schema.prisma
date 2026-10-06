@@ -9,6 +9,8 @@ datasource db {
 
 enum UserRole {
   SUPER_ADMIN
+  ADMIN
+  MODERATOR
   USER
 }
 
@@ -55,6 +57,8 @@ model User {
   lastName        String
   role            UserRole  @default(USER)
   emailVerifiedAt DateTime?
+  /// Compte suspendu par la plateforme : aucune connexion ni session tant que la date est posée.
+  suspendedAt     DateTime?
   /// Langue préférée (`fr` | `en`) : interface et emails.
   locale          String    @default("fr")
   createdAt       DateTime  @default(now())
@@ -121,6 +125,9 @@ enum AuthAuditEvent {
   GOOGLE_LINKED
   GOOGLE_UNLINKED
   ACCOUNT_TAKEOVER_CLEARED
+  PLATFORM_ROLE_CHANGED
+  ACCOUNT_SUSPENDED
+  ACCOUNT_REINSTATED
 }
 
 enum AuthAuditStatus {
@@ -187,6 +194,10 @@ model AuthAuditLog {
   ipAddress  String?
   userAgent  String?
   reasonCode String?
+  /// Compte qui a agi, quand ce n'est pas le compte concerné (changement de rôle, suspension).
+  actorId    String?
+  /// Précision non sensible (ex. `USER>MODERATOR`).
+  detail     String?
   createdAt  DateTime        @default(now())
 
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
