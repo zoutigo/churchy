@@ -183,7 +183,8 @@
   "parishResult": {
     "nextMass": "Next Mass: {date} at {time}",
     "view": "View the parish",
-    "viewLabel": "View the parish {name}"
+    "viewLabel": "View the parish {name}",
+    "newTab": "(opens in a new tab)"
   },
   "parishTabs": {
     "label": "Parish pages",

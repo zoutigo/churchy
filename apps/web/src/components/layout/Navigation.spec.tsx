@@ -26,6 +26,14 @@ describe.each([
     );
   });
 
+  it('garde « Mes favoris » dans le tableau de bord (pas la page publique)', () => {
+    render(<Component />);
+    expect(screen.getByRole('link', { name: /Mes favoris/ })).toHaveAttribute(
+      'href',
+      '/dashboard/favorites',
+    );
+  });
+
   it('cache la réinitialisation de PIN aux utilisateurs ordinaires', () => {
     render(<Component />);
     expect(screen.queryByRole('link', { name: /Réinitialiser un PIN/ })).not.toBeInTheDocument();

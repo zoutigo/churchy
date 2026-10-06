@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 const navItems = [
   { href: '/dashboard', key: 'dashboard', exact: true, icon: LayoutDashboard },
   { href: '/dashboard/parishes', key: 'parishes', exact: false, icon: Church },
-  { href: '/favoris', key: 'favorites', exact: false, icon: Star },
+  { href: '/dashboard/favorites', key: 'favorites', exact: false, icon: Star },
   { href: '/dashboard/security', key: 'security', exact: false, icon: ShieldCheck },
   {
     href: '/dashboard/admin/pin-reset',

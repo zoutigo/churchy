@@ -183,7 +183,8 @@
   "parishResult": {
     "nextMass": "Prochaine messe : {date} à {time}",
     "view": "Voir la paroisse",
-    "viewLabel": "Voir la paroisse {name}"
+    "viewLabel": "Voir la paroisse {name}",
+    "newTab": "(s’ouvre dans un nouvel onglet)"
   },
   "parishTabs": {
     "label": "Pages de la paroisse",

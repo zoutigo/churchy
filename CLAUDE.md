@@ -18,7 +18,7 @@ npm install            # une seule installation pour tout le monorepo
 npm run infra:up       # postgres + redis + mailpit (docker compose, attend qu'ils soient prêts)
 npm run build          # turbo : shared d'abord, puis api/web
 npm run typecheck
-npm run dev -w @churchy/api   # ou -w @churchy/web, -w @churchy/notifications
+npm run start:dev -w @churchy/api   # API ; web : npm run dev -w @churchy/web ; worker : npm run start:dev -w @churchy/notifications
 ```
 Première installation : copier `apps/api/.env.example` → `apps/api/.env` (et générer un `JWT_SECRET`
 aléatoire : `openssl rand -hex 32`), `apps/web/.env.local.example` → `.env.local`,
@@ -26,7 +26,9 @@ aléatoire : `openssl rand -hex 32`), `apps/web/.env.local.example` → `.env.lo
 
 ## Ports de dev
 web 3200 · api 3201 (Swagger: /api/docs) · postgres 5433 · redis 6380 · SMTP Mailpit 1025 ·
-**Mailpit (emails reçus) http://localhost:8025**. Tests fonctionnels : web 3210 · api 3211.
+**Mailpit (emails reçus) http://localhost:8025**.
+**Postgres, Redis et Mailpit ne sont publiés que sur `127.0.0.1`** (`docker-compose.yml`) : jamais sur toutes les interfaces (mot de passe de dev `password` : une base ouverte a déjà été piratée par un mineur de crypto). Garder `127.0.0.1:` devant chaque port publié.
+**Sauvegarde de la base de dev** : `~/scripts/backup_churchy_dev.sh` (cron 1 h 30, dumps de `churchy_db` et `churchy_test` dans `~/backups/churchy-dev/`, 7 jours). Après un `git pull` qui ajooute une migration : `npx prisma migrate deploy` dans `apps/api` (sinon l'API répond 500 sur les tables manquantes). Tests fonctionnels : web 3210 · api 3211.
 
 ## Authentification
 Session par **cookies**, jamais de jeton lisible par le JavaScript du site :
@@ -182,7 +184,7 @@ Ces routes n'ont volontairement **pas** de `@ParishAccess` : elles ne renvoient 
 - Web : `FavoritesProvider` (dans `app/layout.tsx`, sous `AuthProvider`) + `useFavorites` / `useFavoriteItems`. À la connexion, les favoris de
   l'appareil sont **fusionnés dans le compte puis effacés de l'appareil** ; à la déconnexion l'appareil ne garde rien. `FavoriteButton`
   (étoile, sur les cartes de résultat et l'en-tête de paroisse), bloc `FavoritesShelf` sur la landing (rien sans favori), page `/favoris`,
-  lien « Mes favoris » dans l'en-tête public (avec compteur) et dans `Sidebar`/`MobileNav` du tableau de bord.
+  lien « Mes favoris » dans l'en-tête public (avec compteur). Dans le tableau de bord, `Sidebar`/`MobileNav` mènent à `/dashboard/favorites` (`DashboardFavorites`) : on ne quitte pas l'espace connecté ; « Voir la paroisse » et « Trouver une paroisse » y ouvrent le site public dans un **nouvel onglet** (`ParishResultCard newTab`).
 - **Aperçu des liens partagés** (WhatsApp, Facebook, X…) : `metadataBase` (`NEXT_PUBLIC_SITE_URL`, défaut `https://churchy.tigilabs.com`), Open Graph +
   Twitter Card dans `app/layout.tsx`, image 1200×630 générée par `app/opengraph-image.tsx` (et `twitter-image.tsx`), métadonnées par paroisse
   (`lib/seo.ts` `parishMetadata`). Les réseaux mettent les aperçus en cache : après un changement, tester avec un lien `?v=2` ou le débogueur Facebook.

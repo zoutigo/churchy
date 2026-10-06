@@ -4,10 +4,11 @@ import { Link } from '@/i18n/link';
 import { Star } from 'lucide-react';
 import { MAX_FAVORITE_PARISHES } from '@churchy/shared';
 import { ParishResultCard } from '@/components/public/ParishResultCard';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { useFavoriteItems } from './FavoritesProvider';
 
 /** Cartes des paroisses favorites (au plus `MAX_FAVORITE_PARISHES`), pendant le chargement un squelette. */
-function FavoriteCards({ columns }: { columns: string }) {
+function FavoriteCards({ columns, newTab = false }: { columns: string; newTab?: boolean }) {
   const t = useTranslations('favorites');
   const { items, ids, itemsLoading } = useFavoriteItems();
   if (itemsLoading && items.length === 0) {
@@ -25,7 +26,7 @@ function FavoriteCards({ columns }: { columns: string }) {
   return (
     <div className={`grid gap-4 ${columns}`}>
       {items.map((p) => (
-        <ParishResultCard key={p.id} parish={p} />
+        <ParishResultCard key={p.id} parish={p} newTab={newTab} />
       ))}
     </div>
   );
@@ -98,6 +99,43 @@ export function FavoritesPage() {
         </div>
       ) : (
         <FavoriteCards columns="lg:grid-cols-2" />
+      )}
+    </div>
+  );
+}
+
+/** « Mes favoris » dans le tableau de bord : même liste, mais on reste dans l'espace connecté (barre latérale / mobile). */
+export function DashboardFavorites() {
+  const t = useTranslations('favorites');
+  const { ids, ready } = useFavoriteItems();
+  return (
+    <div className="space-y-6" data-testid="dashboard-favorites">
+      <PageHeader
+        title={t('title')}
+        description={
+          ready && ids.length > 0
+            ? `${t('intro')} ${t('count', { count: ids.length, max: MAX_FAVORITE_PARISHES })}`
+            : t('intro')
+        }
+      />
+      {!ready ? null : ids.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-churchy-200 bg-white p-8 text-center">
+          <Star className="mx-auto text-amber-500" size={28} aria-hidden />
+          <p className="mt-3 font-playfair text-lg font-semibold text-churchy-700">
+            {t('emptyTitle')}
+          </p>
+          <p className="mt-1 text-sm text-churchy-900/75">{t('emptyHint')}</p>
+          <Link
+            href="/paroisses"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-flex h-11 items-center rounded-lg bg-churchy-500 px-5 text-sm font-semibold text-white hover:bg-churchy-700"
+          >
+            {t('find')}
+          </Link>
+        </div>
+      ) : (
+        <FavoriteCards columns="xl:grid-cols-2" newTab />
       )}
     </div>
   );
