@@ -76,7 +76,7 @@ src/
 │   ├── favorites/    # FavoritesProvider (appareil/compte + fusion), FavoriteButton, FavoritesShelf, FavoritesPage
 │   ├── public/       # PublicHeader/Footer, ParishSearchForm (GET), CelebrationItem, SheetCard, ContactForm…
 │   ├── news/         # Formulaires annonces/activités du tableau de bord, DeleteButton (suppression en 2 temps)
-│   ├── parish/       # ParishCard, CreateParishForm, ParishInfoForm
+│   ├── parish/       # ParishCard, CreateParishForm, ParishInfoForm, FollowButton (devenir fidèle)
 │   ├── rich-text/    # RichTextEditor (Tiptap, champ de formulaire), RichContent (rendu public)
 │   ├── content/      # ContentForm (création + modification), filter (recherche/type), content-labels
 │   ├── celebration/  # CelebrationCard/Form, ScheduleFields (dates / récurrence + aperçu), OccurrenceItem, SheetPanel, StepCard, TemplateChangeDialog, TemplateForm, EndingSoonDialog

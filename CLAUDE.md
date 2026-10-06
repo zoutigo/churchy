@@ -72,8 +72,7 @@ Un compte peut cumuler plusieurs moyens ; `AuthUserDto.methods` = `{ password, p
   Google) et, pour un mot de passe ou un PIN, coupe les autres sessions et en ouvre une neuve. Routes `PUT /auth/me/{email,password,phone-pin,google}`, `PATCH /auth/me/pin`, `POST /auth/me/google/unlink`.
 - **Web** : `/login` et `/register` = Google (si activé) + onglets Email | Téléphone (`LoginPanel`, `RegisterPanel`) ; `PhoneNumberField` (pays + masque, valeur
   internationale), `PinInput` (chiffres seulement, pas de `maxLength` : il tronquerait un collage « 482 915 »). Pages `/forgot-pin`, `/reset-pin` (segments traduits, `AUTH_LINK_PATHS`).
-- Limites connues : un numéro non vérifié peut être saisi par un tiers (le propriétaire réel sera bloqué à l'inscription tant qu'il n'y a pas de SMS) ; l'ajout de membres
-  d'une paroisse se fait toujours par **email** (un compte sans email ne peut pas encore être invité) ; le PIN à 6 chiffres reste faible face à une attaque en ligne (le verrouillage est la protection principale).
+- Limites connues : un numéro non vérifié peut être saisi par un tiers (le propriétaire réel sera bloqué à l'inscription tant qu'il n'y a pas de SMS) ; le PIN à 6 chiffres reste faible face à une attaque en ligne (le verrouillage est la protection principale).
 
 ### Rôles de plateforme (`UserRole`)
 `SUPER_ADMIN > ADMIN > MODERATOR > USER`, **un seul rôle par compte**, rôles **fixes** : les permissions sont codées en dur dans
@@ -103,13 +102,28 @@ Un compte peut cumuler plusieurs moyens ; `AuthUserDto.methods` = `{ password, p
 En production : `NODE_ENV=production` (cookies `Secure`), web et API sur le même domaine racine (cookies
 `SameSite=Lax`), et `trust proxy` si l'API est derrière un reverse proxy (limitation par IP).
 
-**Autorisations par paroisse** : `@ParishAccess(ROLES, kind?, param?)` + `ParishRolesGuard`
-(`apps/api/src/common`). Le guard retrouve la paroisse via l'URL **ou via la ressource visée** (célébration,
-modèle, contenu, étape) pour qu'un identifiant d'une autre paroisse ne contourne pas le contrôle.
-`ALL_MEMBERS` (lecture) = ADMIN, PREPARER, READER, VIEWER ; `EDITORS` (écriture, publication) = ADMIN, PREPARER ;
-`ADMINS` (membres) = ADMIN ; `SUPER_ADMIN` passe partout. Les services vérifient aussi l'isolation (modèle ou
-contenu d'une autre paroisse refusé). Toute nouvelle route qui touche une ressource de paroisse doit porter
-`@ParishAccess`.
+**Autorisations par paroisse** : `@ParishAccess('parish.xxx', kind?, param?)` + `ParishRolesGuard` (`apps/api/src/common`). Comme pour la
+plateforme, le code teste une **permission** (`hasParishPermission(membre, perm)`, `parish-permissions.constants.ts` de `@churchy/shared`), jamais un nom de rôle.
+Le guard retrouve la paroisse via l'URL **ou via la ressource visée** (célébration, modèle, contenu, étape) pour qu'un identifiant d'une autre paroisse ne contourne pas le contrôle.
+`SUPER_ADMIN` passe partout ; ADMIN/MODERATOR de plateforme lisent en GET/HEAD (voir « Rôles de plateforme »). Les services vérifient aussi l'isolation. Toute nouvelle route
+qui touche une ressource de paroisse doit porter `@ParishAccess` (test d'autorisation dans `test/authorization.e2e-spec.ts`).
+- **Statut** (`ParishMember.status`) : `FAITHFUL` (fidèle, « Follower ») < `PARISHIONER` (paroissien, « Member ») < `PARISH_ADMIN` (plusieurs ; le dernier ne part pas : 409 `parishLastAdmin`,
+  transaction sérialisable). **Responsabilités** (`duties`, cumulables, **réservées à un paroissien** : un fidèle n'en a jamais, rétrograder les efface) : `PREPARER`, `READER`, `ANNOUNCER`.
+- **Permissions** : `parish.view` (tout fidèle : voir la paroisse) · `parish.view.members` (paroissien+ : annonces/activités « Paroissiens seulement ») · `parish.internal.read`
+  (Lecteur, Préparateur, admin : séries, feuilles non publiées, modèles, contenus) · `parish.celebrations.write` (Préparateur, admin : préparer/publier, notes internes) ·
+  `parish.announcements.write` (Rédacteur, admin) · `parish.manage` (admin : identité publique, membres, responsabilités). Un fidèle ne voit donc que le public.
+- **Visibilité** (`ContentVisibility` `PUBLIC` | `MEMBERS`, sur `Announcement` et `Activity`, champ `visibility`, `PUBLIC` par défaut) : `GET /parishes/:id/announcements|activities` (`parish.view`)
+  ne renvoie le « Paroissiens seulement » qu'à un paroissien ou plus (`canSeeMembersContent`) ; `PublicService` (site public, sans session) **filtre toujours `PUBLIC`**. Formulaires web : `VisibilityField`.
+- **Devenir fidèle** : `POST /parishes/:id/follow` (connecté, sans validation, idempotent, limité comme l'authentification, `MAX_FAITHFUL_PARISHES` = 20 → 409 `parishFollowLimit`) ;
+  le nom et le prénom sont ceux du **compte** (déjà demandés à l'inscription, jamais ressaisis) ; `GET /parishes/:id/membership` (mon statut, `status: null` si aucun) ;
+  `DELETE /parishes/:id/follow` = se retirer **d'un cran** : paroissien/admin → fidèle (responsabilités effacées), fidèle → quitte (`{ membership: null }`) ; le dernier admin ne peut pas.
+- **Gestion par l'admin** (`parish.manage`, `/parishes/:id/members`) : `GET ?q=&status=&page=` (30 par page ; **nom, prénom, date, statut, responsabilités — jamais d'email ni de téléphone**),
+  `PATCH /:userId` (`{ status?, duties? }` : promotion fidèle → paroissien **immédiate**, sans invitation, plusieurs admins), `DELETE /:userId` (retrait sans blocage sauf dernier admin).
+  L'ancien ajout par email n'existe plus (peu d'emails au Cameroun). Les paroissiens ne se voient pas entre eux. Favoris et statut de fidèle sont indépendants.
+- Migration `parish_status_duties` : ancien `PARISH_ADMIN` → admin ; `PREPARER` → paroissien + Préparateur + Rédacteur (il écrivait aussi les annonces) ; `READER` → paroissien + Lecteur ; `VIEWER` → paroissien.
+- Web : `FollowButton` (en-tête du mini-site d'une paroisse) — visiteur → `/login?next=` puis retour ; boîte de dialogue qui annonce « l'administrateur verra votre nom et prénom, pas votre email ni
+  téléphone » + lien vers la confidentialité ; fidèle : « Ne plus suivre » ; paroissien : « Me retirer (redevenir fidèle) » ; admin : pas de retrait ici. `enums.parishStatus` / `enums.parishDuty`
+  (`useLabels`). La politique de confidentialité a une section « Devenir fidèle d'une paroisse ».
 
 **Web** : `AuthProvider` (contexte) + `useAuth`, `middleware.ts` (redirige les pages privées sans session vers
 `/login?next=…` ; `next` est validé par `safeNextPath`), `AuthGuard` (filet côté client), client API
@@ -192,7 +206,7 @@ Ces routes n'ont volontairement **pas** de `@ParishAccess` : elles ne renvoient 
   saisie libre. Le contrôle « numéro complet » est côté formulaire (`withCompletePhone`) ; l'API n'exige que des
   caractères de numéro. Sur la page publique, téléphone et email sont des liens `tel:` / `mailto:`.
 - Gestion : `PATCH /parishes/:id` (identité publique, ADMINS), `announcements` et `activities` (`/parishes/:parishId/…`,
-  lecture ALL_MEMBERS, écriture/suppression EDITORS), `PATCH /celebrations/:id/announced`.
+  lecture `parish.view`, écriture/suppression `parish.announcements.write`, avec `visibility`), `PATCH /celebrations/:id/announced`.
 - Les pages sont rendues par le serveur web : toutes les requêtes publiques partent de **la même IP**. En production,
   transmettre l'IP du visiteur (`X-Forwarded-For` + `trust proxy`) pour que la limite `THROTTLE_LIMIT` ne
   s'applique pas à l'ensemble des visiteurs.
@@ -228,7 +242,7 @@ Règles (toutes testées, unitaire + e2e) :
   `timezoneForCountry`) ; « chaque dimanche à 10 h » reste à 10 h au changement d'heure (`@churchy/shared` `schedule.ts`,
   partagé API + web pour l'aperçu).
 - **Notes internes** : `canSeeInternalNotes` (ADMIN, PREPARER, SUPER_ADMIN) ; `ParishRolesGuard` pose `request.parishRole`
-  (décorateur `@CurrentParishRole()`), les lecteurs/spectateurs ne reçoivent **pas la clé** `internalNote`.
+  (décorateur `@CurrentParishRole()`), les lecteurs ne reçoivent **pas la clé** `internalNote`.
 - **Changer de modèle** (`PATCH /sheets/:id/template`, `dryRun` pour l'aperçu) : étapes rapprochées par `key` (contenu conservé),
   étapes manquantes ajoutées vides, étapes **vides** sans équivalent retirées, étapes **remplies** sans équivalent gardées comme
   étapes libres : rien n'est perdu en silence. `null` = détacher (à la volée).
@@ -315,21 +329,16 @@ toucher à leurs conf nginx / conteneurs**. Modèle repris de scolive/tigilabs :
 Cette section est la référence du chantier. **Cocher la checklist à chaque étape** ; quand un lot est terminé, déplacer ses règles
 vers les sections permanentes (Authentification, Autorisations par paroisse…) et **supprimer** le lot d'ici. Supprimer la section entière à la fin.
 
-**Décisions**
-- Paroisse : statut `FAITHFUL` (Fidèle / Follower) → `PARISHIONER` (Paroissien / Member) → `PARISH_ADMIN`. Plusieurs admins, le dernier ne part pas.
-  Responsabilités d'équipe séparées du statut, cumulables : Préparateur, Lecteur, Rédacteur d'annonces/activités ; attribuées par l'admin à des paroissiens seulement.
-- Un fidèle ne voit que le public. Un paroissien voit en plus les annonces/activités « Paroissiens seulement » (nouvelle option de visibilité). Feuilles non publiées : responsabilité Lecteur ou plus.
-- Devenir fidèle : sans validation, connecté (visiteur → `/login?next=`), nom + prénom rattachés au **compte** (demandés une fois), 20 paroisses max, limité (throttle).
-  Phrase dans le formulaire : l'admin verra nom et prénom ; section dans la politique de confidentialité.
-- Promotion fidèle → paroissien : **immédiate** par l'admin (pas d'invitation). Un paroissien peut se retirer lui-même (redevient fidèle) ; un fidèle peut quitter ; l'admin peut retirer un membre (sans blocage).
-  L'ajout de membre par email est **supprimé** (la limite connue « compte sans email non invitable » disparaît).
-- L'admin voit nom, prénom, date, rôle (ni email ni téléphone) ; les paroissiens ne se voient pas entre eux. Favoris et statut de fidèle restent indépendants.
-- Vue lecture seule d'une paroisse dans `/dashboard` : mini-site public + Devenir fidèle / Quitter + favori + lien « Gérer » pour admin/équipe.
-- Migration (1 paroisse, 1 utilisateur en prod) : VIEWER → paroissien ; READER/PREPARER → paroissien + responsabilité. Premier SUPER_ADMIN : zoutigo@gmail.com (déjà créé).
+**Décisions restantes (lots 3 et 4)**
+- Vue lecture seule d'une paroisse dans `/dashboard` : mini-site public + Devenir fidèle / Quitter + favori + lien « Gérer » pour admin/équipe. « Mes paroisses » liste les paroisses où l'on est fidèle
+  (statut affiché) ; un paroissien y voit aussi les annonces/activités « Paroissiens seulement » (l'API `GET /parishes/:id/announcements|activities` les renvoie déjà selon le statut).
+- Écran des membres (admin) : nom, prénom, date, statut, responsabilités (ni email ni téléphone), recherche, promotion immédiate, attribution des responsabilités, retrait ; l'API existe (`/parishes/:id/members`).
+  Texte à ajouter : un fidèle/paroissien qui se retire redevient fidèle ; l'admin peut retirer sans blocage ; le dernier admin reste.
 
 **Checklist** (chaque lot : tests unitaires + e2e API + Playwright 3 viewports + essais réels navigateur et API, précommit, push, CI `dev` vert)
 - [x] Lot 1 — rôles plateforme (terminé, effacé de cette liste ; règles dans « Rôles de plateforme »)
-- [ ] Lot 2 — rôles de paroisse (migration, fidèle, responsabilités, visibilité « Paroissiens seulement », confidentialité)
+- [x] Lot 2 — rôles de paroisse (terminé : migration, API fidèle/membres/responsabilités, visibilité, bouton « Devenir fidèle », confidentialité ; règles dans « Autorisations par paroisse »)
+  - reste au lot 4 : **l'écran** d'administration des membres (liste, promotion, responsabilités, retrait) — l'API est déjà en place
 - [ ] Lot 3 — vue lecture seule d'une paroisse (favoris, Mes paroisses)
 - [ ] Lot 4 — liste des fidèles, promotion, retrait, quitter
 

@@ -4,7 +4,7 @@ import { PrismaService } from '../src/prisma/prisma.service';
 import { Agent, createTestApp, onDays, registerAgent } from './helpers';
 
 /**
- * Matrice d'autorisations : qui (visiteur, non-membre, VIEWER, PREPARER, PARISH_ADMIN) peut faire quoi,
+ * Matrice d'autorisations : qui (visiteur, non-membre, fidèle, paroissien, lecteur, préparateur, rédacteur, admin) peut faire quoi,
  * sur les routes qui visent une paroisse directement ou via une de ses ressources.
  */
 describe('Autorisations par paroisse', () => {
@@ -13,7 +13,10 @@ describe('Autorisations par paroisse', () => {
 
   let admin: Agent;
   let preparer: Agent;
-  let viewer: Agent;
+  let reader: Agent;
+  let announcer: Agent;
+  let parishioner: Agent;
+  let faithful: Agent;
   let stranger: Agent;
   let otherAdmin: Agent;
 
@@ -47,9 +50,14 @@ describe('Autorisations par paroisse', () => {
     (await owner.post('/api/parishes').send({ name, city: 'Lyon', country: 'France' }).expect(201))
       .body.id as string;
 
-  const addMember = async (email: string, parishId: string, role: 'PREPARER' | 'VIEWER') => {
+  const addMember = async (
+    email: string,
+    parishId: string,
+    status: 'FAITHFUL' | 'PARISHIONER',
+    duties: ('PREPARER' | 'READER' | 'ANNOUNCER')[] = [],
+  ) => {
     const user = await prisma.user.findUniqueOrThrow({ where: { email } });
-    await prisma.parishMember.create({ data: { userId: user.id, parishId, role } });
+    await prisma.parishMember.create({ data: { userId: user.id, parishId, status, duties } });
   };
 
   const seed = async (owner: Agent, parishId: string, suffix: string) => {
@@ -109,13 +117,19 @@ describe('Autorisations par paroisse', () => {
 
     admin = await registerAgent(app, 'authz-admin@test.fr');
     preparer = await registerAgent(app, 'authz-preparer@test.fr');
-    viewer = await registerAgent(app, 'authz-viewer@test.fr');
+    reader = await registerAgent(app, 'authz-reader@test.fr');
+    announcer = await registerAgent(app, 'authz-announcer@test.fr');
+    parishioner = await registerAgent(app, 'authz-parishioner@test.fr');
+    faithful = await registerAgent(app, 'authz-faithful@test.fr');
     stranger = await registerAgent(app, 'authz-stranger@test.fr');
     otherAdmin = await registerAgent(app, 'authz-other@test.fr');
 
     a.parishId = await makeParish(admin, 'Paroisse Authz A');
-    await addMember('authz-preparer@test.fr', a.parishId, 'PREPARER');
-    await addMember('authz-viewer@test.fr', a.parishId, 'VIEWER');
+    await addMember('authz-preparer@test.fr', a.parishId, 'PARISHIONER', ['PREPARER']);
+    await addMember('authz-reader@test.fr', a.parishId, 'PARISHIONER', ['READER']);
+    await addMember('authz-announcer@test.fr', a.parishId, 'PARISHIONER', ['ANNOUNCER']);
+    await addMember('authz-parishioner@test.fr', a.parishId, 'PARISHIONER');
+    await addMember('authz-faithful@test.fr', a.parishId, 'FAITHFUL');
     Object.assign(a, await seed(admin, a.parishId, 'A'));
 
     b.parishId = await makeParish(otherAdmin, 'Paroisse Authz B');
@@ -264,37 +278,121 @@ describe('Autorisations par paroisse', () => {
     await call(stranger).expect(403);
   });
 
-  it.each(names.filter((n) => routes()[n].read))('VIEWER : peut lire (%s)', async (name) => {
-    await routes()[name].call(viewer).expect(200);
+  /**
+   * Permissions attendues par route (écrites ici en clair, indépendamment du code testé) :
+   * view = tout fidèle ; internal = lecteur, préparateur, admin ; celebrations = préparateur, admin ;
+   * announcements = rédacteur, admin ; manage = admin seulement.
+   */
+  const NEEDS: Record<string, 'view' | 'internal' | 'celebrations' | 'announcements' | 'manage'> = {
+    'GET  parishes/:id': 'view',
+    'GET  announcements': 'view',
+    'GET  activities': 'view',
+    'POST announcement': 'announcements',
+    'POST activity': 'announcements',
+    'DELETE announcement': 'announcements',
+    'DELETE activity': 'announcements',
+    'PATCH parish (infos publiques)': 'manage',
+    'GET  members': 'manage',
+  };
+  const needOf = (name: string) =>
+    NEEDS[name] ?? (name.startsWith('GET') ? 'internal' : 'celebrations');
+
+  const ACTORS = {
+    fidèle: { agent: () => faithful, has: ['view'] },
+    paroissien: { agent: () => parishioner, has: ['view'] },
+    lecteur: { agent: () => reader, has: ['view', 'internal'] },
+    préparateur: { agent: () => preparer, has: ['view', 'internal', 'celebrations'] },
+    rédacteur: { agent: () => announcer, has: ['view', 'announcements'] },
+  } as const;
+
+  for (const [label, actor] of Object.entries(ACTORS)) {
+    const allowed = (n: string) => (actor.has as readonly string[]).includes(needOf(n));
+
+    it.each(names.filter((n) => allowed(n) && routes()[n].read))(
+      `${label} : peut lire (%s)`,
+      async (name) => {
+        await routes()[name].call(actor.agent()).expect(200);
+      },
+    );
+
+    it.each([...names, ...mutNames].filter((n) => !allowed(n)))(
+      `${label} : 403 sur %s`,
+      async (name) => {
+        const call = routes()[name]?.call ?? mutating()[name];
+        await call(actor.agent()).expect(403);
+      },
+    );
+  }
+
+  it('un fidèle ne reçoit que les annonces et activités publiques, un paroissien aussi le réservé', async () => {
+    const pub = await admin
+      .post(`/api/parishes/${a.parishId}/announcements`)
+      .send({ title: 'Pour tous', body: 'Texte', visibility: 'PUBLIC' })
+      .expect(201);
+    const priv = await admin
+      .post(`/api/parishes/${a.parishId}/announcements`)
+      .send({ title: 'Entre paroissiens', body: 'Texte', visibility: 'MEMBERS' })
+      .expect(201);
+    const titles = async (agent: Agent) =>
+      (await agent.get(`/api/parishes/${a.parishId}/announcements`).expect(200)).body.map(
+        (x: { title: string }) => x.title,
+      );
+    expect(await titles(faithful)).toContain('Pour tous');
+    expect(await titles(faithful)).not.toContain('Entre paroissiens');
+    expect(await titles(parishioner)).toContain('Entre paroissiens');
+    expect(await titles(announcer)).toContain('Entre paroissiens');
+    // Le site public, lui, ne l'expose jamais.
+    const publicList = await request(app.getHttpServer())
+      .get(`/api/public/parishes/${a.parishId}/announcements`)
+      .expect(200);
+    expect(JSON.stringify(publicList.body)).not.toContain('Entre paroissiens');
+
+    await admin.delete(`/api/parishes/${a.parishId}/announcements/${pub.body.id}`).expect(200);
+    await admin.delete(`/api/parishes/${a.parishId}/announcements/${priv.body.id}`).expect(200);
   });
 
-  it.each([...names.filter((n) => !routes()[n].read), ...mutNames])(
-    'VIEWER : 403 sur l’écriture %s',
-    async (name) => {
-      const call = routes()[name]?.call ?? mutating()[name];
-      await call(viewer).expect(403);
-    },
-  );
+  it('une activité « Paroissiens seulement » est cachée au fidèle et au public', async () => {
+    const act = await admin
+      .post(`/api/parishes/${a.parishId}/activities`)
+      .send({
+        title: 'Retraite des paroissiens',
+        description: 'Texte',
+        startsAt: '2027-05-01T18:00:00.000Z',
+        visibility: 'MEMBERS',
+      })
+      .expect(201);
+    const has = async (agent: Agent) =>
+      JSON.stringify((await agent.get(`/api/parishes/${a.parishId}/activities`).expect(200)).body);
+    expect(await has(faithful)).not.toContain('Retraite des paroissiens');
+    expect(await has(parishioner)).toContain('Retraite des paroissiens');
+    const publicList = await request(app.getHttpServer())
+      .get(`/api/public/parishes/${a.parishId}/activities`)
+      .expect(200);
+    expect(JSON.stringify(publicList.body)).not.toContain('Retraite des paroissiens');
+    await admin.delete(`/api/parishes/${a.parishId}/activities/${act.body.id}`).expect(200);
+  });
 
-  it('VIEWER et PREPARER : la gestion des membres reste réservée à l’admin', async () => {
-    await viewer.get(`/api/parishes/${a.parishId}/members`).expect(403);
-    await preparer
-      .post(`/api/parishes/${a.parishId}/members`)
-      .send({ email: 'authz-stranger@test.fr', role: 'VIEWER' })
-      .expect(403);
-    await preparer.delete(`/api/parishes/${a.parishId}/members/whoever`).expect(403);
+  it('la gestion des membres reste réservée à l’admin de la paroisse', async () => {
+    for (const agent of [faithful, parishioner, reader, preparer, announcer]) {
+      await agent.get(`/api/parishes/${a.parishId}/members`).expect(403);
+      await agent
+        .patch(`/api/parishes/${a.parishId}/members/whoever`)
+        .send({ status: 'PARISHIONER' })
+        .expect(403);
+      await agent.delete(`/api/parishes/${a.parishId}/members/whoever`).expect(403);
+    }
   });
 
   it('PREPARER : ne peut pas modifier l’identité publique de la paroisse (admin seulement)', async () => {
     await preparer.patch(`/api/parishes/${a.parishId}`).send({ address: 'Piraté' }).expect(403);
   });
 
-  it('PREPARER : publie annonces et activités', async () => {
-    await preparer
+  it('rédacteur : publie annonces et activités (le préparateur, non : autre responsabilité)', async () => {
+    await announcer
       .post(`/api/parishes/${a.parishId}/announcements`)
-      .send({ title: 'Par le préparateur', body: 'Texte' })
+      .send({ title: 'Par le rédacteur', body: 'Texte' })
       .expect(201);
-    await preparer
+    await announcer
       .post(`/api/parishes/${a.parishId}/activities`)
       .send({ title: 'Rencontre', description: 'Texte', startsAt: '2027-03-01T18:00:00.000Z' })
       .expect(201);
@@ -320,16 +418,16 @@ describe('Autorisations par paroisse', () => {
       .expect(200);
   });
 
-  it('notes internes : visibles des préparateurs, jamais des lecteurs ni des spectateurs', async () => {
+  it('notes internes : visibles des préparateurs, jamais des lecteurs', async () => {
     const asAdmin = await admin.get(`/api/celebrations/${a.celebrationId}`).expect(200);
     expect(asAdmin.body.internalNote).toBe('Note interne A');
     const asPreparer = await preparer.get(`/api/celebrations/${a.celebrationId}`).expect(200);
     expect(asPreparer.body.internalNote).toBe('Note interne A');
 
-    const asViewer = await viewer.get(`/api/celebrations/${a.celebrationId}`).expect(200);
-    expect(asViewer.body).not.toHaveProperty('internalNote');
-    expect(JSON.stringify(asViewer.body)).not.toContain('Note interne');
-    const occurrence = await viewer.get(`/api/occurrences/${a.occurrenceId}`).expect(200);
+    const asReader = await reader.get(`/api/celebrations/${a.celebrationId}`).expect(200);
+    expect(asReader.body).not.toHaveProperty('internalNote');
+    expect(JSON.stringify(asReader.body)).not.toContain('Note interne');
+    const occurrence = await reader.get(`/api/occurrences/${a.occurrenceId}`).expect(200);
     expect(JSON.stringify(occurrence.body)).not.toContain('Note interne');
   });
 

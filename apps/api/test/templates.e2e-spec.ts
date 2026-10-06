@@ -124,13 +124,15 @@ describe('Modèles de feuille — modification et suppression (vraie base church
     await intruder.delete(`/api/templates/${templateId}`).expect(403);
   });
 
-  it('un lecteur (rôle READER) ne peut pas modifier un modèle', async () => {
+  it('un lecteur (responsabilité Lecteur) ne peut pas modifier un modèle', async () => {
     const { agent, parishId, templateId } = await setup('tpl-admin@test.fr');
     const reader = await registerAgent(app, 'tpl-reader@test.fr');
+    const me = await reader.get('/api/auth/me').expect(200);
+    await reader.post(`/api/parishes/${parishId}/follow`).expect(201);
     await agent
-      .post(`/api/parishes/${parishId}/members`)
-      .send({ email: 'tpl-reader@test.fr', role: 'READER' })
-      .expect(201);
+      .patch(`/api/parishes/${parishId}/members/${me.body.id}`)
+      .send({ status: 'PARISHIONER', duties: ['READER'] })
+      .expect(200);
     await reader.get(`/api/parishes/${parishId}/templates`).expect(200);
     await reader.patch(`/api/templates/${templateId}`).send({ name: 'Non' }).expect(403);
     await reader.delete(`/api/templates/${templateId}`).expect(403);

@@ -1,8 +1,11 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import { ParishRole } from '@churchy/shared';
+import type { ParishMemberAccess } from '@churchy/shared';
 
-/** Rôle du membre dans la paroisse de la route (posé par `ParishRolesGuard`), ou `SUPER_ADMIN`. */
-export type ParishRoleValue = ParishRole | 'SUPER_ADMIN' | 'PLATFORM_STAFF';
+/**
+ * Accès de l'appelant à la paroisse de la route (posé par `ParishRolesGuard`) : son statut et ses
+ * responsabilités, ou `SUPER_ADMIN` / `PLATFORM_STAFF` (ADMIN ou MODERATOR de plateforme, lecture seule).
+ */
+export type ParishRoleValue = ParishMemberAccess | 'SUPER_ADMIN' | 'PLATFORM_STAFF';
 
 export const CurrentParishRole = createParamDecorator(
   (_data: unknown, ctx: ExecutionContext): ParishRoleValue | undefined =>

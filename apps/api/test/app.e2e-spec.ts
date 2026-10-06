@@ -68,7 +68,7 @@ describe('API — parcours principaux (vraie base churchy_test)', () => {
 
       const mine = await agent.get('/api/parishes/my').expect(200);
       expect(mine.body).toEqual([
-        expect.objectContaining({ id: created.body.id, role: 'PARISH_ADMIN' }),
+        expect.objectContaining({ id: created.body.id, status: 'PARISH_ADMIN', duties: [] }),
       ]);
 
       const publicList = await http().get('/api/public/parishes?q=saint%20pierre').expect(200);

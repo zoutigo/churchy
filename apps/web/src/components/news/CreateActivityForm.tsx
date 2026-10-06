@@ -3,7 +3,7 @@ import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ERR, createActivitySchema } from '@churchy/shared';
+import { ContentVisibility, ERR, createActivitySchema } from '@churchy/shared';
 import { activitiesApi } from '@/lib/api/activities.api';
 import { localInputToIso } from '@/lib/datetime';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { VisibilityField } from '@/components/news/VisibilityField';
 import { RichTextEditor } from '@/components/rich-text/RichTextEditor';
 import { handleSubmitError } from '@/lib/forms/submit-error';
 import { notify } from '@/lib/notify';
@@ -38,7 +39,14 @@ export function CreateActivityForm({
   const optionalHint = <span className="text-muted-foreground text-xs">{tc('optional')}</span>;
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: { title: '', description: '', startsAt: '', location: '', imageUrl: '' },
+    defaultValues: {
+      title: '',
+      description: '',
+      startsAt: '',
+      location: '',
+      imageUrl: '',
+      visibility: ContentVisibility.PUBLIC,
+    },
     mode: 'onChange',
   });
 
@@ -139,6 +147,7 @@ export function CreateActivityForm({
             </FormItem>
           )}
         />
+        <VisibilityField control={form.control} name="visibility" />
         {form.formState.errors.root && (
           <p className="text-sm text-destructive">{form.formState.errors.root.message}</p>
         )}

@@ -22,6 +22,7 @@ export default function Page({ params }: Props) {
   const td = useTranslations('dashboard');
   const tc = useTranslations('common');
   const tcn = useTranslations('dashContents');
+  const tv = useTranslations('visibilityField');
   const locale = useAppLocale();
   const { parishId } = params;
   const [items, setItems] = useState<Activity[]>([]);
@@ -78,7 +79,14 @@ export default function Page({ params }: Props) {
               className="flex flex-col gap-3 rounded-lg border bg-card p-4 sm:flex-row sm:items-start sm:justify-between"
             >
               <div className="min-w-0 space-y-1">
-                <p className="font-medium">{item.title}</p>
+                <p className="font-medium">
+                  {item.title}
+                  {item.visibility === 'MEMBERS' && (
+                    <span className="ml-2 rounded-full bg-churchy-100 px-2 py-0.5 align-middle text-xs font-normal text-churchy-700">
+                      {tv('badgeMembers')}
+                    </span>
+                  )}
+                </p>
                 <p className="text-sm text-muted-foreground">
                   {t('at', {
                     date: formatDateLong(item.startsAt, { locale }),

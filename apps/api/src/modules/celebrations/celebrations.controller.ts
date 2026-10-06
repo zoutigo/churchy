@@ -17,7 +17,7 @@ import {
   type UpdateOccurrenceDto,
 } from '@churchy/shared';
 import { ParishRolesGuard } from '../../common/guards/parish-roles.guard';
-import { ALL_MEMBERS, EDITORS, ParishAccess } from '../../common/decorators/roles.decorator';
+import { ParishAccess } from '../../common/decorators/roles.decorator';
 import {
   CurrentParishRole,
   type ParishRoleValue,
@@ -32,7 +32,7 @@ export class CelebrationsController {
 
   /** Crée une série : une ou plusieurs dates (ponctuelles ou récurrence), feuilles créées à la demande. */
   @Post('parishes/:parishId/celebrations')
-  @ParishAccess(EDITORS)
+  @ParishAccess('parish.celebrations.write')
   create(
     @Param('parishId') parishId: string,
     @Body(new ZodValidationPipe(createCelebrationSchema)) dto: CreateCelebrationDto,
@@ -42,19 +42,19 @@ export class CelebrationsController {
   }
 
   @Get('parishes/:parishId/celebrations')
-  @ParishAccess(ALL_MEMBERS)
+  @ParishAccess('parish.internal.read')
   findByParish(@Param('parishId') parishId: string) {
     return this.service.findByParish(parishId);
   }
 
   @Get('celebrations/:id')
-  @ParishAccess(ALL_MEMBERS, 'celebration')
+  @ParishAccess('parish.internal.read', 'celebration')
   findOne(@Param('id') id: string, @CurrentParishRole() role: ParishRoleValue | undefined) {
     return this.service.findById(id, role);
   }
 
   @Patch('celebrations/:id')
-  @ParishAccess(EDITORS, 'celebration')
+  @ParishAccess('parish.celebrations.write', 'celebration')
   update(
     @Param('id') id: string,
     @Body(new ZodValidationPipe(updateCelebrationSchema)) dto: UpdateCelebrationDto,
@@ -63,20 +63,20 @@ export class CelebrationsController {
   }
 
   @Post('celebrations/:id/archive')
-  @ParishAccess(EDITORS, 'celebration')
+  @ParishAccess('parish.celebrations.write', 'celebration')
   archive(@Param('id') id: string) {
     return this.service.archive(id);
   }
 
   @Post('celebrations/:id/unarchive')
-  @ParishAccess(EDITORS, 'celebration')
+  @ParishAccess('parish.celebrations.write', 'celebration')
   unarchive(@Param('id') id: string) {
     return this.service.unarchive(id);
   }
 
   /** Prolonge la série avec de nouvelles dates. */
   @Post('celebrations/:id/occurrences')
-  @ParishAccess(EDITORS, 'celebration')
+  @ParishAccess('parish.celebrations.write', 'celebration')
   addOccurrences(
     @Param('id') id: string,
     @Body(new ZodValidationPipe(addOccurrencesSchema)) dto: AddOccurrencesDto,
@@ -85,13 +85,13 @@ export class CelebrationsController {
   }
 
   @Get('occurrences/:id')
-  @ParishAccess(ALL_MEMBERS, 'occurrence')
+  @ParishAccess('parish.internal.read', 'occurrence')
   findOccurrence(@Param('id') id: string, @CurrentParishRole() role: ParishRoleValue | undefined) {
     return this.service.getOccurrence(id, role);
   }
 
   @Patch('occurrences/:id')
-  @ParishAccess(EDITORS, 'occurrence')
+  @ParishAccess('parish.celebrations.write', 'occurrence')
   updateOccurrence(
     @Param('id') id: string,
     @Body(new ZodValidationPipe(updateOccurrenceSchema)) dto: UpdateOccurrenceDto,
@@ -100,7 +100,7 @@ export class CelebrationsController {
   }
 
   @Post('occurrences/:id/cancel')
-  @ParishAccess(EDITORS, 'occurrence')
+  @ParishAccess('parish.celebrations.write', 'occurrence')
   cancel(
     @Param('id') id: string,
     @Body(new ZodValidationPipe(cancelOccurrenceSchema)) dto: CancelOccurrenceDto,
@@ -109,7 +109,7 @@ export class CelebrationsController {
   }
 
   @Post('occurrences/:id/reinstate')
-  @ParishAccess(EDITORS, 'occurrence')
+  @ParishAccess('parish.celebrations.write', 'occurrence')
   reinstate(@Param('id') id: string) {
     return this.service.reinstateOccurrence(id);
   }

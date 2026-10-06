@@ -267,7 +267,8 @@ export class PublicService {
   async listAnnouncements(parishId: string): Promise<PublicAnnouncement[]> {
     await this.assertParishExists(parishId);
     const rows = await this.prisma.announcement.findMany({
-      where: { parishId },
+      // Le public ne voit jamais ce qui est réservé aux paroissiens.
+      where: { parishId, visibility: 'PUBLIC' },
       orderBy: { publishedAt: 'desc' },
       take: LIST_LIMIT,
     });
@@ -284,7 +285,7 @@ export class PublicService {
   async listActivities(parishId: string): Promise<PublicActivity[]> {
     await this.assertParishExists(parishId);
     const rows = await this.prisma.activity.findMany({
-      where: { parishId, startsAt: { gte: this.upcomingFrom() } },
+      where: { parishId, visibility: 'PUBLIC', startsAt: { gte: this.upcomingFrom() } },
       orderBy: { startsAt: 'asc' },
       take: LIST_LIMIT,
     });

@@ -1,11 +1,17 @@
 import { ExecutionContext, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { ParishRole } from '@churchy/shared';
+import { ParishDuty, ParishStatus } from '@churchy/shared';
 import { PrismaService } from '../../prisma/prisma.service';
-import { PARISH_ROLES_KEY, PARISH_SCOPE_KEY } from '../decorators/roles.decorator';
+import { PARISH_PERMISSION_KEY, PARISH_SCOPE_KEY } from '../decorators/roles.decorator';
 import { ParishRolesGuard } from './parish-roles.guard';
 
 type Fn = jest.Mock;
+
+const admin = { status: ParishStatus.PARISH_ADMIN, duties: [] };
+const preparer = { status: ParishStatus.PARISHIONER, duties: [ParishDuty.PREPARER] };
+const reader = { status: ParishStatus.PARISHIONER, duties: [ParishDuty.READER] };
+const parishioner = { status: ParishStatus.PARISHIONER, duties: [] };
+const faithful = { status: ParishStatus.FAITHFUL, duties: [] };
 
 describe('ParishRolesGuard', () => {
   let prisma: {
@@ -47,7 +53,7 @@ describe('ParishRolesGuard', () => {
   });
 
   it('laisse passer un SUPER_ADMIN', async () => {
-    metadata[PARISH_ROLES_KEY] = [ParishRole.PARISH_ADMIN];
+    metadata[PARISH_PERMISSION_KEY] = 'parish.manage';
     await expect(
       guard.canActivate(ctx({ id: 'u1', role: 'SUPER_ADMIN' }, { parishId: 'p1' })),
     ).resolves.toBe(true);
@@ -55,8 +61,8 @@ describe('ParishRolesGuard', () => {
   });
 
   it('autorise un membre avec le bon rôle (paroisse dans l’URL)', async () => {
-    metadata[PARISH_ROLES_KEY] = [ParishRole.PARISH_ADMIN, ParishRole.PREPARER];
-    prisma.parishMember.findUnique.mockResolvedValue({ role: ParishRole.PREPARER });
+    metadata[PARISH_PERMISSION_KEY] = 'parish.celebrations.write';
+    prisma.parishMember.findUnique.mockResolvedValue(preparer);
     await expect(
       guard.canActivate(ctx({ id: 'u1', role: 'USER' }, { parishId: 'p1' })),
     ).resolves.toBe(true);
@@ -66,16 +72,16 @@ describe('ParishRolesGuard', () => {
   });
 
   it('refuse un non-membre', async () => {
-    metadata[PARISH_ROLES_KEY] = [ParishRole.PARISH_ADMIN];
+    metadata[PARISH_PERMISSION_KEY] = 'parish.manage';
     prisma.parishMember.findUnique.mockResolvedValue(null);
     await expect(
       guard.canActivate(ctx({ id: 'u1', role: 'USER' }, { parishId: 'p1' })),
     ).rejects.toBeInstanceOf(ForbiddenException);
   });
 
-  it('refuse un membre dont le rôle est insuffisant', async () => {
-    metadata[PARISH_ROLES_KEY] = [ParishRole.PARISH_ADMIN, ParishRole.PREPARER];
-    prisma.parishMember.findUnique.mockResolvedValue({ role: ParishRole.VIEWER });
+  it('refuse un membre dont les permissions sont insuffisantes (un fidèle n’écrit pas)', async () => {
+    metadata[PARISH_PERMISSION_KEY] = 'parish.celebrations.write';
+    prisma.parishMember.findUnique.mockResolvedValue(faithful);
     await expect(
       guard.canActivate(ctx({ id: 'u1', role: 'USER' }, { parishId: 'p1' })),
     ).rejects.toBeInstanceOf(ForbiddenException);
@@ -99,10 +105,10 @@ describe('ParishRolesGuard', () => {
   ])(
     'retrouve la paroisse via la ressource (%s) et non via un identifiant fourni par le client',
     async (kind, _model, params, finder) => {
-      metadata[PARISH_ROLES_KEY] = [ParishRole.PARISH_ADMIN];
+      metadata[PARISH_PERMISSION_KEY] = 'parish.manage';
       metadata[PARISH_SCOPE_KEY] = { kind };
       finder(prisma).mockResolvedValue({ parishId: 'parish-of-resource' });
-      prisma.parishMember.findUnique.mockResolvedValue({ role: ParishRole.PARISH_ADMIN });
+      prisma.parishMember.findUnique.mockResolvedValue(admin);
 
       await guard.canActivate(ctx({ id: 'u1', role: 'USER' }, params));
 
@@ -113,10 +119,10 @@ describe('ParishRolesGuard', () => {
   );
 
   it('retrouve la paroisse d’une étape de modèle via son modèle', async () => {
-    metadata[PARISH_ROLES_KEY] = [ParishRole.PARISH_ADMIN];
+    metadata[PARISH_PERMISSION_KEY] = 'parish.manage';
     metadata[PARISH_SCOPE_KEY] = { kind: 'templateStep', param: 'stepId' };
     prisma.celebrationTemplateStep.findUnique.mockResolvedValue({ template: { parishId: 'p9' } });
-    prisma.parishMember.findUnique.mockResolvedValue({ role: ParishRole.PARISH_ADMIN });
+    prisma.parishMember.findUnique.mockResolvedValue(admin);
 
     await guard.canActivate(ctx({ id: 'u1', role: 'USER' }, { stepId: 's1' }));
 
@@ -126,10 +132,10 @@ describe('ParishRolesGuard', () => {
   });
 
   it('retrouve la paroisse d’une feuille via sa date', async () => {
-    metadata[PARISH_ROLES_KEY] = [ParishRole.PARISH_ADMIN];
+    metadata[PARISH_PERMISSION_KEY] = 'parish.manage';
     metadata[PARISH_SCOPE_KEY] = { kind: 'sheet' };
     prisma.preparationSheet.findUnique.mockResolvedValue({ occurrence: { parishId: 'p7' } });
-    prisma.parishMember.findUnique.mockResolvedValue({ role: ParishRole.PARISH_ADMIN });
+    prisma.parishMember.findUnique.mockResolvedValue(admin);
 
     await guard.canActivate(ctx({ id: 'u1', role: 'USER' }, { id: 'sh1' }));
 
@@ -139,7 +145,7 @@ describe('ParishRolesGuard', () => {
   });
 
   it('répond 404 si la date ou la feuille n’existe pas', async () => {
-    metadata[PARISH_ROLES_KEY] = [ParishRole.PARISH_ADMIN];
+    metadata[PARISH_PERMISSION_KEY] = 'parish.manage';
     prisma.celebrationOccurrence.findUnique.mockResolvedValue(null);
     prisma.preparationSheet.findUnique.mockResolvedValue(null);
     for (const kind of ['occurrence', 'sheet']) {
@@ -150,10 +156,35 @@ describe('ParishRolesGuard', () => {
     }
   });
 
-  it('expose le rôle du membre à la requête (pour masquer la note interne)', async () => {
-    metadata[PARISH_ROLES_KEY] = [ParishRole.PARISH_ADMIN, ParishRole.VIEWER];
-    prisma.parishMember.findUnique.mockResolvedValue({ role: ParishRole.VIEWER });
-    const request: { user: unknown; params: unknown; parishRole?: string } = {
+  it.each([
+    ['parish.view', faithful, true],
+    ['parish.view.members', faithful, false],
+    ['parish.view.members', parishioner, true],
+    ['parish.internal.read', parishioner, false],
+    ['parish.internal.read', reader, true],
+    ['parish.celebrations.write', reader, false],
+    ['parish.celebrations.write', preparer, true],
+    ['parish.announcements.write', preparer, false],
+    ['parish.manage', preparer, false],
+    ['parish.manage', admin, true],
+    // Un fidèle ne reçoit jamais de responsabilité, même si une ligne en base en portait une.
+    [
+      'parish.celebrations.write',
+      { status: ParishStatus.FAITHFUL, duties: [ParishDuty.PREPARER] },
+      false,
+    ],
+  ])('permission %s pour %j : %s', async (perm, member, allowed) => {
+    metadata[PARISH_PERMISSION_KEY] = perm;
+    prisma.parishMember.findUnique.mockResolvedValue(member);
+    const result = guard.canActivate(ctx({ id: 'u1', role: 'USER' }, { parishId: 'p1' }));
+    if (allowed) await expect(result).resolves.toBe(true);
+    else await expect(result).rejects.toBeInstanceOf(ForbiddenException);
+  });
+
+  it('expose le statut et les responsabilités du membre à la requête (pour masquer la note interne)', async () => {
+    metadata[PARISH_PERMISSION_KEY] = 'parish.view';
+    prisma.parishMember.findUnique.mockResolvedValue(faithful);
+    const request: { user: unknown; params: unknown; parishRole?: unknown } = {
       user: { id: 'u1', role: 'USER' },
       params: { parishId: 'p1' },
     };
@@ -163,19 +194,19 @@ describe('ParishRolesGuard', () => {
       switchToHttp: () => ({ getRequest: () => request }),
     } as unknown as ExecutionContext;
     await guard.canActivate(context);
-    expect(request.parishRole).toBe(ParishRole.VIEWER);
+    expect(request.parishRole).toEqual(faithful);
 
-    const admin = { user: { id: 'u2', role: 'SUPER_ADMIN' }, params: {}, parishRole: undefined };
+    const root = { user: { id: 'u2', role: 'SUPER_ADMIN' }, params: {}, parishRole: undefined };
     await guard.canActivate({
       getHandler: () => 'handler',
       getClass: () => 'class',
-      switchToHttp: () => ({ getRequest: () => admin }),
+      switchToHttp: () => ({ getRequest: () => root }),
     } as unknown as ExecutionContext);
-    expect(admin.parishRole).toBe('SUPER_ADMIN');
+    expect(root.parishRole).toBe('SUPER_ADMIN');
   });
 
   it('répond 404 si la ressource n’existe pas', async () => {
-    metadata[PARISH_ROLES_KEY] = [ParishRole.PARISH_ADMIN];
+    metadata[PARISH_PERMISSION_KEY] = 'parish.manage';
     metadata[PARISH_SCOPE_KEY] = { kind: 'celebration' };
     prisma.celebration.findUnique.mockResolvedValue(null);
     await expect(
@@ -195,7 +226,7 @@ describe('ParishRolesGuard', () => {
     };
 
     beforeEach(() => {
-      metadata[PARISH_ROLES_KEY] = [ParishRole.PARISH_ADMIN, ParishRole.PREPARER];
+      metadata[PARISH_PERMISSION_KEY] = 'parish.celebrations.write';
       prisma.parishMember.findUnique.mockResolvedValue(null);
     });
 
@@ -222,10 +253,10 @@ describe('ParishRolesGuard', () => {
     });
 
     it("un ADMIN de plateforme qui est aussi admin de la paroisse garde l'écriture", async () => {
-      prisma.parishMember.findUnique.mockResolvedValue({ role: ParishRole.PARISH_ADMIN });
+      prisma.parishMember.findUnique.mockResolvedValue(admin);
       const { req, context } = request({ id: 'u1', role: 'ADMIN' }, 'PATCH');
       await expect(guard.canActivate(context)).resolves.toBe(true);
-      expect(req.parishRole).toBe(ParishRole.PARISH_ADMIN);
+      expect(req.parishRole).toEqual(admin);
     });
   });
 });

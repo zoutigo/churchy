@@ -1,6 +1,0 @@
-export enum ParishRole {
-  PARISH_ADMIN = 'PARISH_ADMIN',
-  PREPARER = 'PREPARER',
-  READER = 'READER',
-  VIEWER = 'VIEWER',
-}

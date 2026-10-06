@@ -157,6 +157,16 @@
       "PARISH": "Je représente une paroisse",
       "PROBLEM": "Signaler un problème",
       "OTHER": "Autre demande"
+    },
+    "parishStatus": {
+      "FAITHFUL": "Fidèle",
+      "PARISHIONER": "Paroissien",
+      "PARISH_ADMIN": "Administrateur"
+    },
+    "parishDuty": {
+      "PREPARER": "Préparateur",
+      "READER": "Lecteur",
+      "ANNOUNCER": "Rédacteur d’annonces"
     }
   },
   "weekdays": {
@@ -534,6 +544,14 @@
         "paragraphs": [
           "Les informations relatives à la pratique ou à l’appartenance religieuse sont considérées comme sensibles. Le fait d’avoir un compte rattaché à une paroisse, ou une paroisse en favori, peut en révéler. C’est pourquoi : nous ne publions jamais la liste des membres ni des favoris ; les noms des membres ne sont visibles que dans l’espace de gestion de leur paroisse ; les favoris d’un visiteur restent sur son appareil ; nous ne vendons ni ne cédons aucune donnée.",
           "Les paroisses ne doivent pas publier de données de fidèles (noms, intentions de messe nominatives, informations de santé ou de deuil) sans leur accord. Une annonce de décès ou une intention de messe nominative suppose le consentement de la famille."
+        ]
+      },
+      {
+        "title": "Devenir fidèle d’une paroisse",
+        "paragraphs": [
+          "Vous pouvez devenir fidèle d’une paroisse en un clic, sans validation. C’est un choix volontaire : vous pouvez le retirer à tout moment avec « Ne plus suivre ».",
+          "Les administrateurs de cette paroisse voient alors votre nom, votre prénom, la date de votre inscription et votre statut (fidèle ou paroissien). Ils ne voient ni votre email ni votre numéro de téléphone. Les autres fidèles et paroissiens ne vous voient pas.",
+          "Une paroisse peut vous reconnaître comme paroissien, vous confier une responsabilité (préparation des célébrations, lecture, annonces) ou vous retirer de sa liste. Quand vous quittez une paroisse, ces informations sont supprimées."
         ]
       },
       {
@@ -1587,5 +1605,32 @@
       "pageOf": "Page {page} sur {pages}"
     },
     "forbidden": "Cet espace est réservé aux équipes de la plateforme."
+  },
+  "follow": {
+    "login": "Devenir fidèle",
+    "become": "Devenir fidèle",
+    "following": "Vous êtes fidèle",
+    "member": "Vous êtes paroissien",
+    "admin": "Vous administrez cette paroisse",
+    "unfollow": "Ne plus suivre",
+    "stepDown": "Me retirer (redevenir fidèle)",
+    "dialogTitle": "Devenir fidèle de {name}",
+    "dialogIntro": "Vous serez fidèle de cette paroisse, sans validation. Vous pourrez la quitter à tout moment.",
+    "visibleName": "L’administrateur de la paroisse verra votre nom et votre prénom : {name}, ainsi que la date de votre inscription. Il ne verra ni votre email ni votre téléphone.",
+    "privacy": "En savoir plus dans la <link>politique de confidentialité</link>.",
+    "confirm": "Confirmer",
+    "cancel": "Annuler",
+    "done": "Vous êtes fidèle de {name}",
+    "left": "Vous ne suivez plus {name}",
+    "steppedDown": "Vous êtes de nouveau fidèle de {name}",
+    "error": "Impossible de modifier votre appartenance à la paroisse"
+  },
+  "visibilityField": {
+    "label": "Qui peut le lire ?",
+    "public": "Tout le monde",
+    "publicHint": "Visible sur la page publique de la paroisse.",
+    "members": "Paroissiens seulement",
+    "membersHint": "Réservé aux paroissiens : les fidèles et le public ne le voient pas.",
+    "badgeMembers": "Paroissiens seulement"
   }
 }

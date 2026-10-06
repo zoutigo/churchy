@@ -2,14 +2,16 @@
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
 import { parishesApi } from '@/lib/api/parishes.api';
-import type { Parish } from '@churchy/shared';
+import type { Parish, ParishDuty, ParishStatus } from '@churchy/shared';
 
 const messageOf = (err: unknown, fallback: string) =>
   err instanceof Error ? err.message : fallback;
 
 export function useMyParishes() {
   const t = useTranslations('dashboard');
-  const [parishes, setParishes] = useState<(Parish & { role: string })[]>([]);
+  const [parishes, setParishes] = useState<
+    (Parish & { status: ParishStatus; duties: ParishDuty[] })[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

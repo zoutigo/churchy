@@ -6,9 +6,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { ParishRole, ERR, hasPlatformPermission } from '@churchy/shared';
 import {
-  PARISH_ROLES_KEY,
+  ERR,
+  hasParishPermission,
+  hasPlatformPermission,
+  type ParishPermission,
+} from '@churchy/shared';
+import {
+  PARISH_PERMISSION_KEY,
   PARISH_SCOPE_KEY,
   type ParishScopeOptions,
 } from '../decorators/roles.decorator';
@@ -23,8 +28,11 @@ export class ParishRolesGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const targets = [context.getHandler(), context.getClass()];
-    const requiredRoles = this.reflector.getAllAndOverride<ParishRole[]>(PARISH_ROLES_KEY, targets);
-    if (!requiredRoles) return true;
+    const required = this.reflector.getAllAndOverride<ParishPermission>(
+      PARISH_PERMISSION_KEY,
+      targets,
+    );
+    if (!required) return true;
 
     const request = context.switchToHttp().getRequest();
     const user = request.user;
@@ -40,9 +48,9 @@ export class ParishRolesGuard implements CanActivate {
     const member = await this.prisma.parishMember.findUnique({
       where: { userId_parishId: { userId: user.id, parishId } },
     });
-    if (!member || !requiredRoles.includes(member.role as ParishRole)) {
+    if (!member || !hasParishPermission(member, required)) {
       // Repli : ADMIN et MODERATOR de plateforme lisent (jamais n'écrivent) les données internes de toute paroisse
-      // dont ils ne sont pas membres avec le rôle voulu.
+      // dont ils ne sont pas membres avec la permission voulue.
       if (
         hasPlatformPermission(user.role, 'platform.parishes.read') &&
         ['GET', 'HEAD'].includes(request.method)
@@ -53,7 +61,7 @@ export class ParishRolesGuard implements CanActivate {
       throw new ForbiddenException(ERR.parishAccessDenied);
     }
     // Les services s'en servent pour masquer ce que certains rôles ne doivent pas voir (notes internes).
-    request.parishRole = member.role;
+    request.parishRole = { status: member.status, duties: member.duties };
     return true;
   }
 

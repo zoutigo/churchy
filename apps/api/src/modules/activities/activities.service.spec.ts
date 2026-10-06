@@ -1,4 +1,5 @@
 import { NotFoundException } from '@nestjs/common';
+import { ContentVisibility, ParishStatus } from '@churchy/shared';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ActivitiesService } from './activities.service';
 
@@ -14,7 +15,12 @@ describe('ActivitiesService', () => {
   it('convertit la date ISO et rattache l’activité à la paroisse de l’URL', async () => {
     await service.create(
       'p1',
-      { title: 'Retraite', description: 'Week-end', startsAt: '2026-11-01T18:00:00.000Z' },
+      {
+        title: 'Retraite',
+        description: 'Week-end',
+        startsAt: '2026-11-01T18:00:00.000Z',
+        visibility: ContentVisibility.MEMBERS,
+      },
       'u1',
     );
     expect(prisma.activity.create).toHaveBeenCalledWith({
@@ -22,9 +28,23 @@ describe('ActivitiesService', () => {
         title: 'Retraite',
         description: '<p>Week-end</p>',
         startsAt: new Date('2026-11-01T18:00:00.000Z'),
+        visibility: 'MEMBERS',
         parishId: 'p1',
         createdById: 'u1',
       },
+    });
+  });
+
+  it('un fidèle ne reçoit que le public, un paroissien reçoit tout', async () => {
+    await service.findByParish('p1', { status: ParishStatus.FAITHFUL, duties: [] });
+    expect(prisma.activity.findMany).toHaveBeenLastCalledWith({
+      where: { parishId: 'p1', visibility: 'PUBLIC' },
+      orderBy: { startsAt: 'desc' },
+    });
+    await service.findByParish('p1', { status: ParishStatus.PARISHIONER, duties: [] });
+    expect(prisma.activity.findMany).toHaveBeenLastCalledWith({
+      where: { parishId: 'p1' },
+      orderBy: { startsAt: 'desc' },
     });
   });
 

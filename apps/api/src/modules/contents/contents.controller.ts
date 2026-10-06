@@ -11,7 +11,7 @@ import {
   type UpdateContentDto,
 } from '@churchy/shared';
 import { ParishRolesGuard } from '../../common/guards/parish-roles.guard';
-import { ALL_MEMBERS, EDITORS, ParishAccess } from '../../common/decorators/roles.decorator';
+import { ParishAccess } from '../../common/decorators/roles.decorator';
 
 @ApiTags('contents')
 @ApiBearerAuth()
@@ -21,7 +21,7 @@ export class ContentsController {
   constructor(private service: ContentsService) {}
 
   @Post('parishes/:parishId/contents')
-  @ParishAccess(EDITORS)
+  @ParishAccess('parish.celebrations.write')
   create(
     @Param('parishId') parishId: string,
     @Body(new ZodValidationPipe(createContentSchema)) dto: CreateContentDto,
@@ -31,19 +31,19 @@ export class ContentsController {
   }
 
   @Get('parishes/:parishId/contents')
-  @ParishAccess(ALL_MEMBERS)
+  @ParishAccess('parish.internal.read')
   findByParish(@Param('parishId') parishId: string) {
     return this.service.findByParish(parishId);
   }
 
   @Get('contents/:id')
-  @ParishAccess(ALL_MEMBERS, 'content')
+  @ParishAccess('parish.internal.read', 'content')
   findOne(@Param('id') id: string) {
     return this.service.findById(id);
   }
 
   @Patch('contents/:id')
-  @ParishAccess(EDITORS, 'content')
+  @ParishAccess('parish.celebrations.write', 'content')
   update(
     @Param('id') id: string,
     @Body(new ZodValidationPipe(updateContentSchema)) dto: UpdateContentDto,
@@ -53,7 +53,7 @@ export class ContentsController {
   }
 
   @Delete('contents/:id')
-  @ParishAccess(EDITORS, 'content')
+  @ParishAccess('parish.celebrations.write', 'content')
   remove(@Param('id') id: string, @CurrentUser() user: AuthUser) {
     return this.service.remove(id, user.id);
   }

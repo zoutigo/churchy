@@ -1,4 +1,5 @@
 import { NotFoundException } from '@nestjs/common';
+import { ContentVisibility, ParishStatus } from '@churchy/shared';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AnnouncementsService } from './announcements.service';
 
@@ -14,16 +15,34 @@ describe('AnnouncementsService', () => {
   });
 
   it('crée l’annonce dans la paroisse de l’URL, avec son auteur', async () => {
-    await service.create('p1', { title: 'Horaires', body: 'Texte' }, 'u1');
+    await service.create(
+      'p1',
+      { title: 'Horaires', body: 'Texte', visibility: ContentVisibility.MEMBERS },
+      'u1',
+    );
     expect(prisma.announcement.create).toHaveBeenCalledWith({
-      data: { title: 'Horaires', body: '<p>Texte</p>', parishId: 'p1', createdById: 'u1' },
+      data: {
+        title: 'Horaires',
+        body: '<p>Texte</p>',
+        visibility: 'MEMBERS',
+        parishId: 'p1',
+        createdById: 'u1',
+      },
     });
   });
 
-  it('liste les plus récentes d’abord', async () => {
-    await service.findByParish('p1');
+  it('liste les plus récentes d’abord ; un paroissien voit aussi « Paroissiens seulement »', async () => {
+    await service.findByParish('p1', { status: ParishStatus.PARISHIONER, duties: [] });
     expect(prisma.announcement.findMany).toHaveBeenCalledWith({
       where: { parishId: 'p1' },
+      orderBy: { publishedAt: 'desc' },
+    });
+  });
+
+  it('un fidèle ne reçoit que le public', async () => {
+    await service.findByParish('p1', { status: ParishStatus.FAITHFUL, duties: [] });
+    expect(prisma.announcement.findMany).toHaveBeenCalledWith({
+      where: { parishId: 'p1', visibility: 'PUBLIC' },
       orderBy: { publishedAt: 'desc' },
     });
   });

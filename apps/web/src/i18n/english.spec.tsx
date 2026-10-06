@@ -111,9 +111,16 @@ describe('site public en anglais', () => {
   });
 
   it('carte de paroisse : le pays est affiché en anglais', () => {
-    const parish = { id: 'p1', name: 'Saint Peter', city: 'Douala', country: 'Cameroun' };
+    const parish = {
+      id: 'p1',
+      name: 'Saint Peter',
+      city: 'Douala',
+      country: 'Cameroun',
+      status: 'PARISHIONER',
+    };
     render(<ParishCard parish={parish as never} />);
     expect(screen.getByText('Douala, Cameroon')).toBeInTheDocument();
+    expect(screen.getByText('Member')).toBeInTheDocument();
   });
 
   it('résultat de recherche : prochaine messe', () => {

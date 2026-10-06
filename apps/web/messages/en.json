@@ -157,6 +157,16 @@
       "PARISH": "I represent a parish",
       "PROBLEM": "Report a problem",
       "OTHER": "Other request"
+    },
+    "parishStatus": {
+      "FAITHFUL": "Follower",
+      "PARISHIONER": "Member",
+      "PARISH_ADMIN": "Administrator"
+    },
+    "parishDuty": {
+      "PREPARER": "Preparer",
+      "READER": "Reader",
+      "ANNOUNCER": "Announcements writer"
     }
   },
   "weekdays": {
@@ -532,6 +542,14 @@
         "paragraphs": [
           "Information about religious practice or affiliation is considered sensitive. Having an account linked to a parish, or a parish among your favourites, may reveal some. That is why: we never publish the list of members or favourites; members’ names are only visible in their parish’s management area; a visitor’s favourites stay on their device; we do not sell or hand over any data.",
           "Parishes must not publish worshippers’ data (names, named Mass intentions, health or bereavement information) without their consent. A death notice or a named Mass intention requires the family’s consent."
+        ]
+      },
+      {
+        "title": "Becoming a follower of a parish",
+        "paragraphs": [
+          "You can become a follower of a parish in one click, with no approval. It is your choice, and you can undo it at any time with “Unfollow”.",
+          "The administrators of that parish then see your first name, last name, the date you joined and your status (follower or member). They do not see your email or your phone number. Other followers and members cannot see you.",
+          "A parish may recognise you as a member, give you a responsibility (preparing celebrations, reading, announcements) or remove you from its list. When you leave a parish, this information is deleted."
         ]
       },
       {
@@ -1585,5 +1603,32 @@
       "pageOf": "Page {page} of {pages}"
     },
     "forbidden": "This area is reserved for the platform team."
+  },
+  "follow": {
+    "login": "Become a follower",
+    "become": "Become a follower",
+    "following": "You are a follower",
+    "member": "You are a member",
+    "admin": "You administer this parish",
+    "unfollow": "Unfollow",
+    "stepDown": "Step back (become a follower again)",
+    "dialogTitle": "Become a follower of {name}",
+    "dialogIntro": "You will be a follower of this parish, with no approval needed. You can leave at any time.",
+    "visibleName": "The parish administrator will see your first and last name: {name}, and the date you joined. They will not see your email or your phone number.",
+    "privacy": "Learn more in the <link>privacy policy</link>.",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "done": "You now follow {name}",
+    "left": "You no longer follow {name}",
+    "steppedDown": "You are a follower of {name} again",
+    "error": "Could not change your membership of this parish"
+  },
+  "visibilityField": {
+    "label": "Who can read it?",
+    "public": "Everyone",
+    "publicHint": "Shown on the parish’s public page.",
+    "members": "Members only",
+    "membersHint": "Reserved for members: followers and the public cannot see it.",
+    "badgeMembers": "Members only"
   }
 }

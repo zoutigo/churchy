@@ -14,11 +14,24 @@ enum UserRole {
   USER
 }
 
-enum ParishRole {
+/// Statut dans une paroisse : fidèle (public seulement) < paroissien < administrateur.
+enum ParishStatus {
+  FAITHFUL
+  PARISHIONER
   PARISH_ADMIN
+}
+
+/// Responsabilités d'équipe, cumulables, attribuées à un paroissien par l'administrateur.
+enum ParishDuty {
   PREPARER
   READER
-  VIEWER
+  ANNOUNCER
+}
+
+/// Qui peut lire une annonce ou une activité.
+enum ContentVisibility {
+  PUBLIC
+  MEMBERS
 }
 
 enum ContentType {
@@ -263,9 +276,10 @@ model ParishMember {
   id        String     @id @default(cuid())
   userId    String
   parishId  String
-  role      ParishRole @default(VIEWER)
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  status    ParishStatus @default(FAITHFUL)
+  duties    ParishDuty[]
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   parish Parish @relation(fields: [parishId], references: [id], onDelete: Cascade)
@@ -421,6 +435,7 @@ model Announcement {
   summary     String?
   body        String   @db.Text
   imageUrl    String?
+  visibility  ContentVisibility @default(PUBLIC)
   createdById String
   publishedAt DateTime @default(now())
   createdAt   DateTime @default(now())
@@ -441,6 +456,7 @@ model Activity {
   startsAt    DateTime
   location    String?
   imageUrl    String?
+  visibility  ContentVisibility @default(PUBLIC)
   createdById String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

@@ -1,6 +1,7 @@
 import { BadRequestException, ConflictException } from '@nestjs/common';
 import {
   ERR,
+  hasParishPermission,
   SCHEDULE_WINDOW_MESSAGES,
   SERIES_END_REMINDER_DAYS,
   checkScheduleWindow,
@@ -8,7 +9,6 @@ import {
   type Schedule,
 } from '@churchy/shared';
 import type { ParishRoleValue } from '../../common/decorators/parish-role.decorator';
-import { EDITORS } from '../../common/decorators/roles.decorator';
 
 /** Une date est passée dès qu'elle a commencé : on ne réécrit pas l'histoire. */
 export function isPast(startsAt: Date, now: Date): boolean {
@@ -29,11 +29,9 @@ export function isEndingSoon(lastOccurrenceAt: Date | null, now: Date): boolean 
 
 /** Les notes internes sont réservées à ceux qui préparent (administrateurs et préparateurs). */
 export function canSeeInternalNotes(role: ParishRoleValue | undefined): boolean {
-  return (
-    role === 'SUPER_ADMIN' ||
-    role === 'PLATFORM_STAFF' ||
-    (role !== undefined && EDITORS.includes(role))
-  );
+  if (role === undefined) return false;
+  if (role === 'SUPER_ADMIN' || role === 'PLATFORM_STAFF') return true;
+  return hasParishPermission(role, 'parish.celebrations.write');
 }
 
 /** Erreur de planning au même format que les erreurs Zod, pour s'afficher sous le champ. */

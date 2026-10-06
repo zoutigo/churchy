@@ -15,7 +15,7 @@ import {
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { ParishRolesGuard } from '../../common/guards/parish-roles.guard';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
-import { ALL_MEMBERS, EDITORS, ParishAccess } from '../../common/decorators/roles.decorator';
+import { ParishAccess } from '../../common/decorators/roles.decorator';
 import { SheetsService } from './sheets.service';
 
 @ApiTags('sheets')
@@ -27,7 +27,7 @@ export class SheetsController {
 
   /** Crée (ou renvoie) la feuille d'une date : modèle par défaut, modèle choisi, ou feuille vide (`null`). */
   @Post('occurrences/:id/sheet')
-  @ParishAccess(EDITORS, 'occurrence')
+  @ParishAccess('parish.celebrations.write', 'occurrence')
   createForOccurrence(
     @Param('id') id: string,
     @Body(new ZodValidationPipe(createSheetSchema)) dto: CreateSheetDto,
@@ -36,13 +36,13 @@ export class SheetsController {
   }
 
   @Get('sheets/:id')
-  @ParishAccess(ALL_MEMBERS, 'sheet')
+  @ParishAccess('parish.internal.read', 'sheet')
   findOne(@Param('id') id: string) {
     return this.service.findById(id);
   }
 
   @Patch('sheets/:id/template')
-  @ParishAccess(EDITORS, 'sheet')
+  @ParishAccess('parish.celebrations.write', 'sheet')
   changeTemplate(
     @Param('id') id: string,
     @Body(new ZodValidationPipe(changeSheetTemplateSchema)) dto: ChangeSheetTemplateDto,
@@ -51,7 +51,7 @@ export class SheetsController {
   }
 
   @Post('sheets/:id/steps')
-  @ParishAccess(EDITORS, 'sheet')
+  @ParishAccess('parish.celebrations.write', 'sheet')
   addStep(
     @Param('id') id: string,
     @Body(new ZodValidationPipe(addSheetStepSchema)) dto: AddSheetStepDto,
@@ -60,7 +60,7 @@ export class SheetsController {
   }
 
   @Patch('sheets/:id/steps/order')
-  @ParishAccess(EDITORS, 'sheet')
+  @ParishAccess('parish.celebrations.write', 'sheet')
   reorder(
     @Param('id') id: string,
     @Body(new ZodValidationPipe(reorderSheetStepsSchema)) dto: ReorderSheetStepsDto,
@@ -69,7 +69,7 @@ export class SheetsController {
   }
 
   @Patch('sheets/:id/steps/:stepId')
-  @ParishAccess(EDITORS, 'sheet')
+  @ParishAccess('parish.celebrations.write', 'sheet')
   updateStep(
     @Param('id') id: string,
     @Param('stepId') stepId: string,
@@ -79,19 +79,19 @@ export class SheetsController {
   }
 
   @Delete('sheets/:id/steps/:stepId')
-  @ParishAccess(EDITORS, 'sheet')
+  @ParishAccess('parish.celebrations.write', 'sheet')
   removeStep(@Param('id') id: string, @Param('stepId') stepId: string) {
     return this.service.removeStep(id, stepId);
   }
 
   @Post('sheets/:id/publish')
-  @ParishAccess(EDITORS, 'sheet')
+  @ParishAccess('parish.celebrations.write', 'sheet')
   publish(@Param('id') id: string) {
     return this.service.publish(id);
   }
 
   @Post('sheets/:id/unpublish')
-  @ParishAccess(EDITORS, 'sheet')
+  @ParishAccess('parish.celebrations.write', 'sheet')
   unpublish(@Param('id') id: string) {
     return this.service.unpublish(id);
   }
