@@ -17,6 +17,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/ui/password-input';
 import { Button } from '@/components/ui/button';
+import { afterLoginPath } from '@/lib/auth/session';
 import { handleSubmitError } from '@/lib/forms/submit-error';
 
 interface Props {
@@ -24,7 +25,7 @@ interface Props {
   next?: string;
 }
 
-export function LoginForm({ next = '/dashboard' }: Props) {
+export function LoginForm({ next }: Props) {
   const t = useTranslations('auth');
   const router = useRouter();
   const { login, loading } = useAuth();
@@ -37,8 +38,8 @@ export function LoginForm({ next = '/dashboard' }: Props) {
 
   async function onSubmit(data: LoginDto) {
     try {
-      await login(data);
-      router.push(next);
+      const user = await login(data);
+      router.push(afterLoginPath(user, next));
       router.refresh();
     } catch (err: unknown) {
       handleSubmitError(form, err, t('login.errorFallback'));

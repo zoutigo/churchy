@@ -90,10 +90,6 @@ const CATALOG = {
   activityNotFound: { fr: 'Activité introuvable', en: 'Activity not found' },
   memberNotFound: { fr: 'Membre introuvable', en: 'Member not found' },
   userNotFound: { fr: 'Utilisateur introuvable', en: 'User not found' },
-  userNotFoundByEmail: {
-    fr: 'Utilisateur introuvable avec cet email',
-    en: 'No user found with this email',
-  },
   resourceNotFound: { fr: 'Ressource introuvable', en: 'Resource not found' },
   sessionExpired: { fr: 'Session expirée', en: 'Session expired' },
   sessionInvalid: { fr: 'Session invalide', en: 'Invalid session' },
@@ -114,7 +110,23 @@ const CATALOG = {
   },
   linkInvalidOrExpired: { fr: 'Lien invalide ou expiré', en: 'Invalid or expired link' },
   emailAlreadyUsed: { fr: 'Email déjà utilisé', en: 'Email already in use' },
-  alreadyMember: { fr: 'Cet utilisateur est déjà membre', en: 'This user is already a member' },
+  memberUpdateEmpty: {
+    fr: 'Aucune modification demandée',
+    en: 'No change requested',
+  },
+  dutyNeedsParishioner: {
+    fr: 'Une responsabilité ne se donne qu’à un paroissien',
+    en: 'A duty can only be given to a parishioner',
+  },
+  parishLastAdmin: {
+    fr: 'Une paroisse doit garder au moins un administrateur',
+    en: 'A parish must keep at least one administrator',
+  },
+  parishFollowLimit: {
+    fr: 'Vous suivez déjà le nombre maximum de paroisses',
+    en: 'You already follow the maximum number of parishes',
+  },
+  notFollowing: { fr: 'Vous ne suivez pas cette paroisse', en: 'You do not follow this parish' },
   seriesAlreadyHasDate: {
     fr: 'Cette série a déjà une date à ce moment',
     en: 'This series already has a date at that time',
@@ -223,6 +235,23 @@ const CATALOG = {
     fr: 'Réservé aux administrateurs de la plateforme',
     en: 'Reserved for platform administrators',
   },
+  accountSuspended: {
+    fr: 'Ce compte est suspendu',
+    en: 'This account is suspended',
+  },
+  platformRoleForbidden: {
+    fr: "Vous n'avez pas le droit de modifier ce rôle",
+    en: 'You are not allowed to change this role',
+  },
+  platformLastSuperAdmin: {
+    fr: 'Impossible : il doit rester au moins un super administrateur',
+    en: 'Not possible: at least one super administrator must remain',
+  },
+  platformSuspendForbidden: {
+    fr: "Vous n'avez pas le droit de suspendre ce compte",
+    en: 'You are not allowed to suspend this account',
+  },
+  platformUserNotFound: { fr: 'Compte introuvable', en: 'Account not found' },
   userNotFoundByPhone: {
     fr: 'Aucun compte avec ce numéro',
     en: 'No account with this phone number',

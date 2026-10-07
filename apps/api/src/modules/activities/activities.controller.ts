@@ -2,7 +2,11 @@ import { Body, Controller, Delete, Get, Param, Post, UseGuards } from '@nestjs/c
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { createActivitySchema, type CreateActivityDto } from '@churchy/shared';
 import { CurrentUser, type AuthUser } from '../../common/decorators/current-user.decorator';
-import { ALL_MEMBERS, EDITORS, ParishAccess } from '../../common/decorators/roles.decorator';
+import {
+  CurrentParishRole,
+  type ParishRoleValue,
+} from '../../common/decorators/parish-role.decorator';
+import { ParishAccess } from '../../common/decorators/roles.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { ParishRolesGuard } from '../../common/guards/parish-roles.guard';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
@@ -16,7 +20,7 @@ export class ActivitiesController {
   constructor(private service: ActivitiesService) {}
 
   @Post()
-  @ParishAccess(EDITORS)
+  @ParishAccess('parish.announcements.write')
   create(
     @Param('parishId') parishId: string,
     @Body(new ZodValidationPipe(createActivitySchema)) dto: CreateActivityDto,
@@ -26,13 +30,16 @@ export class ActivitiesController {
   }
 
   @Get()
-  @ParishAccess(ALL_MEMBERS)
-  findByParish(@Param('parishId') parishId: string) {
-    return this.service.findByParish(parishId);
+  @ParishAccess('parish.view')
+  findByParish(
+    @Param('parishId') parishId: string,
+    @CurrentParishRole() role: ParishRoleValue | undefined,
+  ) {
+    return this.service.findByParish(parishId, role);
   }
 
   @Delete(':activityId')
-  @ParishAccess(EDITORS)
+  @ParishAccess('parish.announcements.write')
   remove(@Param('parishId') parishId: string, @Param('activityId') id: string) {
     return this.service.remove(parishId, id);
   }

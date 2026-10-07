@@ -46,6 +46,7 @@ export default defineConfig({
         NODE_ENV: 'test',
         REDIS_DB: '15',
         JWT_SECRET: 'e2e-secret-e2e-secret-0123456789',
+        PIN_PEPPER: 'e2e-pepper-e2e-pepper-e2e-pepper-01',
         // Les scénarios enchaînent plus de connexions que la limite de production.
         AUTH_THROTTLE_LIMIT: '10000',
         THROTTLE_LIMIT: '100000',

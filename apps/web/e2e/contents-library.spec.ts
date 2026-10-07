@@ -278,10 +278,13 @@ test.describe('bibliothèque fournie : recherche, filtre, pagination, droits', (
     const ctx = await browser.newContext();
     const other = await ctx.newPage();
     await registerViaUi(other, otherEmail);
-    const invite = await page.request.post(`${API}/parishes/${parishId}/members`, {
-      data: { email: otherEmail, role: 'PARISH_ADMIN' },
+    // L'autre compte devient fidèle, puis l'administrateur le fait administrateur à son tour.
+    expect((await other.request.post(`${API}/parishes/${parishId}/follow`)).ok()).toBe(true);
+    const otherId = (await (await other.request.get(`${API}/auth/me`)).json()).id;
+    const promote = await page.request.patch(`${API}/parishes/${parishId}/members/${otherId}`, {
+      data: { status: 'PARISH_ADMIN' },
     });
-    expect(invite.ok()).toBe(true);
+    expect(promote.ok()).toBe(true);
 
     await other.goto(`${listUrl}/${content.id}`);
     await expect(other.getByRole('heading', { name: 'Texte du propriétaire' })).toBeVisible();

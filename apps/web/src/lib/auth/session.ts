@@ -1,3 +1,5 @@
+import { isPlatformRole } from '@churchy/shared';
+
 /** Cookie posé par l'API (valeur « 1 », aucun secret) : indique qu'une session existe. */
 export const SESSION_COOKIE = 'churchy_session';
 
@@ -9,6 +11,15 @@ export function hasSessionFlag(
   cookies: string = typeof document === 'undefined' ? '' : document.cookie,
 ): boolean {
   return cookies.split(';').some((c) => c.trim() === `${SESSION_COOKIE}=1`);
+}
+
+/**
+ * Destination après une connexion réussie : le `next` explicite d'abord ; sinon l'espace plateforme pour qui a un
+ * rôle de plateforme, le tableau de bord pour les autres.
+ */
+export function afterLoginPath(user: { role: string }, next?: string): string {
+  if (next) return next;
+  return isPlatformRole(user.role) ? '/platform' : '/dashboard';
 }
 
 /**

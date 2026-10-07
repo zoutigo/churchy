@@ -35,6 +35,9 @@ interface AuditInput {
   /** Déjà masqué (téléphone) ou non sensible (email). */
   principal?: string;
   reasonCode?: string;
+  /** Compte qui a agi, quand ce n'est pas le compte concerné. */
+  actorId?: string;
+  detail?: string;
   context?: RequestContext;
 }
 
@@ -105,6 +108,8 @@ export class AuthSecurityService {
           provider: input.provider ?? null,
           principal: input.principal ?? null,
           reasonCode: input.reasonCode ?? null,
+          actorId: input.actorId ?? null,
+          detail: input.detail ?? null,
           ipAddress: input.context?.ip ?? null,
           userAgent: input.context?.userAgent?.slice(0, 300) ?? null,
         },

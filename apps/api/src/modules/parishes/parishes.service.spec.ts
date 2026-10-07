@@ -28,7 +28,7 @@ describe('ParishesService', () => {
       const parish = await service.create(dto, 'u1');
       expect(parish.slug).toBe('saint-pierre');
       expect(prisma.parishMember.create).toHaveBeenCalledWith({
-        data: { userId: 'u1', parishId: 'p1', role: 'PARISH_ADMIN' },
+        data: { userId: 'u1', parishId: 'p1', status: 'PARISH_ADMIN' },
       });
     });
 

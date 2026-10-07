@@ -52,6 +52,7 @@ export function disallowedPaths(): string[] {
   return [
     '/api/',
     '/dashboard',
+    '/platform',
     ...hidden.flatMap((p) => LOCALES.map((l) => toLocalizedPath(l, p))),
   ];
 }

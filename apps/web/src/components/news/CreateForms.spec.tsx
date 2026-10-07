@@ -34,6 +34,19 @@ describe('CreateAnnouncementForm', () => {
     );
   });
 
+  it('envoie « Tout le monde » par défaut, ou « Paroissiens seulement » si on le choisit', async () => {
+    createAnnouncement.mockResolvedValue({});
+    const user = userEvent.setup();
+    render(<CreateAnnouncementForm parishId="p1" />);
+    expect(screen.getByRole('radio', { name: /Tout le monde/ })).toBeChecked();
+    await user.type(screen.getByLabelText('Titre'), 'Entre nous');
+    await user.type(screen.getByLabelText('Contenu'), 'Texte');
+    await user.click(screen.getByRole('radio', { name: /Paroissiens seulement/ }));
+    await user.click(screen.getByRole('button', { name: 'Publier l’annonce' }));
+    await waitFor(() => expect(createAnnouncement).toHaveBeenCalledTimes(1));
+    expect(createAnnouncement.mock.calls[0][1]).toMatchObject({ visibility: 'MEMBERS' });
+  });
+
   it('refuse une image qui n’est pas en http(s)', async () => {
     const user = userEvent.setup();
     render(<CreateAnnouncementForm parishId="p1" />);
@@ -74,6 +87,19 @@ describe('CreateActivityForm', () => {
     const [parishId, dto] = createActivity.mock.calls[0];
     expect(parishId).toBe('p1');
     expect(dto.startsAt).toBe(new Date(2026, 10, 1, 18, 0).toISOString());
+  });
+
+  it('propose aussi la visibilité « Paroissiens seulement »', async () => {
+    createActivity.mockResolvedValue({});
+    const user = userEvent.setup();
+    render(<CreateActivityForm parishId="p1" />);
+    await user.type(screen.getByLabelText('Titre'), 'Retraite');
+    await user.type(screen.getByLabelText('Description'), 'Week-end');
+    await user.type(screen.getByLabelText('Date et heure'), '2026-11-01T18:00');
+    await user.click(screen.getByRole('radio', { name: /Paroissiens seulement/ }));
+    await user.click(screen.getByRole('button', { name: 'Publier l’activité' }));
+    await waitFor(() => expect(createActivity).toHaveBeenCalledTimes(1));
+    expect(createActivity.mock.calls[0][1]).toMatchObject({ visibility: 'MEMBERS' });
   });
 
   it('exige une date', async () => {

@@ -15,6 +15,7 @@ import { ActivitiesModule } from './modules/activities/activities.module';
 import { ContactModule } from './modules/contact/contact.module';
 import { PublicModule } from './modules/public/public.module';
 import { FavoritesModule } from './modules/favorites/favorites.module';
+import { PlatformModule } from './modules/platform/platform.module';
 import { HealthModule } from './health/health.module';
 
 @Module({
@@ -22,6 +23,7 @@ import { HealthModule } from './health/health.module';
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: env.THROTTLE_LIMIT }]),
     PrismaModule,
     AuthModule,
+    PlatformModule,
     UsersModule,
     ParishesModule,
     ParishMembersModule,

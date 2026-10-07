@@ -2,7 +2,11 @@
 import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { createAnnouncementSchema, type CreateAnnouncementDto } from '@churchy/shared';
+import {
+  ContentVisibility,
+  createAnnouncementSchema,
+  type CreateAnnouncementDto,
+} from '@churchy/shared';
 import { announcementsApi } from '@/lib/api/announcements.api';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,6 +18,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { VisibilityField } from '@/components/news/VisibilityField';
 import { RichTextEditor } from '@/components/rich-text/RichTextEditor';
 import { handleSubmitError } from '@/lib/forms/submit-error';
 import { notify } from '@/lib/notify';
@@ -30,7 +35,13 @@ export function CreateAnnouncementForm({
   const optionalHint = <span className="text-muted-foreground text-xs">{tc('optional')}</span>;
   const form = useForm<CreateAnnouncementDto>({
     resolver: zodResolver(createAnnouncementSchema),
-    defaultValues: { title: '', summary: '', body: '', imageUrl: '' },
+    defaultValues: {
+      title: '',
+      summary: '',
+      body: '',
+      imageUrl: '',
+      visibility: ContentVisibility.PUBLIC,
+    },
     mode: 'onChange',
   });
 
@@ -110,6 +121,7 @@ export function CreateAnnouncementForm({
             </FormItem>
           )}
         />
+        <VisibilityField control={form.control} name="visibility" />
         {form.formState.errors.root && (
           <p className="text-sm text-destructive">{form.formState.errors.root.message}</p>
         )}

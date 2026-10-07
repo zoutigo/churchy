@@ -1,5 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import type { CreateAnnouncementDto } from '@churchy/shared';
+import { ContentVisibility, type CreateAnnouncementDto } from '@churchy/shared';
+import type { ParishRoleValue } from '../../common/decorators/parish-role.decorator';
+import { canSeeMembersContent } from '../../common/visibility';
 import { sanitizeRichText } from '../../common/rich-text';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ERR } from '@churchy/shared';
@@ -14,9 +16,13 @@ export class AnnouncementsService {
     });
   }
 
-  findByParish(parishId: string) {
+  /** Un fidèle ne reçoit que le public ; un paroissien (ou plus) reçoit aussi « Paroissiens seulement ». */
+  findByParish(parishId: string, role: ParishRoleValue | undefined) {
     return this.prisma.announcement.findMany({
-      where: { parishId },
+      where: {
+        parishId,
+        ...(canSeeMembersContent(role) ? {} : { visibility: ContentVisibility.PUBLIC }),
+      },
       orderBy: { publishedAt: 'desc' },
     });
   }

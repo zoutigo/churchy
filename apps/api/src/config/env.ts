@@ -23,9 +23,32 @@ const envSchema = z
       .trim()
       .optional()
       .transform((v) => (v ? v : undefined)),
+    /**
+     * Poivre des PIN : secret HMAC appliqué avant bcrypt, gardé hors de la base. Un PIN n'a que 10^6 valeurs :
+     * sans poivre, une base volée se casse hors ligne. Obligatoire en production.
+     */
+    PIN_PEPPER: z
+      .string()
+      .trim()
+      .optional()
+      .transform((v) => (v ? v : undefined)),
     TRUST_PROXY_HOPS: z.coerce.number().int().min(0).default(0),
   })
   .superRefine((env, ctx) => {
+    if (env.PIN_PEPPER !== undefined && env.PIN_PEPPER.length < 32) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['PIN_PEPPER'],
+        message: 'PIN_PEPPER doit faire 32 caractères minimum (openssl rand -hex 32)',
+      });
+    }
+    if (env.NODE_ENV === 'production' && env.PIN_PEPPER === undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['PIN_PEPPER'],
+        message: 'PIN_PEPPER est obligatoire en production (openssl rand -hex 32)',
+      });
+    }
     if (env.NODE_ENV === 'production' && /change-me|fallback|secret$/i.test(env.JWT_SECRET)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,

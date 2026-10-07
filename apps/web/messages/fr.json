@@ -123,7 +123,11 @@
     "global": {
       "title": "Churchy est momentanément indisponible",
       "message": "Un problème inattendu est survenu. Réessayez dans un instant."
-    }
+    },
+    "platformNotFound": {
+      "message": "Cette page n’existe pas, ou vous n’y avez pas accès."
+    },
+    "platform": "Plateforme"
   },
   "enums": {
     "celebrationType": {
@@ -153,6 +157,16 @@
       "PARISH": "Je représente une paroisse",
       "PROBLEM": "Signaler un problème",
       "OTHER": "Autre demande"
+    },
+    "parishStatus": {
+      "FAITHFUL": "Fidèle",
+      "PARISHIONER": "Paroissien",
+      "PARISH_ADMIN": "Administrateur"
+    },
+    "parishDuty": {
+      "PREPARER": "Préparateur",
+      "READER": "Lecteur",
+      "ANNOUNCER": "Rédacteur d’annonces"
     }
   },
   "weekdays": {
@@ -183,7 +197,8 @@
   "parishResult": {
     "nextMass": "Prochaine messe : {date} à {time}",
     "view": "Voir la paroisse",
-    "viewLabel": "Voir la paroisse {name}"
+    "viewLabel": "Voir la paroisse {name}",
+    "newTab": "(s’ouvre dans un nouvel onglet)"
   },
   "parishTabs": {
     "label": "Pages de la paroisse",
@@ -532,6 +547,14 @@
         ]
       },
       {
+        "title": "Devenir fidèle d’une paroisse",
+        "paragraphs": [
+          "Vous pouvez devenir fidèle d’une paroisse en un clic, sans validation. C’est un choix volontaire : vous pouvez le retirer à tout moment avec « Ne plus suivre ».",
+          "Les administrateurs de cette paroisse voient alors votre nom, votre prénom, la date de votre inscription et votre statut (fidèle ou paroissien). Ils ne voient ni votre email ni votre numéro de téléphone. Les autres fidèles et paroissiens ne vous voient pas.",
+          "Une paroisse peut vous reconnaître comme paroissien, vous confier une responsabilité (préparation des célébrations, lecture, annonces) ou vous retirer de sa liste. Quand vous quittez une paroisse, ces informations sont supprimées."
+        ]
+      },
+      {
         "title": "À quoi servent vos données",
         "items": [
           "Fournir le service : créer et sécuriser votre compte, vous connecter, afficher les pages de gestion et les pages publiques (exécution du contrat) ;",
@@ -861,8 +884,7 @@
       "parishes": "Paroisses",
       "favorites": "Mes favoris",
       "label": "Navigation du tableau de bord",
-      "security": "Sécurité",
-      "pinReset": "Réinitialiser un PIN"
+      "security": "Sécurité"
     },
     "userMenu": "Menu utilisateur",
     "emailUnverified": "Email non confirmé",
@@ -884,10 +906,10 @@
       "createTitle": "Créer une paroisse",
       "createDesc": "Ces informations alimentent la page publique de la paroisse",
       "title": "Mes paroisses",
-      "desc": "Gérez vos espaces paroissiaux",
+      "desc": "Les paroisses que vous gérez ou que vous suivez",
       "new": "+ Nouvelle paroisse",
       "empty": "Aucune paroisse pour l’instant.",
-      "emptyHint": "Créez votre première paroisse ci-dessus."
+      "emptyHint": "Suivez une paroisse depuis sa page publique, ou créez la vôtre."
     },
     "parish": {
       "fallbackName": "Paroisse",
@@ -916,8 +938,13 @@
         "activities": {
           "title": "Activités",
           "text": "Rencontres et événements"
+        },
+        "members": {
+          "title": "Membres",
+          "text": "Fidèles, paroissiens, responsabilités"
         }
-      }
+      },
+      "readOnlyHint": "La gestion de la paroisse (informations publiques, membres) est réservée à ses administrateurs."
     }
   },
   "parishSummary": {
@@ -1351,7 +1378,7 @@
     "newTitle": "Nouvelle annonce",
     "newDesc": "Visible sur la page publique de la paroisse",
     "title": "Annonces",
-    "desc": "Informations publiées sur la page publique de la paroisse",
+    "desc": "Informations pour les fidèles, publiques ou réservées aux paroissiens",
     "add": "+ Nouvelle annonce",
     "empty": "Aucune annonce pour l’instant.",
     "deleted": "Annonce supprimée"
@@ -1509,7 +1536,7 @@
     "pinReset": {
       "title": "Réinitialiser un PIN",
       "subtitle": "Pour une personne qui a perdu son PIN et n’a pas d’adresse email confirmée.",
-      "forbidden": "Cette page est réservée aux administrateurs de la plateforme.",
+      "forbidden": "Cette page est réservée aux équipes d’administration de la plateforme.",
       "formTitle": "Compte concerné",
       "formDesc": "Vérifiez l’identité de la personne avant de lui remettre le lien.",
       "create": "Créer le lien",
@@ -1523,5 +1550,129 @@
       "copyFailed": "Copie impossible : sélectionnez le lien à la main",
       "warning": "Transmettez ce lien uniquement à la personne concernée, par un canal sûr."
     }
+  },
+  "platform": {
+    "switch": {
+      "aria": "Basculer entre la plateforme et mon espace",
+      "platform": "Plateforme",
+      "mine": "Mon espace"
+    },
+    "badge": "Plateforme",
+    "nav": {
+      "label": "Navigation de la plateforme",
+      "home": "Accueil",
+      "users": "Comptes",
+      "pinReset": "Réinitialiser un PIN"
+    },
+    "roles": {
+      "SUPER_ADMIN": "Super administrateur",
+      "ADMIN": "Administrateur",
+      "MODERATOR": "Modérateur",
+      "USER": "Utilisateur"
+    },
+    "home": {
+      "title": "Plateforme",
+      "welcome": "Bienvenue dans l’espace d’administration de Churchy.",
+      "yourRole": "Votre rôle : <strong>{role}</strong>",
+      "soon": "Les outils d’administration arriveront ici au fil des prochaines versions.",
+      "backToMine": "Retourner à mon espace"
+    },
+    "users": {
+      "title": "Comptes",
+      "desc": "Rôles de plateforme et suspensions.",
+      "searchLabel": "Rechercher un compte",
+      "searchPlaceholder": "Nom, prénom ou email",
+      "count": "{count, plural, one {# compte} other {# comptes}}",
+      "empty": "Aucun compte ne correspond.",
+      "loadError": "Impossible de charger les comptes",
+      "columns": {
+        "name": "Compte",
+        "role": "Rôle",
+        "status": "État",
+        "actions": "Actions"
+      },
+      "noEmail": "Sans email",
+      "active": "Actif",
+      "suspended": "Suspendu",
+      "roleLabel": "Rôle de {name}",
+      "roleChanged": "Rôle modifié : {name} est maintenant {role}.",
+      "roleError": "Impossible de modifier le rôle",
+      "suspend": "Suspendre",
+      "suspendConfirm": "Confirmer la suspension",
+      "cancel": "Annuler",
+      "reinstate": "Rétablir",
+      "suspendedOk": "{name} est suspendu.",
+      "reinstatedOk": "{name} est rétabli.",
+      "suspendError": "Impossible de modifier la suspension",
+      "you": "vous",
+      "previous": "Précédent",
+      "next": "Suivant",
+      "pageOf": "Page {page} sur {pages}"
+    },
+    "forbidden": "Cet espace est réservé aux équipes de la plateforme."
+  },
+  "follow": {
+    "login": "Devenir fidèle",
+    "become": "Devenir fidèle",
+    "following": "Vous êtes fidèle",
+    "member": "Vous êtes paroissien",
+    "admin": "Vous administrez cette paroisse",
+    "unfollow": "Ne plus suivre",
+    "stepDown": "Me retirer (redevenir fidèle)",
+    "dialogTitle": "Devenir fidèle de {name}",
+    "dialogIntro": "Vous serez fidèle de cette paroisse, sans validation. Vous pourrez la quitter à tout moment.",
+    "visibleName": "L’administrateur de la paroisse verra votre nom et votre prénom : {name}, ainsi que la date de votre inscription. Il ne verra ni votre email ni votre téléphone.",
+    "privacy": "En savoir plus dans la <link>politique de confidentialité</link>.",
+    "confirm": "Confirmer",
+    "cancel": "Annuler",
+    "done": "Vous êtes fidèle de {name}",
+    "left": "Vous ne suivez plus {name}",
+    "steppedDown": "Vous êtes de nouveau fidèle de {name}",
+    "error": "Impossible de modifier votre appartenance à la paroisse"
+  },
+  "visibilityField": {
+    "label": "Qui peut le lire ?",
+    "public": "Tout le monde",
+    "publicHint": "Visible sur la page publique de la paroisse.",
+    "members": "Paroissiens seulement",
+    "membersHint": "Réservé aux paroissiens : les fidèles et le public ne le voient pas.",
+    "badgeMembers": "Paroissiens seulement"
+  },
+  "parishMembers": {
+    "title": "Membres",
+    "desc": "Les fidèles et paroissiens de la paroisse : nom, prénom et date d’arrivée seulement (jamais d’email ni de téléphone).",
+    "searchLabel": "Rechercher un membre",
+    "searchPlaceholder": "Nom ou prénom",
+    "filterLabel": "Filtrer par statut",
+    "allStatuses": "Tous les statuts",
+    "count": "{count, plural, one {# membre} other {# membres}}",
+    "empty": "Aucun membre ne correspond.",
+    "emptyParish": "Personne n’a encore rejoint cette paroisse.",
+    "loadError": "Impossible de charger les membres",
+    "joined": "Depuis le {date}",
+    "you": "vous",
+    "columns": {
+      "name": "Membre",
+      "status": "Statut",
+      "duties": "Responsabilités",
+      "actions": "Actions"
+    },
+    "statusLabel": "Statut de {name}",
+    "dutyLabel": "{duty} : {name}",
+    "dutiesHint": "Les responsabilités se donnent à un paroissien.",
+    "noDuties": "Aucune responsabilité",
+    "statusChanged": "{name} est maintenant {status}.",
+    "dutiesChanged": "Responsabilités de {name} mises à jour.",
+    "updateError": "Impossible de modifier ce membre",
+    "remove": "Retirer",
+    "removeLabel": "Retirer {name}",
+    "removeConfirm": "Confirmer le retrait",
+    "cancel": "Annuler",
+    "removed": "{name} a été retiré de la paroisse.",
+    "removeError": "Impossible de retirer ce membre",
+    "previous": "Précédent",
+    "next": "Suivant",
+    "pageOf": "Page {page} sur {pages}",
+    "forbidden": "Cette page est réservée aux administrateurs de la paroisse."
   }
 }

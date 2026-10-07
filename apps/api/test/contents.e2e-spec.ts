@@ -100,10 +100,11 @@ describe('Contenus de la bibliothèque : lecture, modification, suppression, err
       const c = (await create().expect(201)).body;
       // `other` est rendu administrateur de la paroisse : le garde passe, la règle « auteur » s’applique.
       const me = await other.get('/api/auth/me').expect(200);
+      await other.post(`/api/parishes/${parishId}/follow`).expect(201);
       await author
-        .post(`/api/parishes/${parishId}/members`)
-        .send({ email: me.body.email, role: 'PARISH_ADMIN' })
-        .expect(201);
+        .patch(`/api/parishes/${parishId}/members/${me.body.id}`)
+        .send({ status: 'PARISH_ADMIN' })
+        .expect(200);
       const patch = await other
         .patch(`/api/contents/${c.id}`)
         .send({ title: 'Piraté' })

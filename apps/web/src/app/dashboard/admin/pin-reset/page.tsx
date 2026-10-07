@@ -1,5 +1,6 @@
-import { PinResetAdmin } from '@/components/account/PinResetAdmin';
+import { redirect } from 'next/navigation';
 
-export default function PinResetAdminPage() {
-  return <PinResetAdmin />;
+/** Ancienne adresse : l'outil a déménagé dans l'espace plateforme. */
+export default function LegacyPinResetPage() {
+  redirect('/platform/pin-reset');
 }

@@ -123,7 +123,11 @@
     "global": {
       "title": "Churchy is temporarily unavailable",
       "message": "An unexpected problem occurred. Please try again in a moment."
-    }
+    },
+    "platformNotFound": {
+      "message": "This page does not exist, or you do not have access to it."
+    },
+    "platform": "Platform"
   },
   "enums": {
     "celebrationType": {
@@ -153,6 +157,16 @@
       "PARISH": "I represent a parish",
       "PROBLEM": "Report a problem",
       "OTHER": "Other request"
+    },
+    "parishStatus": {
+      "FAITHFUL": "Follower",
+      "PARISHIONER": "Member",
+      "PARISH_ADMIN": "Administrator"
+    },
+    "parishDuty": {
+      "PREPARER": "Preparer",
+      "READER": "Reader",
+      "ANNOUNCER": "Announcements writer"
     }
   },
   "weekdays": {
@@ -183,7 +197,8 @@
   "parishResult": {
     "nextMass": "Next Mass: {date} at {time}",
     "view": "View the parish",
-    "viewLabel": "View the parish {name}"
+    "viewLabel": "View the parish {name}",
+    "newTab": "(opens in a new tab)"
   },
   "parishTabs": {
     "label": "Parish pages",
@@ -530,6 +545,14 @@
         ]
       },
       {
+        "title": "Becoming a follower of a parish",
+        "paragraphs": [
+          "You can become a follower of a parish in one click, with no approval. It is your choice, and you can undo it at any time with “Unfollow”.",
+          "The administrators of that parish then see your first name, last name, the date you joined and your status (follower or member). They do not see your email or your phone number. Other followers and members cannot see you.",
+          "A parish may recognise you as a member, give you a responsibility (preparing celebrations, reading, announcements) or remove you from its list. When you leave a parish, this information is deleted."
+        ]
+      },
+      {
         "title": "What your data is used for",
         "items": [
           "Providing the service: creating and securing your account, signing you in, showing the management and public pages (performance of the contract);",
@@ -859,8 +882,7 @@
       "parishes": "Parishes",
       "favorites": "My favorites",
       "label": "Dashboard navigation",
-      "security": "Security",
-      "pinReset": "Reset a PIN"
+      "security": "Security"
     },
     "userMenu": "User menu",
     "emailUnverified": "Email not confirmed",
@@ -882,10 +904,10 @@
       "createTitle": "Create a parish",
       "createDesc": "This information feeds the parish's public page",
       "title": "My parishes",
-      "desc": "Manage your parish spaces",
+      "desc": "The parishes you manage or follow",
       "new": "+ New parish",
       "empty": "No parish yet.",
-      "emptyHint": "Create your first parish above."
+      "emptyHint": "Follow a parish from its public page, or create your own."
     },
     "parish": {
       "fallbackName": "Parish",
@@ -914,8 +936,13 @@
         "activities": {
           "title": "Activities",
           "text": "Gatherings and events"
+        },
+        "members": {
+          "title": "Members",
+          "text": "Followers, parishioners, duties"
         }
-      }
+      },
+      "readOnlyHint": "Managing the parish (public information, members) is reserved for its administrators."
     }
   },
   "parishSummary": {
@@ -1349,7 +1376,7 @@
     "newTitle": "New announcement",
     "newDesc": "Visible on the parish's public page",
     "title": "Announcements",
-    "desc": "News published on the parish's public page",
+    "desc": "News for the faithful, public or reserved for members",
     "add": "+ New announcement",
     "empty": "No announcement yet.",
     "deleted": "Announcement deleted"
@@ -1507,7 +1534,7 @@
     "pinReset": {
       "title": "Reset a PIN",
       "subtitle": "For someone who lost their PIN and has no confirmed email address.",
-      "forbidden": "This page is reserved for platform administrators.",
+      "forbidden": "This page is reserved for the platform administration team.",
       "formTitle": "Account",
       "formDesc": "Check the person's identity before handing over the link.",
       "create": "Create the link",
@@ -1521,5 +1548,129 @@
       "copyFailed": "Copy failed: select the link by hand",
       "warning": "Give this link only to the person concerned, through a safe channel."
     }
+  },
+  "platform": {
+    "switch": {
+      "aria": "Switch between the platform and my space",
+      "platform": "Platform",
+      "mine": "My space"
+    },
+    "badge": "Platform",
+    "nav": {
+      "label": "Platform navigation",
+      "home": "Home",
+      "users": "Accounts",
+      "pinReset": "Reset a PIN"
+    },
+    "roles": {
+      "SUPER_ADMIN": "Super administrator",
+      "ADMIN": "Administrator",
+      "MODERATOR": "Moderator",
+      "USER": "User"
+    },
+    "home": {
+      "title": "Platform",
+      "welcome": "Welcome to the Churchy administration area.",
+      "yourRole": "Your role: <strong>{role}</strong>",
+      "soon": "Administration tools will land here over the coming releases.",
+      "backToMine": "Back to my space"
+    },
+    "users": {
+      "title": "Accounts",
+      "desc": "Platform roles and suspensions.",
+      "searchLabel": "Search for an account",
+      "searchPlaceholder": "Name, first name or email",
+      "count": "{count, plural, one {# account} other {# accounts}}",
+      "empty": "No account matches.",
+      "loadError": "Unable to load accounts",
+      "columns": {
+        "name": "Account",
+        "role": "Role",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "noEmail": "No email",
+      "active": "Active",
+      "suspended": "Suspended",
+      "roleLabel": "Role of {name}",
+      "roleChanged": "Role updated: {name} is now {role}.",
+      "roleError": "Unable to change the role",
+      "suspend": "Suspend",
+      "suspendConfirm": "Confirm suspension",
+      "cancel": "Cancel",
+      "reinstate": "Reinstate",
+      "suspendedOk": "{name} is suspended.",
+      "reinstatedOk": "{name} is reinstated.",
+      "suspendError": "Unable to change the suspension",
+      "you": "you",
+      "previous": "Previous",
+      "next": "Next",
+      "pageOf": "Page {page} of {pages}"
+    },
+    "forbidden": "This area is reserved for the platform team."
+  },
+  "follow": {
+    "login": "Become a follower",
+    "become": "Become a follower",
+    "following": "You are a follower",
+    "member": "You are a member",
+    "admin": "You administer this parish",
+    "unfollow": "Unfollow",
+    "stepDown": "Step back (become a follower again)",
+    "dialogTitle": "Become a follower of {name}",
+    "dialogIntro": "You will be a follower of this parish, with no approval needed. You can leave at any time.",
+    "visibleName": "The parish administrator will see your first and last name: {name}, and the date you joined. They will not see your email or your phone number.",
+    "privacy": "Learn more in the <link>privacy policy</link>.",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "done": "You now follow {name}",
+    "left": "You no longer follow {name}",
+    "steppedDown": "You are a follower of {name} again",
+    "error": "Could not change your membership of this parish"
+  },
+  "visibilityField": {
+    "label": "Who can read it?",
+    "public": "Everyone",
+    "publicHint": "Shown on the parish’s public page.",
+    "members": "Members only",
+    "membersHint": "Reserved for members: followers and the public cannot see it.",
+    "badgeMembers": "Members only"
+  },
+  "parishMembers": {
+    "title": "Members",
+    "desc": "The parish’s followers and parishioners: first name, last name and join date only (never an email or phone number).",
+    "searchLabel": "Search for a member",
+    "searchPlaceholder": "First or last name",
+    "filterLabel": "Filter by status",
+    "allStatuses": "All statuses",
+    "count": "{count, plural, one {# member} other {# members}}",
+    "empty": "No member matches.",
+    "emptyParish": "Nobody has joined this parish yet.",
+    "loadError": "Could not load the members",
+    "joined": "Since {date}",
+    "you": "you",
+    "columns": {
+      "name": "Member",
+      "status": "Status",
+      "duties": "Duties",
+      "actions": "Actions"
+    },
+    "statusLabel": "Status of {name}",
+    "dutyLabel": "{duty}: {name}",
+    "dutiesHint": "Duties are given to a parishioner.",
+    "noDuties": "No duties",
+    "statusChanged": "{name} is now {status}.",
+    "dutiesChanged": "{name}’s duties were updated.",
+    "updateError": "Could not update this member",
+    "remove": "Remove",
+    "removeLabel": "Remove {name}",
+    "removeConfirm": "Confirm removal",
+    "cancel": "Cancel",
+    "removed": "{name} was removed from the parish.",
+    "removeError": "Could not remove this member",
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {page} of {pages}",
+    "forbidden": "This page is reserved for the parish administrators."
   }
 }

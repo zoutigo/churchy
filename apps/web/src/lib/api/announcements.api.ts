@@ -7,6 +7,7 @@ export interface Announcement {
   summary: string | null;
   body: string;
   imageUrl: string | null;
+  visibility: 'PUBLIC' | 'MEMBERS';
   publishedAt: string;
 }
 

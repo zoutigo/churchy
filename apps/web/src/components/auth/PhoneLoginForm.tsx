@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/form';
 import { PinInput } from '@/components/ui/pin-input';
 import { Button } from '@/components/ui/button';
+import { afterLoginPath } from '@/lib/auth/session';
 import { handleSubmitError } from '@/lib/forms/submit-error';
 
 interface Values {
@@ -29,7 +30,7 @@ interface Props {
   next?: string;
 }
 
-export function PhoneLoginForm({ next = '/dashboard' }: Props) {
+export function PhoneLoginForm({ next }: Props) {
   const t = useTranslations('auth');
   const router = useRouter();
   const { loginPhone, loading } = useAuth();
@@ -42,8 +43,8 @@ export function PhoneLoginForm({ next = '/dashboard' }: Props) {
 
   async function onSubmit(data: Values) {
     try {
-      await loginPhone(data);
-      router.push(next);
+      const user = await loginPhone(data);
+      router.push(afterLoginPath(user, next));
       router.refresh();
     } catch (err: unknown) {
       handleSubmitError(form, err, t('loginPhone.errorFallback'));

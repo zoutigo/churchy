@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ParishRole } from '../enums/parish-role.enum';
+import { ParishDuty, ParishStatus } from '../enums/parish-status.enum';
 import { isCompletePhone } from '../constants/phone.constants';
 import { MAX_FAVORITE_PARISHES } from '../constants/business.constants';
 import { isValidMonth, isValidTimezone } from '../schedule';
@@ -95,10 +95,16 @@ export const withCompletePhone = <T extends z.ZodTypeAny>(schema: T) =>
     }
   });
 
-export const inviteMemberSchema = z.object({
-  email: z.string().email(ERR.emailInvalid),
-  role: z.nativeEnum(ParishRole),
-});
+/** Statuts qu'un administrateur peut donner (le statut d'administrateur se donne par `PARISH_ADMIN`). */
+export const updateMemberSchema = z
+  .object({
+    status: z.nativeEnum(ParishStatus).optional(),
+    duties: z
+      .array(z.nativeEnum(ParishDuty))
+      .transform((d) => [...new Set(d)])
+      .optional(),
+  })
+  .refine((v) => v.status !== undefined || v.duties !== undefined, ERR.memberUpdateEmpty);
 
 /** Paramètres de la recherche publique de paroisses. */
 export const searchParishesSchema = z.object({
@@ -145,7 +151,15 @@ export const calendarQuerySchema = z.object({
 export type CalendarQuery = z.infer<typeof calendarQuerySchema>;
 export type CreateParishDto = z.infer<typeof createParishSchema>;
 export type UpdateParishDto = z.infer<typeof updateParishSchema>;
-export type InviteMemberDto = z.infer<typeof inviteMemberSchema>;
+export type UpdateMemberDto = z.infer<typeof updateMemberSchema>;
 export type ParishIdsQuery = z.infer<typeof parishIdsQuerySchema>;
 export type MergeFavoritesDto = z.infer<typeof mergeFavoritesSchema>;
 export type SearchParishesQuery = z.infer<typeof searchParishesSchema>;
+
+/** Liste des membres d'une paroisse (administrateur) : recherche par nom, filtre de statut, page. */
+export const listParishMembersSchema = z.object({
+  q: z.string().trim().max(100).optional(),
+  status: z.nativeEnum(ParishStatus).optional(),
+  page: z.coerce.number().int().min(1).default(1),
+});
+export type ListParishMembersQuery = z.infer<typeof listParishMembersSchema>;

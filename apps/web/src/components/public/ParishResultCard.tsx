@@ -1,13 +1,23 @@
 import { useTranslations } from 'next-intl';
 import { useAppLocale } from '@/i18n/locale';
 import { Link } from '@/i18n/link';
-import { Church, MapPin } from 'lucide-react';
+import { Church, ExternalLink, MapPin } from 'lucide-react';
 import type { PublicParishSummary } from '@churchy/shared';
 import { formatDateShort, formatTime, placeLabel } from '@/lib/format';
 import { FavoriteButton } from '@/components/favorites/FavoriteButton';
 import { SheetStatusBadge } from './SheetStatusBadge';
 
-export function ParishResultCard({ parish }: { parish: PublicParishSummary }) {
+/**
+ * `newTab` : depuis le tableau de bord, le site public de la paroisse s'ouvre dans un nouvel onglet
+ * pour ne pas faire quitter l'espace connecté.
+ */
+export function ParishResultCard({
+  parish,
+  newTab = false,
+}: {
+  parish: PublicParishSummary;
+  newTab?: boolean;
+}) {
   const t = useTranslations('parishResult');
   const locale = useAppLocale();
   const next = parish.nextCelebration;
@@ -41,10 +51,16 @@ export function ParishResultCard({ parish }: { parish: PublicParishSummary }) {
         <FavoriteButton parishId={parish.id} parishName={parish.name} variant="icon" />
         <Link
           href={`/paroisses/${parish.id}`}
-          aria-label={t('viewLabel', { name: parish.name })}
+          aria-label={
+            newTab
+              ? `${t('viewLabel', { name: parish.name })} ${t('newTab')}`
+              : t('viewLabel', { name: parish.name })
+          }
+          {...(newTab ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
           className="inline-flex h-11 flex-1 items-center justify-center rounded-lg bg-churchy-500 px-5 text-sm font-semibold text-white transition-colors hover:bg-churchy-700 sm:flex-none"
         >
           {t('view')}
+          {newTab && <ExternalLink size={14} className="ml-2 shrink-0" aria-hidden />}
         </Link>
       </div>
     </article>

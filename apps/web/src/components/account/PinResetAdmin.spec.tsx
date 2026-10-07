@@ -18,13 +18,19 @@ describe('PinResetAdmin', () => {
     role = 'SUPER_ADMIN';
   });
 
-  it('refuse l’accès à un utilisateur ordinaire, sans formulaire', () => {
-    role = 'USER';
+  it.each(['USER', 'MODERATOR'])('refuse l’accès à %s, sans formulaire', (denied) => {
+    role = denied;
     render(<PinResetAdmin />);
     expect(screen.getByRole('alert')).toHaveTextContent(
-      'réservée aux administrateurs de la plateforme',
+      'réservée aux équipes d’administration de la plateforme',
     );
     expect(screen.queryByLabelText('Numéro de téléphone')).not.toBeInTheDocument();
+  });
+
+  it('un ADMIN de plateforme y a accès', () => {
+    role = 'ADMIN';
+    render(<PinResetAdmin />);
+    expect(screen.getByLabelText('Numéro de téléphone')).toBeInTheDocument();
   });
 
   it('crée le lien, l’affiche pour la personne concernée et annonce le succès', async () => {

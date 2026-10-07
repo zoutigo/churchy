@@ -8,6 +8,7 @@ export interface Activity {
   startsAt: string;
   location: string | null;
   imageUrl: string | null;
+  visibility: 'PUBLIC' | 'MEMBERS';
 }
 
 export const activitiesApi = {

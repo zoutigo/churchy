@@ -135,9 +135,26 @@ describe('AuthSecurityService', () => {
           provider: null,
           principal: '+237•••56',
           reasonCode: 'INVALID_CREDENTIALS',
+          actorId: null,
+          detail: null,
           ipAddress: '1.2.3.4',
           userAgent: 'Mozilla',
         },
+      });
+    });
+
+    it('garde l’auteur et le détail d’un changement de rôle', async () => {
+      await service.audit({
+        event: 'PLATFORM_ROLE_CHANGED',
+        status: 'SUCCESS',
+        userId: 'cible',
+        actorId: 'acteur',
+        detail: 'USER>MODERATOR',
+      });
+      expect(prisma.authAuditLog.create.mock.calls[0][0].data).toMatchObject({
+        userId: 'cible',
+        actorId: 'acteur',
+        detail: 'USER>MODERATOR',
       });
     });
 

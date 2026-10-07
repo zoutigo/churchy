@@ -1,6 +1,15 @@
 import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { ParishRole, type AddOccurrencesDto, type CreateCelebrationDto } from '@churchy/shared';
+import {
+  ParishDuty,
+  ParishStatus,
+  type AddOccurrencesDto,
+  type CreateCelebrationDto,
+} from '@churchy/shared';
+
+const member = (status: ParishStatus, ...duties: ParishDuty[]) => ({ status, duties });
+const ADMIN = member(ParishStatus.PARISH_ADMIN);
+const PREPARER = member(ParishStatus.PARISHIONER, ParishDuty.PREPARER);
 import { PrismaService } from '../../prisma/prisma.service';
 import { CelebrationsService } from './celebrations.service';
 
@@ -174,7 +183,7 @@ describe('CelebrationsService', () => {
       );
     });
 
-    it.each([ParishRole.PARISH_ADMIN, ParishRole.PREPARER, 'SUPER_ADMIN' as const])(
+    it.each([ADMIN, PREPARER, 'SUPER_ADMIN' as const])(
       '%s voit les notes de la série et des dates',
       async (role) => {
         const res = await service.findById('c1', role);
@@ -183,16 +192,16 @@ describe('CelebrationsService', () => {
       },
     );
 
-    it.each([ParishRole.READER, ParishRole.VIEWER])(
-      '%s ne voit aucune note interne (la clé est absente)',
-      async (role) => {
-        const res = await service.findById('c1', role);
-        expect(res).not.toHaveProperty('internalNote');
-        expect(res.occurrences[0]).not.toHaveProperty('internalNote');
-        expect(JSON.stringify(res)).not.toContain('vigilance');
-        expect(JSON.stringify(res)).not.toContain('Micro');
-      },
-    );
+    it.each([
+      member(ParishStatus.PARISHIONER, ParishDuty.READER),
+      member(ParishStatus.PARISHIONER),
+    ])('%s ne voit aucune note interne (la clé est absente)', async (role) => {
+      const res = await service.findById('c1', role);
+      expect(res).not.toHaveProperty('internalNote');
+      expect(res.occurrences[0]).not.toHaveProperty('internalNote');
+      expect(JSON.stringify(res)).not.toContain('vigilance');
+      expect(JSON.stringify(res)).not.toContain('Micro');
+    });
 
     it('marque les dates passées et signale la fin de série proche', async () => {
       prisma.celebration.findUnique.mockResolvedValue(
@@ -203,7 +212,7 @@ describe('CelebrationsService', () => {
           ],
         }),
       );
-      const res = await service.findById('c1', ParishRole.PREPARER);
+      const res = await service.findById('c1', PREPARER);
       expect(res.occurrences.map((o) => o.isPast)).toEqual([true, false]);
       expect(res.endingSoon).toBe(true);
       expect(res.lastOccurrenceAt).toBe('2026-10-20T09:00:00.000Z');
@@ -213,14 +222,12 @@ describe('CelebrationsService', () => {
       prisma.celebration.findUnique.mockResolvedValue(
         series({ archivedAt: NOW, occurrences: [occ('o1', '2026-10-20T09:00:00.000Z')] }),
       );
-      expect((await service.findById('c1', ParishRole.PREPARER)).endingSoon).toBe(false);
+      expect((await service.findById('c1', PREPARER)).endingSoon).toBe(false);
     });
 
     it('404 si la série n’existe pas', async () => {
       prisma.celebration.findUnique.mockResolvedValue(null);
-      await expect(service.findById('x', ParishRole.PREPARER)).rejects.toBeInstanceOf(
-        NotFoundException,
-      );
+      await expect(service.findById('x', PREPARER)).rejects.toBeInstanceOf(NotFoundException);
     });
   });
 

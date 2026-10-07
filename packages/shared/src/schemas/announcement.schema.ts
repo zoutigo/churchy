@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { ContentVisibility } from '../enums/parish-status.enum';
 import { richTextSchema } from '../rich-text';
 import { ERR } from '../constants/error-codes.constants';
 
@@ -23,6 +24,7 @@ export const createAnnouncementSchema = z.object({
   summary: optionalText(300),
   body: richTextSchema(ERR.contentRequired),
   imageUrl: optionalHttpUrl,
+  visibility: z.nativeEnum(ContentVisibility).default(ContentVisibility.PUBLIC),
 });
 
 export const createActivitySchema = z.object({
@@ -31,6 +33,7 @@ export const createActivitySchema = z.object({
   startsAt: z.string().datetime({ message: ERR.dateTimeRequired }),
   location: optionalText(200),
   imageUrl: optionalHttpUrl,
+  visibility: z.nativeEnum(ContentVisibility).default(ContentVisibility.PUBLIC),
 });
 
 export type CreateAnnouncementDto = z.infer<typeof createAnnouncementSchema>;

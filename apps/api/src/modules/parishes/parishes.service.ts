@@ -27,7 +27,7 @@ export class ParishesService {
       data: { ...dto, slug, timezone: dto.timezone ?? timezoneForCountry(dto.country) },
     });
     await this.prisma.parishMember.create({
-      data: { userId, parishId: parish.id, role: 'PARISH_ADMIN' },
+      data: { userId, parishId: parish.id, status: 'PARISH_ADMIN' },
     });
     return parish;
   }
@@ -48,6 +48,6 @@ export class ParishesService {
       where: { userId },
       include: { parish: true },
     });
-    return memberships.map((m) => ({ ...m.parish, role: m.role }));
+    return memberships.map((m) => ({ ...m.parish, status: m.status, duties: m.duties }));
   }
 }

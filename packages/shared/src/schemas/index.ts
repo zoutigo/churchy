@@ -4,3 +4,4 @@ export * from './content.schema';
 export * from './celebration.schema';
 export * from './announcement.schema';
 export * from './contact.schema';
+export * from './platform.schema';

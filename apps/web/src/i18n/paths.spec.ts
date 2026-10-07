@@ -81,6 +81,8 @@ describe('localizeHref', () => {
   it('laisse intacts le tableau de bord, les URL externes et les ancres', () => {
     expect(localizeHref('en', '/dashboard/parishes/p1')).toBe('/dashboard/parishes/p1');
     expect(localizeHref('en', '/dashboard')).toBe('/dashboard');
+    expect(localizeHref('en', '/platform')).toBe('/platform');
+    expect(localizeHref('fr', '/platform/users')).toBe('/platform/users');
     expect(localizeHref('en', 'https://example.com/paroisses')).toBe(
       'https://example.com/paroisses',
     );
@@ -91,6 +93,10 @@ describe('localizeHref', () => {
 
   it('« /dashboardx » n’est pas le tableau de bord', () => {
     expect(localizeHref('fr', '/dashboardx')).toBe('/fr/dashboardx');
+  });
+
+  it('« /platformx » n’est pas la plateforme', () => {
+    expect(localizeHref('fr', '/platformx')).toBe('/fr/platformx');
   });
 });
 

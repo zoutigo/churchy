@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { MapPin } from 'lucide-react';
 import { countryLabel } from '@churchy/shared';
 import { FavoriteButton } from '@/components/favorites/FavoriteButton';
+import { FollowButton } from '@/components/parish/FollowButton';
 import { ParishInfoPanel } from '@/components/public/ParishInfoPanel';
 import { ParishTabs } from '@/components/public/ParishTabs';
 import { orNotFound, publicApi } from '@/lib/api/public.api';
@@ -45,7 +46,10 @@ export default async function ParishLayout({ children, params }: Props) {
                 <MapPin size={16} aria-hidden /> {placeLabel(parish)},{' '}
                 {countryLabel(parish.country, locale)}
               </p>
-              <FavoriteButton parishId={parish.id} parishName={parish.name} className="mt-2" />
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <FavoriteButton parishId={parish.id} parishName={parish.name} />
+                <FollowButton parishId={parish.id} parishName={parish.name} />
+              </div>
             </div>
             {parish.imageUrl && (
               <img

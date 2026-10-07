@@ -25,11 +25,11 @@ src/
 │   ├── notifications/ # producteur BullMQ (emails, publication) — le consommateur est apps/notifications
 │   ├── users/       # GET /api/users/me
 │   ├── parishes/    # création, identité publique (PATCH), mes paroisses
-│   ├── parish-members/ # Invitation et gestion des membres
+│   ├── parish-members/ # devenir fidèle / se retirer, gestion des membres et responsabilités (admin)
 │   ├── contents/    # Bibliothèque de contenus liturgiques
 │   ├── celebration-templates/ # Modèles de célébration + étapes
 │   ├── celebrations/ # Séries, dates (occurrences), feuilles de préparation (voir CLAUDE.md racine)
-│   ├── announcements/ activities/ # annonces et activités (écriture EDITORS)
+│   ├── announcements/ activities/ # annonces et activités (écriture : permission parish.announcements.write)
 │   ├── contact/     # POST /contact → file BullMQ
 │   └── public/      # Lecture publique sans auth (PublicService : vues publiques uniquement)
 └── health/          # GET /api/health
@@ -54,15 +54,14 @@ Voir la section « Authentification » du `CLAUDE.md` racine (refresh rotatif, c
 ### Protection rôle paroisse (obligatoire pour toute ressource de paroisse)
 ```ts
 @UseGuards(JwtAuthGuard, ParishRolesGuard)        // au niveau du contrôleur
-@ParishAccess(EDITORS)                            // parishId dans l'URL
-@ParishAccess(EDITORS, 'celebration')             // :id est une célébration → paroisse retrouvée via elle
-@ParishAccess(EDITORS, 'template', 'templateId')  // autre nom de paramètre
+@ParishAccess('parish.celebrations.write')                       // parishId dans l'URL
+@ParishAccess('parish.celebrations.write', 'celebration')         // :id est une célébration → paroisse retrouvée via elle
+@ParishAccess('parish.celebrations.write', 'template', 'templateId') // autre nom de paramètre
 ```
-Types de ressources : `parish` (défaut), `template`, `templateStep`, `content`, `celebration`, `occurrence`, `sheet`. Groupes de rôles :
-`ALL_MEMBERS` (lecture), `EDITORS` (écriture/publication), `ADMINS` (membres). Un identifiant d'une autre
-paroisse ne doit jamais contourner le contrôle : les services vérifient aussi l'appartenance à la paroisse
-(ex. modèle ou contenu d'une autre paroisse refusé). Toute nouvelle route doit avoir des tests d'autorisation
-dans `test/authorization.e2e-spec.ts`.
+Types de ressources : `parish` (défaut), `template`, `templateStep`, `content`, `celebration`, `occurrence`, `sheet`. On teste des **permissions**
+(`parish.view`, `parish.view.members`, `parish.internal.read`, `parish.celebrations.write`, `parish.announcements.write`, `parish.manage`), jamais des noms de rôles : voir
+« Autorisations par paroisse » du `CLAUDE.md` racine. Un identifiant d'une autre paroisse ne doit jamais contourner le contrôle : les services vérifient aussi l'appartenance à la paroisse
+(ex. modèle ou contenu d'une autre paroisse refusé). Toute nouvelle route doit avoir des tests d'autorisation dans `test/authorization.e2e-spec.ts`.
 
 ## Ajouter un module
 
@@ -83,6 +82,8 @@ Validées au démarrage par `src/config/env.ts` (l'API refuse de démarrer si la
 - `DATABASE_URL` — PostgreSQL connection string
 - `JWT_SECRET` — **obligatoire**, 16 caractères minimum, aucune valeur de secours (`openssl rand -hex 32`) ;
   refusé en production s'il ressemble à un exemple
+- `PIN_PEPPER` — poivre des PIN (HMAC avant bcrypt), 32 caractères minimum (`openssl rand -hex 32`) ; **obligatoire en production**,
+  facultatif en dev/test ; le perdre invalide tous les PIN
 - `ACCESS_TOKEN_TTL_SECONDS` — durée du JWT d'accès (défaut : 900)
 - `REFRESH_TOKEN_TTL_DAYS` — durée de la session (défaut : 30)
 - `PORT` — Port (défaut: 3201)

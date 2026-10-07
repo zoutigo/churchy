@@ -18,7 +18,7 @@ npm install            # une seule installation pour tout le monorepo
 npm run infra:up       # postgres + redis + mailpit (docker compose, attend qu'ils soient prêts)
 npm run build          # turbo : shared d'abord, puis api/web
 npm run typecheck
-npm run dev -w @churchy/api   # ou -w @churchy/web, -w @churchy/notifications
+npm run start:dev -w @churchy/api   # API ; web : npm run dev -w @churchy/web ; worker : npm run start:dev -w @churchy/notifications
 ```
 Première installation : copier `apps/api/.env.example` → `apps/api/.env` (et générer un `JWT_SECRET`
 aléatoire : `openssl rand -hex 32`), `apps/web/.env.local.example` → `.env.local`,
@@ -26,7 +26,9 @@ aléatoire : `openssl rand -hex 32`), `apps/web/.env.local.example` → `.env.lo
 
 ## Ports de dev
 web 3200 · api 3201 (Swagger: /api/docs) · postgres 5433 · redis 6380 · SMTP Mailpit 1025 ·
-**Mailpit (emails reçus) http://localhost:8025**. Tests fonctionnels : web 3210 · api 3211.
+**Mailpit (emails reçus) http://localhost:8025**.
+**Postgres, Redis et Mailpit ne sont publiés que sur `127.0.0.1`** (`docker-compose.yml`) : jamais sur toutes les interfaces (mot de passe de dev `password` : une base ouverte a déjà été piratée par un mineur de crypto). Garder `127.0.0.1:` devant chaque port publié.
+**Sauvegarde de la base de dev** : `~/scripts/backup_churchy_dev.sh` (cron 1 h 30, dumps de `churchy_db` et `churchy_test` dans `~/backups/churchy-dev/`, 7 jours). Après un `git pull` qui ajoute une migration : `npx prisma migrate deploy` dans `apps/api` (sinon l'API répond 500 sur les tables manquantes). Tests fonctionnels : web 3210 · api 3211.
 
 ## Authentification
 Session par **cookies**, jamais de jeton lisible par le JavaScript du site :
@@ -49,13 +51,13 @@ Un compte peut cumuler plusieurs moyens ; `AuthUserDto.methods` = `{ password, p
 (`User.email` et `passwordHash` sont facultatifs : un compte par téléphone ou Google n'a ni l'un ni l'autre au départ).
 - **Email + mot de passe** : l'inscription demande une confirmation (`registerFormSchema`, jamais envoyée à l'API).
 - **Téléphone + PIN à 6 chiffres** (`PhoneAuthService`, table `UserPhoneCredential`) : `POST /auth/register/phone`, `/auth/login/phone`,
-  `/auth/forgot-pin`, `/auth/reset-pin`. Numéro normalisé en E.164 (`phoneSchema`, `normalizeInternationalPhone`), PIN haché (bcrypt) et refusé s'il est
+  `/auth/forgot-pin`, `/auth/reset-pin`. Numéro normalisé en E.164 (`phoneSchema`, `normalizeInternationalPhone`), PIN poivré puis haché (`pin-hash.ts` : HMAC-SHA256 avec `PIN_PEPPER`, bcrypt, préfixe `p1$` ; un haché d'avant le poivre reste valable et est refait à la connexion réussie ; poivre perdu = tous les PIN invalides) et refusé s'il est
   trop simple (`isWeakPin` : 000000, 123456…). **Le numéro n'est pas vérifié** (`verifiedAt` vide : pas encore de SMS) ; la connexion fonctionne quand même.
 - **Verrouillage et audit** (`AuthSecurityService`) : échecs comptés par clé hachée (`AuthRateLimit`), atomiquement ; 5 échecs de PIN ou de preuve, 10 de mot de passe →
   verrou de 15 min (429 `tooManyAttempts`, même réponse pour un numéro inconnu). Journal `AuthAuditLog` (numéro masqué, jamais de secret).
 - **Récupération du PIN** : pas de SMS pour l'instant. (1) lien envoyé à l'**email vérifié** du compte (job `auth.pin-reset-requested`, page `/reset-pin?token=`,
-  même réponse que le compte existe ou non) ; (2) sans email : un **administrateur de la plateforme** (`User.role === 'SUPER_ADMIN'`, `PlatformAdminGuard` : les
-  rôles de plateforme seront étendus au prochain chantier) obtient un lien de 24 h par `POST /admin/auth/pin-reset-link` (page `/dashboard/admin/pin-reset`).
+  même réponse que le compte existe ou non) ; (2) sans email : un **administrateur de la plateforme** (ADMIN ou SUPER_ADMIN, permission `platform.pin-reset`) obtient un lien de 24 h par
+  `POST /admin/auth/pin-reset-link` (page `/platform/pin-reset`).
   Un PIN réinitialisé déconnecte toutes les sessions.
 - **SMS (préparé, inactif)** : contrat `sms.requested` (`smsPayloadSchema`), `NotificationsService.smsRequested`, worker `SmsService` + `SMS_PROVIDER` (`log` seul pour
   l'instant, nom inconnu = refus au démarrage). Aucun producteur : brancher Orange/MTN = écrire un `SmsProvider`, puis un code à usage unique pour la récupération.
@@ -70,22 +72,65 @@ Un compte peut cumuler plusieurs moyens ; `AuthUserDto.methods` = `{ password, p
   Google) et, pour un mot de passe ou un PIN, coupe les autres sessions et en ouvre une neuve. Routes `PUT /auth/me/{email,password,phone-pin,google}`, `PATCH /auth/me/pin`, `POST /auth/me/google/unlink`.
 - **Web** : `/login` et `/register` = Google (si activé) + onglets Email | Téléphone (`LoginPanel`, `RegisterPanel`) ; `PhoneNumberField` (pays + masque, valeur
   internationale), `PinInput` (chiffres seulement, pas de `maxLength` : il tronquerait un collage « 482 915 »). Pages `/forgot-pin`, `/reset-pin` (segments traduits, `AUTH_LINK_PATHS`).
-- Limites connues : un numéro non vérifié peut être saisi par un tiers (le propriétaire réel sera bloqué à l'inscription tant qu'il n'y a pas de SMS) ; l'ajout de membres
-  d'une paroisse se fait toujours par **email** (un compte sans email ne peut pas encore être invité) ; le PIN n'est pas « poivré » (le verrouillage est la protection principale).
+- Limites connues : un numéro non vérifié peut être saisi par un tiers (le propriétaire réel sera bloqué à l'inscription tant qu'il n'y a pas de SMS) ; le PIN à 6 chiffres reste faible face à une attaque en ligne (le verrouillage est la protection principale).
+
+### Rôles de plateforme (`UserRole`)
+`SUPER_ADMIN > ADMIN > MODERATOR > USER`, **un seul rôle par compte**, rôles **fixes** : les permissions sont codées en dur dans
+`@churchy/shared` (`platform-permissions.constants.ts`, `PLATFORM_PERMISSIONS`, `hasPlatformPermission(role, 'platform.users.read')`) ; le code teste des
+**permissions**, jamais des noms de rôles. Les règles de hiérarchie sont les mêmes pour l'API (qui les impose) et le web (qui ne propose que ce qui est permis) :
+- `canChangePlatformRole(acteur, cible, nouveau)` : SUPER_ADMIN gère tout ; ADMIN gère seulement MODERATOR ↔ USER, jamais un ADMIN ni un SUPER_ADMIN (il ne crée pas d'ADMIN) ;
+  le **dernier SUPER_ADMIN actif** ne peut pas être retiré, même par lui-même (409 `platformLastSuperAdmin`, transaction sérialisable).
+- `canSuspendAccount(acteur, cible, estSoi)` : SUPER_ADMIN suspend tous sauf lui-même ; ADMIN suspend MODERATOR et USER ; MODERATOR et USER personne.
+- MODERATOR : accès à l'espace plateforme, messages de contact et contenus publics (permissions déclarées, outils à venir). ADMIN et MODERATOR lisent
+  (**GET/HEAD seulement**) les données internes de toute paroisse (`ParishRolesGuard`, `request.parishRole = 'PLATFORM_STAFF'`, notes internes comprises) ;
+  l'appartenance réelle à la paroisse passe d'abord (un ADMIN de plateforme qui est admin de sa paroisse garde l'écriture). SUPER_ADMIN passe partout, comme avant.
+- API (`apps/api/src/modules/platform`) : `GET /platform/users?q=&page=`, `PATCH /platform/users/:id/role`, `POST /platform/users/:id/suspend|reinstate`, gardées par
+  `PlatformPermissionGuard` + `@RequirePlatformPermission('…')` (sans décorateur le garde **refuse** : une route oubliée n'est jamais ouverte). Le rôle est lu **en base** à chaque requête
+  (`JwtStrategy`), pas dans le JWT : un rôle retiré ou un compte suspendu perd l'accès tout de suite. `POST /admin/auth/pin-reset-link` demande `platform.pin-reset` (ADMIN et SUPER_ADMIN).
+- **Suspension** (`User.suspendedAt`) : `JwtStrategy` refuse (401 `accountSuspended`), `AuthService.issueSession` — point de passage de toute connexion et de tout refresh — refuse (403), et la suspension
+  révoque tous les refresh tokens. Un changement de rôle révoque aussi les sessions de la personne. Les deux sont journalisés (`AuthAuditLog` : `PLATFORM_ROLE_CHANGED`, `ACCOUNT_SUSPENDED`,
+  `ACCOUNT_REINSTATED`, avec `actorId` et `detail` « ANCIEN>NOUVEAU »).
+- Web : `PlatformSwitch` (interrupteur « Mon espace | Plateforme », `role="switch"`, dans `Header`, visible avec `platform.access`) ; le mode se déduit de l'URL, rien n'est mémorisé.
+  `/platform` (comme `/dashboard` : sans préfixe de langue, `UNPREFIXED` de `i18n/paths.ts`, protégé par le middleware, `PlatformGuard` renvoie les comptes sans rôle à `/dashboard`) :
+  accueil, `/platform/users` (comptes, rôle, suspension en deux temps ; cartes sur mobile, tableau dès `md`), `/platform/pin-reset` (l'ancienne adresse `/dashboard/admin/pin-reset` redirige).
+  `Sidebar`/`MobileNav` prennent `area="platform"`, filtrés par permission. Après connexion (`afterLoginPath`) un compte de plateforme arrive **toujours sur `/platform`**, sauf `?next=` explicite.
+  Premier SUPER_ADMIN : changer `User.role` en base (aucune route ne le fait, volontairement). Pas encore d'UI d'administration au-delà des comptes et du PIN.
 
 **Configuration** (`apps/api/src/config/env.ts`, validée au démarrage, aucune valeur de secours) :
-`GOOGLE_CLIENT_ID` (facultatif), `JWT_SECRET` obligatoire (16 car. min., refusé en production s'il ressemble à un exemple),
+`GOOGLE_CLIENT_ID` (facultatif), `PIN_PEPPER` (poivre des PIN, 32 car. min., **obligatoire en production**), `JWT_SECRET` obligatoire (16 car. min., refusé en production s'il ressemble à un exemple),
 `ACCESS_TOKEN_TTL_SECONDS`, `REFRESH_TOKEN_TTL_DAYS`, `FRONTEND_URL`, `AUTH_THROTTLE_LIMIT`, `THROTTLE_LIMIT`.
 En production : `NODE_ENV=production` (cookies `Secure`), web et API sur le même domaine racine (cookies
 `SameSite=Lax`), et `trust proxy` si l'API est derrière un reverse proxy (limitation par IP).
 
-**Autorisations par paroisse** : `@ParishAccess(ROLES, kind?, param?)` + `ParishRolesGuard`
-(`apps/api/src/common`). Le guard retrouve la paroisse via l'URL **ou via la ressource visée** (célébration,
-modèle, contenu, étape) pour qu'un identifiant d'une autre paroisse ne contourne pas le contrôle.
-`ALL_MEMBERS` (lecture) = ADMIN, PREPARER, READER, VIEWER ; `EDITORS` (écriture, publication) = ADMIN, PREPARER ;
-`ADMINS` (membres) = ADMIN ; `SUPER_ADMIN` passe partout. Les services vérifient aussi l'isolation (modèle ou
-contenu d'une autre paroisse refusé). Toute nouvelle route qui touche une ressource de paroisse doit porter
-`@ParishAccess`.
+**Autorisations par paroisse** : `@ParishAccess('parish.xxx', kind?, param?)` + `ParishRolesGuard` (`apps/api/src/common`). Comme pour la
+plateforme, le code teste une **permission** (`hasParishPermission(membre, perm)`, `parish-permissions.constants.ts` de `@churchy/shared`), jamais un nom de rôle.
+Le guard retrouve la paroisse via l'URL **ou via la ressource visée** (célébration, modèle, contenu, étape) pour qu'un identifiant d'une autre paroisse ne contourne pas le contrôle.
+`SUPER_ADMIN` passe partout ; ADMIN/MODERATOR de plateforme lisent en GET/HEAD (voir « Rôles de plateforme »). Les services vérifient aussi l'isolation. Toute nouvelle route
+qui touche une ressource de paroisse doit porter `@ParishAccess` (test d'autorisation dans `test/authorization.e2e-spec.ts`).
+- **Statut** (`ParishMember.status`) : `FAITHFUL` (fidèle, « Follower ») < `PARISHIONER` (paroissien, « Member ») < `PARISH_ADMIN` (plusieurs ; le dernier ne part pas : 409 `parishLastAdmin`,
+  transaction sérialisable). **Responsabilités** (`duties`, cumulables, **réservées à un paroissien** : un fidèle n'en a jamais, rétrograder les efface) : `PREPARER`, `READER`, `ANNOUNCER`.
+- **Permissions** : `parish.view` (tout fidèle : voir la paroisse) · `parish.view.members` (paroissien+ : annonces/activités « Paroissiens seulement ») · `parish.internal.read`
+  (Lecteur, Préparateur, admin : séries, feuilles non publiées, modèles, contenus) · `parish.celebrations.write` (Préparateur, admin : préparer/publier, notes internes) ·
+  `parish.announcements.write` (Rédacteur, admin) · `parish.manage` (admin : identité publique, membres, responsabilités). Un fidèle ne voit donc que le public.
+- **Visibilité** (`ContentVisibility` `PUBLIC` | `MEMBERS`, sur `Announcement` et `Activity`, champ `visibility`, `PUBLIC` par défaut) : `GET /parishes/:id/announcements|activities` (`parish.view`)
+  ne renvoie le « Paroissiens seulement » qu'à un paroissien ou plus (`canSeeMembersContent`) ; `PublicService` (site public, sans session) **filtre toujours `PUBLIC`**. Formulaires web : `VisibilityField`.
+- **Devenir fidèle** : `POST /parishes/:id/follow` (connecté, sans validation, idempotent, limité comme l'authentification, `MAX_FAITHFUL_PARISHES` = 20 → 409 `parishFollowLimit`) ;
+  le nom et le prénom sont ceux du **compte** (déjà demandés à l'inscription, jamais ressaisis) ; `GET /parishes/:id/membership` (mon statut, `status: null` si aucun) ;
+  `DELETE /parishes/:id/follow` = se retirer **d'un cran** : paroissien/admin → fidèle (responsabilités effacées), fidèle → quitte (`{ membership: null }`) ; le dernier admin ne peut pas.
+- **Gestion par l'admin** (`parish.manage`, `/parishes/:id/members`) : `GET ?q=&status=&page=` (30 par page ; **nom, prénom, date, statut, responsabilités — jamais d'email ni de téléphone**),
+  `PATCH /:userId` (`{ status?, duties? }` : promotion fidèle → paroissien **immédiate**, sans invitation, plusieurs admins), `DELETE /:userId` (retrait sans blocage sauf dernier admin).
+  L'ancien ajout par email n'existe plus (peu d'emails au Cameroun). Les paroissiens ne se voient pas entre eux. Favoris et statut de fidèle sont indépendants.
+- **Écran des membres** (web, `/dashboard/parishes/[id]/members`, `ParishMembers` ; le lien « Membres » de la vue de la paroisse n'apparaît qu'avec `parish.manage`) : recherche par nom (délai de 300 ms),
+  filtre de statut, pagination ; une **carte** par membre sur mobile et tablette, un **tableau** dès `lg`. Statut = liste déroulante (promotion immédiate), responsabilités = cases (proposées seulement à un
+  paroissien), retrait en deux temps (« Retirer » puis « Confirmer le retrait »). Mise à jour **optimiste** avec retour arrière si l'API refuse (dernier administrateur : toast d'erreur). Jamais d'email ni de téléphone à l'écran.
+- Migration `parish_status_duties` : ancien `PARISH_ADMIN` → admin ; `PREPARER` → paroissien + Préparateur + Rédacteur (il écrivait aussi les annonces) ; `READER` → paroissien + Lecteur ; `VIEWER` → paroissien.
+- Web : `FollowButton` (en-tête du mini-site d'une paroisse) — visiteur → `/login?next=` puis retour ; boîte de dialogue qui annonce « l'administrateur verra votre nom et prénom, pas votre email ni
+  téléphone » + lien vers la confidentialité ; fidèle : « Ne plus suivre » ; paroissien : « Me retirer (redevenir fidèle) » ; admin : pas de retrait ici. `enums.parishStatus` / `enums.parishDuty`
+  (`useLabels`). La politique de confidentialité a une section « Devenir fidèle d'une paroisse ».
+- **Vue d'une paroisse dans `/dashboard`** (`/dashboard/parishes/[id]`, « Mes paroisses » liste gérées **et** suivies, avec le statut) : `useParishAccess(parishId)` lit `GET …/membership` et
+  expose `can(permission)` (même `hasParishPermission` que l'API ; SUPER_ADMIN tout ; ADMIN/MODERATOR de plateforme sans appartenance : lecture seulement). Le web ne fait que **proposer** :
+  sections Bibliothèque/Modèles/Célébrations = `parish.internal.read`, Annonces/Activités = `parish.view`, « Modifier » = `parish.manage`, ajout/suppression d'annonces et d'activités = `parish.announcements.write`.
+  En-tête : `FollowButton` + `FavoriteButton` + lien vers le site public ; un non-admin voit un bandeau « réservée à ses administrateurs ». Un paroissien voit les annonces « Paroissiens seulement » dans la liste (l'API les renvoie).
 
 **Web** : `AuthProvider` (contexte) + `useAuth`, `middleware.ts` (redirige les pages privées sans session vers
 `/login?next=…` ; `next` est validé par `safeNextPath`), `AuthGuard` (filet côté client), client API
@@ -168,7 +213,7 @@ Ces routes n'ont volontairement **pas** de `@ParishAccess` : elles ne renvoient 
   saisie libre. Le contrôle « numéro complet » est côté formulaire (`withCompletePhone`) ; l'API n'exige que des
   caractères de numéro. Sur la page publique, téléphone et email sont des liens `tel:` / `mailto:`.
 - Gestion : `PATCH /parishes/:id` (identité publique, ADMINS), `announcements` et `activities` (`/parishes/:parishId/…`,
-  lecture ALL_MEMBERS, écriture/suppression EDITORS), `PATCH /celebrations/:id/announced`.
+  lecture `parish.view`, écriture/suppression `parish.announcements.write`, avec `visibility`), `PATCH /celebrations/:id/announced`.
 - Les pages sont rendues par le serveur web : toutes les requêtes publiques partent de **la même IP**. En production,
   transmettre l'IP du visiteur (`X-Forwarded-For` + `trust proxy`) pour que la limite `THROTTLE_LIMIT` ne
   s'applique pas à l'ensemble des visiteurs.
@@ -182,7 +227,7 @@ Ces routes n'ont volontairement **pas** de `@ParishAccess` : elles ne renvoient 
 - Web : `FavoritesProvider` (dans `app/layout.tsx`, sous `AuthProvider`) + `useFavorites` / `useFavoriteItems`. À la connexion, les favoris de
   l'appareil sont **fusionnés dans le compte puis effacés de l'appareil** ; à la déconnexion l'appareil ne garde rien. `FavoriteButton`
   (étoile, sur les cartes de résultat et l'en-tête de paroisse), bloc `FavoritesShelf` sur la landing (rien sans favori), page `/favoris`,
-  lien « Mes favoris » dans l'en-tête public (avec compteur) et dans `Sidebar`/`MobileNav` du tableau de bord.
+  lien « Mes favoris » dans l'en-tête public (avec compteur). Dans le tableau de bord, `Sidebar`/`MobileNav` mènent à `/dashboard/favorites` (`DashboardFavorites`) : on ne quitte pas l'espace connecté ; « Voir la paroisse » et « Trouver une paroisse » y ouvrent le site public dans un **nouvel onglet** (`ParishResultCard newTab`).
 - **Aperçu des liens partagés** (WhatsApp, Facebook, X…) : `metadataBase` (`NEXT_PUBLIC_SITE_URL`, défaut `https://churchy.tigilabs.com`), Open Graph +
   Twitter Card dans `app/layout.tsx`, image 1200×630 générée par `app/opengraph-image.tsx` (et `twitter-image.tsx`), métadonnées par paroisse
   (`lib/seo.ts` `parishMetadata`). Les réseaux mettent les aperçus en cache : après un changement, tester avec un lien `?v=2` ou le débogueur Facebook.
@@ -204,7 +249,7 @@ Règles (toutes testées, unitaire + e2e) :
   `timezoneForCountry`) ; « chaque dimanche à 10 h » reste à 10 h au changement d'heure (`@churchy/shared` `schedule.ts`,
   partagé API + web pour l'aperçu).
 - **Notes internes** : `canSeeInternalNotes` (ADMIN, PREPARER, SUPER_ADMIN) ; `ParishRolesGuard` pose `request.parishRole`
-  (décorateur `@CurrentParishRole()`), les lecteurs/spectateurs ne reçoivent **pas la clé** `internalNote`.
+  (décorateur `@CurrentParishRole()`), les lecteurs ne reçoivent **pas la clé** `internalNote`.
 - **Changer de modèle** (`PATCH /sheets/:id/template`, `dryRun` pour l'aperçu) : étapes rapprochées par `key` (contenu conservé),
   étapes manquantes ajoutées vides, étapes **vides** sans équivalent retirées, étapes **remplies** sans équivalent gardées comme
   étapes libres : rien n'est perdu en silence. `null` = détacher (à la volée).

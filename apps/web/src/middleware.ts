@@ -16,6 +16,9 @@ import { splitLocale, toInternalPath, toLocalizedPath } from '@/i18n/paths';
  * on ne lit pas `Accept-Language`. Le tableau de bord (`/dashboard`) n'a pas de préfixe.
  */
 const AUTH_ONLY_PAGES = ['/login', '/register', '/forgot-password', '/forgot-pin'];
+/** Espaces privés sans préfixe de langue : tableau de bord et plateforme. */
+const isPrivateArea = (pathname: string) =>
+  ['/dashboard', '/platform'].some((root) => pathname === root || pathname.startsWith(`${root}/`));
 const handleI18n = createIntlMiddleware(routing);
 
 const preferredLocale = (request: NextRequest): Locale => {
@@ -27,7 +30,7 @@ export function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const hasSession = request.cookies.get(SESSION_COOKIE)?.value === '1';
 
-  if (pathname === '/dashboard' || pathname.startsWith('/dashboard/')) {
+  if (isPrivateArea(pathname)) {
     if (hasSession) return NextResponse.next();
     const url = request.nextUrl.clone();
     url.pathname = toLocalizedPath(preferredLocale(request), '/login');

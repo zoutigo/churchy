@@ -10,6 +10,7 @@ import type { PrismaService } from '../../prisma/prisma.service';
 import type { AuthSecurityService } from './auth-security.service';
 import type { AuthService } from './auth.service';
 import { PhoneAuthService } from './phone-auth.service';
+import { hashPin, verifyPin } from './pin-hash';
 
 type Fn = jest.Mock;
 const PHONE = '+237677123456';
@@ -19,7 +20,7 @@ const credential = async (over: Record<string, unknown> = {}) => ({
   id: 'c1',
   userId: 'u1',
   phoneE164: PHONE,
-  pinHash: await bcrypt.hash(PIN, 4),
+  pinHash: await hashPin(PIN),
   verifiedAt: null,
   user: dbUser(),
   ...over,
@@ -109,7 +110,7 @@ describe('PhoneAuthService', () => {
       expect(data.locale).toBe('en');
       expect(data.phoneCredential.create.phoneE164).toBe(PHONE);
       expect(data.phoneCredential.create.pinHash).not.toBe(PIN);
-      expect(await bcrypt.compare(PIN, data.phoneCredential.create.pinHash)).toBe(true);
+      expect(await verifyPin(PIN, data.phoneCredential.create.pinHash)).toBe(true);
       expect(data.phoneCredential.create.verifiedAt).toBeUndefined();
       expect(user.email).toBeNull();
       expect(user.phone).toBe(PHONE);
@@ -152,6 +153,29 @@ describe('PhoneAuthService', () => {
       expect(security.audit).toHaveBeenCalledWith(
         expect.objectContaining({ event: 'LOGIN_PHONE', status: 'SUCCESS' }),
       );
+    });
+
+    it('refait le haché d’un PIN d’avant le poivre après une connexion réussie, jamais après un échec', async () => {
+      const legacy = await bcrypt.hash(PIN, 4);
+      prisma.userPhoneCredential.findUnique.mockResolvedValue(
+        await credential({ pinHash: legacy }),
+      );
+      await expect(service.login({ phone: PHONE, pin: '000001' })).rejects.toBeInstanceOf(
+        UnauthorizedException,
+      );
+      expect(prisma.userPhoneCredential.update).not.toHaveBeenCalled();
+
+      await service.login({ phone: PHONE, pin: PIN });
+      const update = prisma.userPhoneCredential.update.mock.calls[0][0];
+      expect(update.where).toEqual({ id: 'c1' });
+      expect(update.data.pinHash).toMatch(/^p1\$/);
+      expect(await verifyPin(PIN, update.data.pinHash)).toBe(true);
+    });
+
+    it('ne touche pas au haché d’un PIN déjà poivré', async () => {
+      prisma.userPhoneCredential.findUnique.mockResolvedValue(await credential());
+      await service.login({ phone: PHONE, pin: PIN });
+      expect(prisma.userPhoneCredential.update).not.toHaveBeenCalled();
     });
 
     it('refuse un mauvais PIN, le compte et le journalise', async () => {
@@ -229,7 +253,7 @@ describe('PhoneAuthService', () => {
       });
       expect(prisma.$transaction).toHaveBeenCalled();
       const update = prisma.userPhoneCredential.update.mock.calls[0][0];
-      expect(await bcrypt.compare('739104', update.data.pinHash)).toBe(true);
+      expect(await verifyPin('739104', update.data.pinHash)).toBe(true);
       expect(prisma.refreshToken.updateMany).toHaveBeenCalledWith({
         where: { userId: 'u1', revokedAt: null },
         data: { revokedAt: expect.any(Date) },

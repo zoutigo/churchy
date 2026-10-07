@@ -1,4 +1,5 @@
 import { INestApplication } from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
 import { Queue } from 'bullmq';
 import request from 'supertest';
 import { NotificationJob } from '@churchy/contracts';
@@ -68,7 +69,7 @@ describe('Connexion par téléphone + PIN', () => {
       const credential = await prisma.userPhoneCredential.findUniqueOrThrow({
         where: { phoneE164: phone },
       });
-      expect(credential.pinHash).toMatch(/^\$2[aby]\$/);
+      expect(credential.pinHash).toMatch(/^p1\$\$2[aby]\$/); // poivré (PIN_PEPPER)
       expect(credential.pinHash).not.toContain(PIN);
       expect(credential.verifiedAt).toBeNull();
     });
@@ -122,6 +123,29 @@ describe('Connexion par téléphone + PIN', () => {
   });
 
   describe('connexion', () => {
+    it('un PIN enregistré avant le poivre reste valable et est repoté à la connexion', async () => {
+      const phone = nextPhone();
+      await registerPhoneAgent(app, phone);
+      const legacy = await bcrypt.hash(PIN, 4);
+      await prisma.userPhoneCredential.update({
+        where: { phoneE164: phone },
+        data: { pinHash: legacy },
+      });
+
+      await http().post('/api/auth/login/phone').send({ phone, pin: '000001' }).expect(401);
+      const wrong = await prisma.userPhoneCredential.findUniqueOrThrow({
+        where: { phoneE164: phone },
+      });
+      expect(wrong.pinHash).toBe(legacy); // un échec ne change rien
+
+      await http().post('/api/auth/login/phone').send({ phone, pin: PIN }).expect(201);
+      const upgraded = await prisma.userPhoneCredential.findUniqueOrThrow({
+        where: { phoneE164: phone },
+      });
+      expect(upgraded.pinHash).toMatch(/^p1\$/);
+      await http().post('/api/auth/login/phone').send({ phone, pin: PIN }).expect(201);
+    });
+
     it('ouvre une session avec le bon PIN, même numéro non vérifié', async () => {
       const phone = nextPhone();
       await registerPhoneAgent(app, phone);

@@ -11,7 +11,7 @@ import {
   type UpdateParishDto,
 } from '@churchy/shared';
 import { ParishRolesGuard } from '../../common/guards/parish-roles.guard';
-import { ADMINS, ALL_MEMBERS, ParishAccess } from '../../common/decorators/roles.decorator';
+import { ParishAccess } from '../../common/decorators/roles.decorator';
 
 @ApiTags('parishes')
 @Controller('parishes')
@@ -38,7 +38,7 @@ export class ParishesController {
   @Get(':id')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, ParishRolesGuard)
-  @ParishAccess(ALL_MEMBERS)
+  @ParishAccess('parish.view')
   findOne(@Param('id') id: string) {
     return this.parishesService.findById(id);
   }
@@ -47,7 +47,7 @@ export class ParishesController {
   @Patch(':id')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, ParishRolesGuard)
-  @ParishAccess(ADMINS)
+  @ParishAccess('parish.manage')
   update(
     @Param('id') id: string,
     @Body(new ZodValidationPipe(updateParishSchema)) dto: UpdateParishDto,

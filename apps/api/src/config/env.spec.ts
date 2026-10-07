@@ -40,7 +40,20 @@ describe('loadEnv', () => {
 
   it('accepte un vrai secret en production', () => {
     expect(() =>
-      loadEnv({ NODE_ENV: 'production', JWT_SECRET: 'x7Gq9TzL2mVb8RkWc4YhN6pJdSaE0uFo' }),
+      loadEnv({
+        NODE_ENV: 'production',
+        JWT_SECRET: 'x7Gq9TzL2mVb8RkWc4YhN6pJdSaE0uFo',
+        PIN_PEPPER: 'k'.repeat(32),
+      }),
     ).not.toThrow();
+  });
+
+  it('PIN_PEPPER : obligatoire en production, facultatif ailleurs, 32 caractères minimum', () => {
+    const prod = { NODE_ENV: 'production', JWT_SECRET: 'x7Gq9TzL2mVb8RkWc4YhN6pJdSaE0uFo' };
+    expect(() => loadEnv(prod)).toThrow(/PIN_PEPPER est obligatoire/);
+    expect(() => loadEnv({ ...prod, PIN_PEPPER: '   ' })).toThrow(/PIN_PEPPER est obligatoire/);
+    expect(() => loadEnv({ ...prod, PIN_PEPPER: 'court' })).toThrow(/32 caractères/);
+    expect(loadEnv(base).PIN_PEPPER).toBeUndefined();
+    expect(() => loadEnv({ ...base, PIN_PEPPER: 'court' })).toThrow(/32 caractères/);
   });
 });

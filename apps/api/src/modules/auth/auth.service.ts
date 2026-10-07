@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   Logger,
   UnauthorizedException,
@@ -235,9 +236,11 @@ export class AuthService {
   // --- interne -------------------------------------------------------------------------------
 
   async issueSession(
-    user: { id: string; email: string | null },
+    user: { id: string; email: string | null; suspendedAt?: Date | null },
     familyId: string = randomUUID(),
   ): Promise<Session> {
+    // Point de passage unique de toute connexion et de tout refresh : un compte suspendu n'obtient aucune session.
+    if (user.suspendedAt) throw new ForbiddenException(ERR.accountSuspended);
     const refreshToken = generateToken();
     const refreshExpiresAt = new Date(Date.now() + env.REFRESH_TOKEN_TTL_DAYS * 86_400_000);
     await this.prisma.refreshToken.create({

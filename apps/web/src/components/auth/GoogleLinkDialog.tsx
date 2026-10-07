@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/form';
 import { PasswordInput } from '@/components/ui/password-input';
 import { Button } from '@/components/ui/button';
+import { afterLoginPath } from '@/lib/auth/session';
 import { handleSubmitError } from '@/lib/forms/submit-error';
 import { notify } from '@/lib/notify';
 
@@ -33,7 +34,7 @@ type Values = z.infer<typeof schema>;
 interface Props {
   idToken: string;
   email: string;
-  next: string;
+  next?: string;
   onClose: () => void;
 }
 
@@ -51,9 +52,9 @@ export function GoogleLinkDialog({ idToken, email, next, onClose }: Props) {
 
   async function onSubmit({ password }: Values) {
     try {
-      await linkGoogleWithPassword({ idToken, password });
+      const user = await linkGoogleWithPassword({ idToken, password });
       notify.success(t('linked'));
-      router.push(next);
+      router.push(afterLoginPath(user, next));
       router.refresh();
     } catch (err: unknown) {
       handleSubmitError(form, err, t('linkError'));

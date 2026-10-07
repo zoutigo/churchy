@@ -79,6 +79,15 @@ describe('GoogleAuthSection', () => {
     await waitFor(() => expect(push).toHaveBeenCalledWith('/dashboard/parishes'));
   });
 
+  it('un administrateur de plateforme connecté avec Google arrive sur /platform', async () => {
+    providers.mockResolvedValue({ google: { clientId: 'cid' } });
+    loginGoogle.mockResolvedValue({ user: { id: 'u1', role: 'SUPER_ADMIN' } });
+    render(<GoogleAuthSection />);
+    await screen.findByTestId('google-button');
+    emitCredential?.('id.token.google');
+    await waitFor(() => expect(push).toHaveBeenCalledWith('/platform'));
+  });
+
   it('transmet la langue anglaise', async () => {
     setTestLocale('en');
     providers.mockResolvedValue({ google: { clientId: 'cid' } });

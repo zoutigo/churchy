@@ -1,12 +1,63 @@
-import { Controller, Post, Get, Delete, Param, Body, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { ParishMembersService } from './parish-members.service';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
+import {
+  listParishMembersSchema,
+  updateMemberSchema,
+  type ListParishMembersQuery,
+  type UpdateMemberDto,
+} from '@churchy/shared';
+import { env } from '../../config/env';
+import { CurrentUser, type AuthUser } from '../../common/decorators/current-user.decorator';
+import { ParishAccess } from '../../common/decorators/roles.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { ParishRolesGuard } from '../../common/guards/parish-roles.guard';
-import { ParishRoles } from '../../common/decorators/roles.decorator';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
-import { inviteMemberSchema, ParishRole, type InviteMemberDto } from '@churchy/shared';
+import { ParishMembersService } from './parish-members.service';
 
+/**
+ * Suivre une paroisse (devenir fidèle) : toute personne connectée, pour elle-même, sans `@ParishAccess`
+ * (on n'est pas encore membre). Limité comme l'authentification : c'est une écriture ouverte à tous.
+ */
+@ApiTags('parish-members')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
+@Controller('parishes/:parishId')
+export class ParishFollowController {
+  constructor(private service: ParishMembersService) {}
+
+  @Get('membership')
+  membership(@Param('parishId') parishId: string, @CurrentUser() user: AuthUser) {
+    return this.service
+      .membership(parishId, user.id)
+      .then((m) => m ?? { status: null, duties: [] });
+  }
+
+  @Post('follow')
+  @Throttle({ default: { limit: env.AUTH_THROTTLE_LIMIT, ttl: 60_000 } })
+  follow(@Param('parishId') parishId: string, @CurrentUser() user: AuthUser) {
+    return this.service.follow(parishId, user.id);
+  }
+
+  @Delete('follow')
+  @HttpCode(200)
+  async leave(@Param('parishId') parishId: string, @CurrentUser() user: AuthUser) {
+    return { membership: await this.service.leave(parishId, user.id) };
+  }
+}
+
+/** Gestion des membres : administrateurs de la paroisse seulement. */
 @ApiTags('parish-members')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, ParishRolesGuard)
@@ -14,24 +65,29 @@ import { inviteMemberSchema, ParishRole, type InviteMemberDto } from '@churchy/s
 export class ParishMembersController {
   constructor(private service: ParishMembersService) {}
 
-  @Post()
-  @ParishRoles(ParishRole.PARISH_ADMIN)
-  invite(
+  @Get()
+  @ParishAccess('parish.manage')
+  list(
     @Param('parishId') parishId: string,
-    @Body(new ZodValidationPipe(inviteMemberSchema)) dto: InviteMemberDto,
+    @Query(new ZodValidationPipe(listParishMembersSchema)) query: ListParishMembersQuery,
   ) {
-    return this.service.invite(parishId, dto);
+    return this.service.list(parishId, query);
   }
 
-  @Get()
-  @ParishRoles(ParishRole.PARISH_ADMIN, ParishRole.PREPARER)
-  findAll(@Param('parishId') parishId: string) {
-    return this.service.findByParish(parishId);
+  @Patch(':userId')
+  @ParishAccess('parish.manage')
+  update(
+    @Param('parishId') parishId: string,
+    @Param('userId') userId: string,
+    @Body(new ZodValidationPipe(updateMemberSchema)) dto: UpdateMemberDto,
+  ) {
+    return this.service.update(parishId, userId, dto);
   }
 
   @Delete(':userId')
-  @ParishRoles(ParishRole.PARISH_ADMIN)
-  remove(@Param('parishId') parishId: string, @Param('userId') userId: string) {
-    return this.service.remove(parishId, userId);
+  @ParishAccess('parish.manage')
+  async remove(@Param('parishId') parishId: string, @Param('userId') userId: string) {
+    await this.service.remove(parishId, userId);
+    return { removed: true };
   }
 }

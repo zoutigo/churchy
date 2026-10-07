@@ -199,10 +199,48 @@ test.describe('paroisses favorites', () => {
             ? page.locator('aside nav')
             : page.getByRole('navigation', { name: 'Navigation du tableau de bord' });
         await nav.getByRole('link', { name: 'Mes favoris' }).click();
-        await expect(page).toHaveURL('/fr/favoris');
+        // On reste dans le tableau de bord : la navigation du dashboard est toujours là.
+        await expect(page).toHaveURL('/dashboard/favorites');
+        await expect(nav).toBeVisible();
+        await expect(page.getByRole('heading', { level: 1, name: 'Mes favoris' })).toBeVisible();
         await expect(page.getByText('Aucune paroisse en favori pour l’instant')).toBeVisible();
+        expect(await hasHorizontalOverflow(page)).toBe(false);
+        // « Trouver une paroisse » s'ouvre dans un nouvel onglet : le dashboard reste en place.
+        const popupPromise = page.waitForEvent('popup');
         await page.getByRole('main').getByRole('link', { name: 'Trouver une paroisse' }).click();
-        await expect(page).toHaveURL('/fr/paroisses');
+        const popup = await popupPromise;
+        await expect(popup).toHaveURL('/fr/paroisses');
+        await expect(page).toHaveURL('/dashboard/favorites');
+      });
+
+      test('connecté : les favoris s’affichent dans le tableau de bord, on peut en retirer un', async ({
+        page,
+      }) => {
+        await registerViaUi(page, uniqueEmail('fav-dash'));
+        await page.goto(`/fr/paroisses/${parish.id}`);
+        await page.getByRole('button', { name: 'Ajouter aux favoris' }).click();
+        await expect(toast(page, 'Ajoutée à vos favoris')).toBeVisible();
+
+        await page.goto('/dashboard/favorites');
+        const card = page.getByRole('article').filter({ hasText: parish.name });
+        await expect(card).toBeVisible();
+        const view = card.getByRole('link', { name: `Voir la paroisse ${parish.name}` });
+        await expect(view).toHaveAttribute('href', `/fr/paroisses/${parish.id}`);
+        await expect(view).toHaveAttribute('target', '_blank');
+        expect(await hasHorizontalOverflow(page)).toBe(false);
+
+        // Le site public s'ouvre dans un nouvel onglet ; le dashboard reste ouvert.
+        const popupPromise = page.waitForEvent('popup');
+        await view.click();
+        const popup = await popupPromise;
+        await expect(popup).toHaveURL(`/fr/paroisses/${parish.id}`);
+        await popup.close();
+        await expect(page).toHaveURL('/dashboard/favorites');
+
+        await card.getByRole('button', { name: /Retirer des favoris/ }).click();
+        await expect(toast(page, 'Favori retiré')).toBeVisible();
+        await expect(page.getByText('Aucune paroisse en favori pour l’instant')).toBeVisible();
+        await expect(page).toHaveURL('/dashboard/favorites');
       });
 
       test('échec de l’API : l’ajout est annulé et une erreur est annoncée', async ({ page }) => {

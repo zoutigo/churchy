@@ -52,6 +52,7 @@ describe('disallowedPaths', () => {
       expect.arrayContaining([
         '/api/',
         '/dashboard',
+        '/platform',
         '/fr/connexion',
         '/en/login',
         '/fr/inscription',

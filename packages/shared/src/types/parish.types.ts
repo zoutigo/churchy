@@ -1,4 +1,4 @@
-import { ParishRole } from '../enums/parish-role.enum';
+import type { ParishDuty, ParishStatus } from '../enums/parish-status.enum';
 
 export interface Parish {
   id: string;
@@ -27,7 +27,8 @@ export interface ParishMember {
   id: string;
   userId: string;
   parishId: string;
-  role: ParishRole;
+  status: ParishStatus;
+  duties: ParishDuty[];
   createdAt: Date;
   updatedAt: Date;
 }

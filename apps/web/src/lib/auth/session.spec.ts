@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { hasSessionFlag, safeNextPath } from './session';
+import { afterLoginPath, hasSessionFlag, safeNextPath } from './session';
 
 describe('hasSessionFlag', () => {
   it('détecte le cookie de session parmi d’autres', () => {
@@ -33,5 +33,23 @@ describe('safeNextPath', () => {
 
   it('utilise le repli fourni', () => {
     expect(safeNextPath('https://evil.example', '/login')).toBe('/login');
+  });
+});
+
+describe('afterLoginPath', () => {
+  it.each(['SUPER_ADMIN', 'ADMIN', 'MODERATOR'])(
+    'un %s arrive sur la plateforme quand aucune destination n’est demandée',
+    (role) => {
+      expect(afterLoginPath({ role })).toBe('/platform');
+    },
+  );
+
+  it('un compte ordinaire arrive sur son tableau de bord', () => {
+    expect(afterLoginPath({ role: 'USER' })).toBe('/dashboard');
+  });
+
+  it('une destination explicite (?next=) passe toujours avant', () => {
+    expect(afterLoginPath({ role: 'ADMIN' }, '/dashboard/parishes')).toBe('/dashboard/parishes');
+    expect(afterLoginPath({ role: 'USER' }, '/dashboard/security')).toBe('/dashboard/security');
   });
 });

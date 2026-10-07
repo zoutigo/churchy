@@ -22,7 +22,7 @@ import {
   type CreateTemplateStepDto,
 } from '@churchy/shared';
 import { ParishRolesGuard } from '../../common/guards/parish-roles.guard';
-import { ALL_MEMBERS, EDITORS, ParishAccess } from '../../common/decorators/roles.decorator';
+import { ParishAccess } from '../../common/decorators/roles.decorator';
 
 @ApiTags('celebration-templates')
 @ApiBearerAuth()
@@ -32,7 +32,7 @@ export class CelebrationTemplatesController {
   constructor(private service: CelebrationTemplatesService) {}
 
   @Post('parishes/:parishId/templates')
-  @ParishAccess(EDITORS)
+  @ParishAccess('parish.celebrations.write')
   create(
     @Param('parishId') parishId: string,
     @Body(new ZodValidationPipe(createCelebrationTemplateSchema)) dto: CreateCelebrationTemplateDto,
@@ -41,19 +41,19 @@ export class CelebrationTemplatesController {
   }
 
   @Get('parishes/:parishId/templates')
-  @ParishAccess(ALL_MEMBERS)
+  @ParishAccess('parish.internal.read')
   findByParish(@Param('parishId') parishId: string) {
     return this.service.findByParish(parishId);
   }
 
   @Get('templates/:id')
-  @ParishAccess(ALL_MEMBERS, 'template')
+  @ParishAccess('parish.internal.read', 'template')
   findOne(@Param('id') id: string) {
     return this.service.findById(id);
   }
 
   @Patch('templates/:id')
-  @ParishAccess(EDITORS, 'template')
+  @ParishAccess('parish.celebrations.write', 'template')
   update(
     @Param('id') id: string,
     @Body(new ZodValidationPipe(updateCelebrationTemplateSchema)) dto: UpdateCelebrationTemplateDto,
@@ -63,13 +63,13 @@ export class CelebrationTemplatesController {
 
   @Delete('templates/:id')
   @HttpCode(204)
-  @ParishAccess(EDITORS, 'template')
+  @ParishAccess('parish.celebrations.write', 'template')
   remove(@Param('id') id: string) {
     return this.service.remove(id);
   }
 
   @Post('templates/:templateId/steps')
-  @ParishAccess(EDITORS, 'template', 'templateId')
+  @ParishAccess('parish.celebrations.write', 'template', 'templateId')
   addStep(
     @Param('templateId') templateId: string,
     @Body(new ZodValidationPipe(createTemplateStepSchema)) dto: CreateTemplateStepDto,
@@ -78,7 +78,7 @@ export class CelebrationTemplatesController {
   }
 
   @Delete('templates/steps/:stepId')
-  @ParishAccess(EDITORS, 'templateStep', 'stepId')
+  @ParishAccess('parish.celebrations.write', 'templateStep', 'stepId')
   removeStep(@Param('stepId') stepId: string) {
     return this.service.removeStep(stepId);
   }

@@ -1,5 +1,7 @@
 import { BadRequestException, ConflictException } from '@nestjs/common';
-import { ParishRole } from '@churchy/shared';
+import { ParishDuty, ParishStatus } from '@churchy/shared';
+
+const member = (status: ParishStatus, ...duties: ParishDuty[]) => ({ status, duties });
 import {
   assertNotPast,
   canSeeInternalNotes,
@@ -39,11 +41,13 @@ describe('isEndingSoon', () => {
 
 describe('canSeeInternalNotes', () => {
   it('réservées à ceux qui préparent (administrateur, préparateur) et au super admin', () => {
-    expect(canSeeInternalNotes(ParishRole.PARISH_ADMIN)).toBe(true);
-    expect(canSeeInternalNotes(ParishRole.PREPARER)).toBe(true);
+    expect(canSeeInternalNotes(member(ParishStatus.PARISH_ADMIN))).toBe(true);
+    expect(canSeeInternalNotes(member(ParishStatus.PARISHIONER, ParishDuty.PREPARER))).toBe(true);
     expect(canSeeInternalNotes('SUPER_ADMIN')).toBe(true);
-    expect(canSeeInternalNotes(ParishRole.READER)).toBe(false);
-    expect(canSeeInternalNotes(ParishRole.VIEWER)).toBe(false);
+    expect(canSeeInternalNotes('PLATFORM_STAFF')).toBe(true);
+    expect(canSeeInternalNotes(member(ParishStatus.PARISHIONER, ParishDuty.READER))).toBe(false);
+    expect(canSeeInternalNotes(member(ParishStatus.PARISHIONER))).toBe(false);
+    expect(canSeeInternalNotes(member(ParishStatus.FAITHFUL))).toBe(false);
     expect(canSeeInternalNotes(undefined)).toBe(false);
   });
 });

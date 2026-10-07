@@ -1,14 +1,16 @@
 import { Link } from '@/i18n/link';
-import { countryLabel, type Parish } from '@churchy/shared';
+import { countryLabel, type Parish, type ParishStatus } from '@churchy/shared';
 import { useAppLocale } from '@/i18n/locale';
+import { useLabels } from '@/i18n/labels';
 
 interface Props {
-  parish: Parish & { role?: string };
+  parish: Parish & { status?: ParishStatus };
   href?: string;
 }
 
 export function ParishCard({ parish, href }: Props) {
   const locale = useAppLocale();
+  const labels = useLabels();
   const target = href ?? `/dashboard/parishes/${parish.id}`;
   return (
     <Link href={target} className="block group">
@@ -17,9 +19,9 @@ export function ParishCard({ parish, href }: Props) {
           <h3 className="font-playfair font-semibold text-churchy-700 group-hover:text-churchy-500 transition-colors">
             {parish.name}
           </h3>
-          {parish.role && (
+          {parish.status && (
             <span className="text-xs text-churchy-500 bg-churchy-200 px-2 py-0.5 rounded-full shrink-0 font-medium">
-              {parish.role}
+              {labels.parishStatus(parish.status)}
             </span>
           )}
         </div>
