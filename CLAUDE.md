@@ -187,6 +187,12 @@ Le Cameroun est bilingue. Langues : `fr` (défaut) et `en` (`LOCALES`, `DEFAULT_
 - **Paramètres de requête** : le nom **interne** s'écrit dans le code (`?mois=`), `localizeHref` le rend visible dans la langue (`?month=` en anglais) ; table `QUERY_PARAMS` de `i18n/paths.ts`. Lecture côté serveur par `readQueryParam(searchParams, 'mois')` (accepte les deux noms : les anciens liens restent valides) ; `LanguageSwitcher` renomme le paramètre en changeant de langue (`localizeSearch`). Nouveau paramètre traduit = nouvelle entrée de la table.
 - **Reste à faire** : rien de planifié côté i18n.
 
+## Robustesse navigateur (page « momentanément indisponible »)
+`global-error.tsx` et `ServerErrorPage` appellent `handlePageError` (`apps/web/src/lib/client-errors.ts`) :
+- **fichier JS introuvable** (`isChunkLoadError` : page ouverte avant un déploiement, ou réseau mobile instable) → rechargement automatique **une seule fois par minute** (`sessionStorage` ; sans stockage, pas de rechargement : risque de boucle) ;
+- sinon l'erreur est envoyée à `POST /api/client-errors` (`ClientErrorsModule`, public, limité, bornes Zod `clientErrorSchema`) qui l'écrit dans les logs : `docker compose logs api | grep ClientError`.
+- `browserslist` (`apps/web/package.json`) fixe les navigateurs visés (Safari/iOS 14+, Chrome/Android 90+…). Playwright : projets `webkit`, `mobile-safari`, `firefox`, `mobile-chrome` pour `e2e/cross-browser.spec.ts` (pages sans exception JS, stockage refusé) ; le CI installe chromium, webkit et firefox.
+
 ## Site public (sans authentification)
 Pages servies par le web (rendu serveur, `force-dynamic`, URL **par id** de paroisse, pas par slug ; chemins ci-dessous = chemins **internes** en français, voir « Langues » pour les URL visibles `/fr/…` et `/en/…`) :
 `/` (landing : recherche en premier), `/paroisses?q=&page=` (résultats), `/paroisses/[id]` (mini-site : accueil,

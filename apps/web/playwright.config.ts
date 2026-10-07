@@ -28,6 +28,23 @@ export default defineConfig({
       // En CI : `npx playwright install chromium` puis retirer `channel`.
       use: { ...devices['Desktop Chrome'], channel: process.env.PW_CHANNEL ?? 'chrome' },
     },
+    // Moteurs réels du grand public : Safari (WebKit, iPhone compris) et Firefox. Fichiers `cross-browser.spec.ts` seulement.
+    { name: 'webkit', testMatch: /cross-browser\.spec\.ts/, use: { ...devices['Desktop Safari'] } },
+    {
+      name: 'mobile-safari',
+      testMatch: /cross-browser\.spec\.ts/,
+      use: { ...devices['iPhone 13'] },
+    },
+    {
+      name: 'firefox',
+      testMatch: /cross-browser\.spec\.ts/,
+      use: { ...devices['Desktop Firefox'] },
+    },
+    {
+      name: 'mobile-chrome',
+      testMatch: /cross-browser\.spec\.ts/,
+      use: { ...devices['Pixel 5'], channel: process.env.PW_CHANNEL ?? 'chrome' },
+    },
   ],
   webServer: [
     {

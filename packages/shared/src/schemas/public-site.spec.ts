@@ -10,6 +10,7 @@ import {
 } from './parish.schema';
 import { MAX_FAVORITE_PARISHES } from '../constants/business.constants';
 import { createActivitySchema, createAnnouncementSchema } from './announcement.schema';
+import { clientErrorSchema } from './client-error.schema';
 import { contactMessageSchema } from './contact.schema';
 import { createCelebrationSchema, updateCelebrationSchema } from './celebration.schema';
 
@@ -250,5 +251,15 @@ describe('favoris de paroisses', () => {
   it('dédoublonne avant de compter la limite', () => {
     const ids = Array.from({ length: 15 }, () => 'same');
     expect(mergeFavoritesSchema.parse({ parishIds: ids }).parishIds).toEqual(['same']);
+  });
+});
+
+describe('clientErrorSchema', () => {
+  it('accepte un rapport minimal et refuse une source inconnue ou un message trop long', () => {
+    expect(clientErrorSchema.safeParse({ message: 'boom', source: 'global' }).success).toBe(true);
+    expect(clientErrorSchema.safeParse({ message: 'boom', source: 'x' }).success).toBe(false);
+    expect(
+      clientErrorSchema.safeParse({ message: 'x'.repeat(501), source: 'segment' }).success,
+    ).toBe(false);
   });
 });

@@ -1,11 +1,24 @@
 'use client';
+import { useEffect } from 'react';
+import { handlePageError } from '@/lib/client-errors';
 import './globals.css';
 
 /**
  * Dernier filet : le layout racine lui-même a échoué (donc ni en-tête, ni fournisseurs, ni polices, ni langue).
  * Le message est donc bilingue, en dur : c'est la seule page qui ne passe pas par `next-intl`.
  */
-export default function GlobalError({ reset }: { error: Error; reset: () => void }) {
+export default function GlobalError({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  // Fichier périmé après un déploiement : rechargement automatique ; sinon l'erreur est signalée à l'API.
+  useEffect(() => {
+    handlePageError(error, 'global');
+  }, [error]);
+
   return (
     <html lang="fr">
       <body className="bg-churchy-50">
