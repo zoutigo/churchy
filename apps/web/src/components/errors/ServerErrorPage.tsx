@@ -2,6 +2,7 @@
 import { Link } from '@/i18n/link';
 import { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
+import { handlePageError } from '@/lib/client-errors';
 import { ErrorPage, errorButtonClass, errorSecondaryButtonClass } from './ErrorPage';
 
 interface Props {
@@ -16,7 +17,9 @@ export function ServerErrorPage({ error, reset, size, home }: Props) {
   const t = useTranslations('errors');
   const exit = home ?? { href: '/', label: t('backHome') };
   useEffect(() => {
-    if (error) console.error(error);
+    if (!error) return;
+    console.error(error);
+    handlePageError(error, 'segment');
   }, [error]);
 
   return (

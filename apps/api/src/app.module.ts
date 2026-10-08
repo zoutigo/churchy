@@ -12,6 +12,7 @@ import { CelebrationTemplatesModule } from './modules/celebration-templates/cele
 import { CelebrationsModule } from './modules/celebrations/celebrations.module';
 import { AnnouncementsModule } from './modules/announcements/announcements.module';
 import { ActivitiesModule } from './modules/activities/activities.module';
+import { ClientErrorsModule } from './modules/client-errors/client-errors.module';
 import { ContactModule } from './modules/contact/contact.module';
 import { PublicModule } from './modules/public/public.module';
 import { FavoritesModule } from './modules/favorites/favorites.module';
@@ -32,6 +33,7 @@ import { HealthModule } from './health/health.module';
     CelebrationsModule,
     AnnouncementsModule,
     ActivitiesModule,
+    ClientErrorsModule,
     ContactModule,
     PublicModule,
     FavoritesModule,
